@@ -1,5 +1,5 @@
 using UnityEngine;
-using UnityEngine.InputSystem; // 必须引用
+using UnityEngine.InputSystem;
 
 [RequireComponent(typeof(CharacterController))]
 public class PlayerController_InputSystem : MonoBehaviour
@@ -31,7 +31,7 @@ public class PlayerController_InputSystem : MonoBehaviour
 
     private Vector3 facingDirection = Vector3.right;
 
-    // --- 新系统生命周期 ---
+    // --- 系统生命周期 ---
     void Awake() => controls = new PlayerControls();
     void OnEnable() => controls.Player.Enable();
     void OnDisable() => controls.Player.Disable();
@@ -84,7 +84,7 @@ public class PlayerController_InputSystem : MonoBehaviour
             playerVelocity.y = Mathf.Sqrt(jumpHeight * -2f * gravity);
         }
 
-        // --- 变长跳跃 (新系统版) ---
+        // --- 变长跳跃  ---
         // 如果玩家松开了跳跃键，且角色正在上升
         if (controls.Player.Jump.WasReleasedThisFrame() && playerVelocity.y > 0)
         {
