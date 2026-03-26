@@ -3112,16 +3112,6 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
-    - target: {fileID: 1808218592961450793, guid: a46874199daebc840aa9391ad093ad5b,
-        type: 3}
-      propertyPath: m_LocalPosition.x
-      value: 17
-      objectReference: {fileID: 0}
-    - target: {fileID: 1808218592961450793, guid: a46874199daebc840aa9391ad093ad5b,
-        type: 3}
-      propertyPath: m_LocalPosition.y
-      value: 6.6
-      objectReference: {fileID: 0}
     - target: {fileID: 2996540924888052743, guid: a46874199daebc840aa9391ad093ad5b,
         type: 3}
       propertyPath: m_Name
@@ -3130,17 +3120,17 @@ PrefabInstance:
     - target: {fileID: 6148535628497002512, guid: a46874199daebc840aa9391ad093ad5b,
         type: 3}
       propertyPath: m_LocalPosition.x
-      value: 193.4
+      value: 0.8
       objectReference: {fileID: 0}
     - target: {fileID: 6148535628497002512, guid: a46874199daebc840aa9391ad093ad5b,
         type: 3}
       propertyPath: m_LocalPosition.y
-      value: 7.5
+      value: 3.6
       objectReference: {fileID: 0}
     - target: {fileID: 6148535628497002512, guid: a46874199daebc840aa9391ad093ad5b,
         type: 3}
       propertyPath: m_LocalPosition.z
-      value: 0.03
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6148535628497002512, guid: a46874199daebc840aa9391ad093ad5b,
         type: 3}
@@ -3176,11 +3166,6 @@ PrefabInstance:
         type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 6780376445522918278, guid: a46874199daebc840aa9391ad093ad5b,
-        type: 3}
-      propertyPath: moveSpeed
-      value: 4
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -7053,9 +7038,9 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1287380694}
   m_LocalEulerAnglesHint: {x: 0.55, y: 0.541, z: 43.069}
---- !u!4 &1714737411 stripped
+--- !u!4 &1667635826 stripped
 Transform:
-  m_CorrespondingSourceObject: {fileID: 1808218592961450793, guid: a46874199daebc840aa9391ad093ad5b,
+  m_CorrespondingSourceObject: {fileID: 3611831215344741737, guid: a46874199daebc840aa9391ad093ad5b,
     type: 3}
   m_PrefabInstance: {fileID: 726318729}
   m_PrefabAsset: {fileID: 0}
@@ -8528,7 +8513,7 @@ GameObject:
   - component: {fileID: 2090402238}
   - component: {fileID: 2090402237}
   - component: {fileID: 2090402236}
-  m_Layer: 3
+  m_Layer: 6
   m_Name: Cube (7)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -8853,7 +8838,7 @@ PrefabInstance:
         type: 3}
       propertyPath: target
       value: 
-      objectReference: {fileID: 1714737411}
+      objectReference: {fileID: 1667635826}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []

@@ -1,9 +1,12 @@
+using UnityEditor.Animations;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
 [RequireComponent(typeof(CharacterController))]
 public class PlayerController_InputSystem : MonoBehaviour
 {
+    
+
     private CharacterController controller;
     private PlayerControls controls; // 自动生成的C#类
     private Vector2 moveInput;
@@ -36,13 +39,16 @@ public class PlayerController_InputSystem : MonoBehaviour
     void OnEnable() => controls.Player.Enable();
     void OnDisable() => controls.Player.Disable();
 
-    void Start() => controller = GetComponent<CharacterController>();
+   void Start() => controller = GetComponent<CharacterController>() ;   
+
 
     void Update()
     {
         // 1. 读取输入数值
         moveInput = controls.Player.Move.ReadValue<Vector2>();
         jumpHeld = controls.Player.Jump.IsPressed();
+
+        
 
         // 2. 环境检测
         Vector3 footPos = transform.position + Vector3.up * 0.1f;
@@ -66,12 +72,15 @@ public class PlayerController_InputSystem : MonoBehaviour
         wasGrounded = isGrounded;
     }
 
+
     void HandleRegularMovement()
     {
         // 水平移动
         Vector3 move = new Vector3(moveInput.x, 0, 0);
         controller.Move(move * moveSpeed * Time.deltaTime);
-
+        
+  
+       
         // 转向逻辑
         if (moveInput.x > 0.01f) { facingDirection = Vector3.right; transform.forward = Vector3.right; }
         else if (moveInput.x < -0.01f) { facingDirection = Vector3.left; transform.forward = Vector3.left; }
