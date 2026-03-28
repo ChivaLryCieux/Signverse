@@ -1,146 +1,139 @@
-using UnityEditor.Animations;
 using UnityEngine;
-using UnityEngine.InputSystem;
+using Skills; // 技能命名空间
 
 [RequireComponent(typeof(CharacterController))]
-public class PlayerController_InputSystem : MonoBehaviour
+public class PlayerCC : MonoBehaviour
 {
+    private CharacterController cc;
+    private PlayerControls controls; // 与生成的 Input Action 类名一致
     
-
-    private CharacterController controller;
-    private PlayerControls controls; // 自动生成的C#类
-    private Vector2 moveInput;
-    private Vector3 playerVelocity;
-    private bool isGrounded;
-    private bool isClimbing;
-    private bool jumpHeld; // 是否正按住跳跃键
-
-    [Header("移动设置")]
-    public float moveSpeed = 6f;
-    public float jumpHeight = 2.2f;
+    [Header("核心物理")]
     public float gravity = -25f;
-    public float climbSpeed = 4f;
+    private float verticalVelocity;
+    private Vector3 facingDirection = Vector3.right;
+    
+    [Header("状态监控")]
+    public bool isGrounded;
+    public bool isClimbing; // 由 MoveSkill 实时控制
 
-    [Header("检测设置")]
-    public LayerMask groundMask;
-    public LayerMask climbableMask;
-    public float groundRayLength = 0.3f;
-    public float climbRayLength = 0.8f;
+    [Header("技能槽位 (拖入 .asset 文件)")]
+    public SkillBase moveSkill;
+    public SkillBase jumpSkill;
 
     [Header("摔死检测")]
     public float deathDistance = 5.0f;
     private float airStartY;
     private bool wasGrounded;
 
-    private Vector3 facingDirection = Vector3.right;
+    // --- 供技能脚本调用的 Public 接口 ---
+    public CharacterController GetCharacterController() => cc;
+    
+    // 获取 WASD 的 Vector2 输入
+    public Vector2 GetMoveInput() => controls.Player.Move.ReadValue<Vector2>();
+    
+    // 获取空格键是否被按住 (用于持续爬墙)
+    public bool IsJumpPressed() => controls.Player.Jump.IsPressed();
+    
+    // 获取当前面向 (Vector3.right 或 Vector3.left)
+    public Vector3 GetFacing() => facingDirection;
 
-    // --- 系统生命周期 ---
-    void Awake() => controls = new PlayerControls();
+    // 设置纵向速度 (跳跃技能调用)
+    public void SetVerticalVelocity(float val) => verticalVelocity = val;
+
+    // 设置朝向
+    public void SetFacing(Vector3 dir)
+    {
+        facingDirection = dir;
+        transform.forward = dir;
+    }
+
+    // --- 生命周期 ---
+    void Awake()
+    {
+        cc = GetComponent<CharacterController>();
+        controls = new PlayerControls(); // 如果你的名字改了，这里也要改
+    }
+
     void OnEnable() => controls.Player.Enable();
     void OnDisable() => controls.Player.Disable();
 
-   void Start() => controller = GetComponent<CharacterController>() ;   
-
-
     void Update()
     {
-        // 1. 读取输入数值
-        moveInput = controls.Player.Move.ReadValue<Vector2>();
-        jumpHeld = controls.Player.Jump.IsPressed();
+        // 1. 环境检测 (使用 CC 自带检测)
+        isGrounded = cc.isGrounded;
 
-        
-
-        // 2. 环境检测
-        Vector3 footPos = transform.position + Vector3.up * 0.1f;
-        isGrounded = Physics.Raycast(footPos, Vector3.down, groundRayLength, groundMask);
-
-        Vector3 climbOrigin = transform.position + Vector3.up * -0.8f; 
-        bool canClimb = Physics.Raycast(climbOrigin, facingDirection, climbRayLength, climbableMask);
-
-        // 3. 状态切换：靠近墙且 (按W/S 或 按住空格)
-        if (canClimb && (Mathf.Abs(moveInput.y) > 0.1f || jumpHeld)) 
+        // 2. 执行移动逻辑 (包含爬墙检测)
+        if (moveSkill != null)
         {
-            isClimbing = true;
+            moveSkill.OnUpdate(gameObject, this);
         }
 
-        if (isClimbing)
-            HandleClimbing(canClimb);
+        // 3. 处理重力与跳跃触发
+        if (isGrounded && verticalVelocity < 0)
+        {
+            verticalVelocity = -2f; // 贴地力
+        }
+
+        if (!isClimbing)
+        {
+            // 只有不在爬墙时才受重力影响
+            verticalVelocity += gravity * Time.deltaTime;
+
+            // 地面跳跃触发
+            if (controls.Player.Jump.WasPressedThisFrame() && isGrounded)
+            {
+                if (jumpSkill != null) jumpSkill.OnActivate(gameObject, this);
+            }
+        }
         else
-            HandleRegularMovement();
-
-        CheckFallDeath();
-        wasGrounded = isGrounded;
-    }
-
-
-    void HandleRegularMovement()
-    {
-        // 水平移动
-        Vector3 move = new Vector3(moveInput.x, 0, 0);
-        controller.Move(move * moveSpeed * Time.deltaTime);
-        
-  
-       
-        // 转向逻辑
-        if (moveInput.x > 0.01f) { facingDirection = Vector3.right; transform.forward = Vector3.right; }
-        else if (moveInput.x < -0.01f) { facingDirection = Vector3.left; transform.forward = Vector3.left; }
-
-        if (isGrounded && playerVelocity.y < 0) playerVelocity.y = -2f;
-
-        // 跳跃逻辑 (由 ActionTrigger 触发)
-        if (controls.Player.Jump.WasPressedThisFrame() && isGrounded)
         {
-            playerVelocity.y = Mathf.Sqrt(jumpHeight * -2f * gravity);
+            // 爬墙时重力置零，垂直位移由 MoveSkill 完全接管
+            verticalVelocity = 0;
         }
 
-        // --- 变长跳跃  ---
-        // 如果玩家松开了跳跃键，且角色正在上升
-        if (controls.Player.Jump.WasReleasedThisFrame() && playerVelocity.y > 0)
-        {
-            playerVelocity.y *= 0.5f;
-        }
+        // 4. 执行垂直位移
+        cc.Move(new Vector3(0, verticalVelocity, 0) * Time.deltaTime);
 
-        playerVelocity.y += gravity * Time.deltaTime;
-        controller.Move(playerVelocity * Time.deltaTime);
+        // 5. 摔死检测
+        HandleFallDeath();
     }
 
-    void HandleClimbing(bool canClimb)
+    void LateUpdate()
     {
-        // 合并 W 和 空格的向上动力
-        float verticalForce = moveInput.y;
-        if (jumpHeld) verticalForce = 1f;
-
-        playerVelocity.y = verticalForce * climbSpeed;
-        controller.Move(new Vector3(0, playerVelocity.y, 0) * Time.deltaTime);
-
-        // 跳离判定：在墙上按【左右】+【空格】
-        bool jumpOff = controls.Player.Jump.WasPressedThisFrame() && Mathf.Abs(moveInput.x) > 0.1f;
-
-        if (!canClimb || jumpOff || (isGrounded && moveInput.y < -0.1f))
-        {
-            isClimbing = false;
-            if (jumpOff) playerVelocity.y = Mathf.Sqrt(jumpHeight * -1.2f * gravity);
-        }
+        // 强力锁定 Z 轴，防止 2.5D 游戏中角色前后偏移
+        transform.position = new Vector3(transform.position.x, transform.position.y, 0);
     }
 
-    void CheckFallDeath()
+    private void HandleFallDeath()
     {
-        if (wasGrounded && !isGrounded) airStartY = transform.position.y;
+        // 离开地面瞬间
+        if (wasGrounded && !isGrounded)
+        {
+            airStartY = transform.position.y;
+        }
+
+        // 落地瞬间
         if (!wasGrounded && isGrounded)
         {
             float fallHeight = airStartY - transform.position.y;
-            if (fallHeight > deathDistance) Die();
+            if (fallHeight > deathDistance)
+            {
+                Die();
+            }
         }
+        wasGrounded = isGrounded;
     }
 
-    void Die() => Debug.Log("<color=red>摔死了！</color>");
+    private void Die()
+    {
+        Debug.Log("<color=red><b>角色摔死了！</b></color>");
+        // 重生逻辑：比如重载场景或回到存盘点
+    }
 
     private void OnDrawGizmos()
     {
+        // 画出脚底位置，方便调试射线起始点
         Gizmos.color = isGrounded ? Color.green : Color.red;
-        Gizmos.DrawRay(transform.position + Vector3.up * 0.1f, Vector3.down * groundRayLength);
-        Gizmos.color = Color.blue;
-        Vector3 climbOrigin = transform.position + Vector3.up * -0.8f;
-        Gizmos.DrawRay(climbOrigin, (Application.isPlaying ? facingDirection : transform.right) * climbRayLength);
+        Gizmos.DrawWireSphere(transform.position + Vector3.up * 0.1f, 0.2f);
     }
 }

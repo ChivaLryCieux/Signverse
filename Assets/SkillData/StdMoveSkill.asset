@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1ec0fdb65a111de6cb5c08e14d82f05f, type: 3}
+  m_Name: StdMoveSkill
+  m_EditorClassIdentifier: 
+  skillID: 1
+  skillName: Move
+  moveSpeed: 6
+  climbSpeed: 4
+  climbRayLength: 0.8
+  climbableMask:
+    serializedVersion: 2
+    m_Bits: 64
+  rayOffsetY: -0.8
