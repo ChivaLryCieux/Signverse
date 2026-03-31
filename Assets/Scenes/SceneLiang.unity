@@ -2793,7 +2793,7 @@ PrefabInstance:
     - target: {fileID: 6148535628497002512, guid: a46874199daebc840aa9391ad093ad5b,
         type: 3}
       propertyPath: m_LocalPosition.y
-      value: 11.295
+      value: 11.37
       objectReference: {fileID: 0}
     - target: {fileID: 6148535628497002512, guid: a46874199daebc840aa9391ad093ad5b,
         type: 3}
@@ -5216,7 +5216,7 @@ PrefabInstance:
     - target: {fileID: -8679921383154817045, guid: a9fd31c4611a7454481d30aa86ef49d3,
         type: 3}
       propertyPath: m_LocalPosition.y
-      value: -0.429
+      value: -1.03
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: a9fd31c4611a7454481d30aa86ef49d3,
         type: 3}
@@ -6107,7 +6107,7 @@ Transform:
   m_GameObject: {fileID: 1792305645}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 2.2435358e-24, z: -7.6325715e-17, w: 1}
-  m_LocalPosition: {x: 200.7709, y: 10.626, z: -10.020374}
+  m_LocalPosition: {x: 200.7709, y: 10.1, z: -10.020374}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -7613,6 +7613,8 @@ MonoBehaviour:
   isClimbing: 0
   moveSkill: {fileID: 11400000, guid: 7e4fcba96b5756b74a4a692ce2020b1e, type: 2}
   jumpSkill: {fileID: 11400000, guid: f8259b7fe85dd8e10917cf6a2f1e264d, type: 2}
+  unlockedSkills: []
+  masterDatabase: {fileID: 11400000, guid: 6c7fa50fa25f9d569a8378dc6b3967b9, type: 2}
   deathDistance: 5
 --- !u!143 &2116710492
 CharacterController:
@@ -7831,7 +7833,7 @@ PrefabInstance:
     - target: {fileID: 8162198625454783887, guid: c57ccacf4c907eb44bf89fd2201dd1a3,
         type: 3}
       propertyPath: m_LocalPosition.y
-      value: 10.626
+      value: 10.1
       objectReference: {fileID: 0}
     - target: {fileID: 8162198625454783887, guid: c57ccacf4c907eb44bf89fd2201dd1a3,
         type: 3}

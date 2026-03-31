@@ -1,57 +1,57 @@
 using UnityEngine;
-using Skills; // 技能命名空间
+using System.Collections.Generic;
+using Skills; 
 
 [RequireComponent(typeof(CharacterController))]
 public class PlayerCC : MonoBehaviour
 {
+    [Header("核心引用")]
     private CharacterController cc;
-    private PlayerControls controls; // 与生成的 Input Action 类名一致
-    
-    [Header("核心物理")]
+    private PlayerControls controls; 
+
+    [Header("物理参数")]
     public float gravity = -25f;
     private float verticalVelocity;
     private Vector3 facingDirection = Vector3.right;
-    
+
     [Header("状态监控")]
     public bool isGrounded;
-    public bool isClimbing; // 由 MoveSkill 实时控制
+    public bool isClimbing; 
 
-    [Header("技能槽位 (拖入 .asset 文件)")]
-    public SkillBase moveSkill;
-    public SkillBase jumpSkill;
+    [Header("技能系统 (Slot-Based)")]
+    public SkillBase moveSkill; 
+    public SkillBase jumpSkill; 
+    
+    public List<SkillBase> unlockedSkills = new List<SkillBase>();
+    public SkillDatabase masterDatabase; 
 
     [Header("摔死检测")]
     public float deathDistance = 5.0f;
     private float airStartY;
     private bool wasGrounded;
 
-    // --- 供技能脚本调用的 Public 接口 ---
+    // --- 给技能脚本提供的“遥控器”接口 ---
     public CharacterController GetCharacterController() => cc;
-    
-    // 获取 WASD 的 Vector2 输入
     public Vector2 GetMoveInput() => controls.Player.Move.ReadValue<Vector2>();
     
-    // 获取空格键是否被按住 (用于持续爬墙)
+    // 供蓄力跳检测：空格是否正被按住
     public bool IsJumpPressed() => controls.Player.Jump.IsPressed();
     
-    // 获取当前面向 (Vector3.right 或 Vector3.left)
+    // 供技能检测：空格是否在这一帧松开
+    public bool WasJumpReleased() => controls.Player.Jump.WasReleasedThisFrame();
+
     public Vector3 GetFacing() => facingDirection;
-
-    // 设置纵向速度 (跳跃技能调用)
     public void SetVerticalVelocity(float val) => verticalVelocity = val;
-
-    // 设置朝向
     public void SetFacing(Vector3 dir)
     {
         facingDirection = dir;
         transform.forward = dir;
     }
 
-    // --- 生命周期 ---
     void Awake()
     {
         cc = GetComponent<CharacterController>();
-        controls = new PlayerControls(); // 如果你的名字改了，这里也要改
+        controls = new PlayerControls();
     }
 
     void OnEnable() => controls.Player.Enable();
@@ -59,27 +59,41 @@ public class PlayerCC : MonoBehaviour
 
     void Update()
     {
-        // 1. 环境检测 (使用 CC 自带检测)
         isGrounded = cc.isGrounded;
 
-        // 2. 执行移动逻辑 (包含爬墙检测)
-        if (moveSkill != null)
+        // 1. 基础移动逻辑
+        if (moveSkill != null) moveSkill.OnUpdate(gameObject, this);
+
+        // 2. 只有每帧执行 OnUpdate，LongJumpSkill 才能计算蓄力时间和处理空中惯性
+        if (jumpSkill != null) jumpSkill.OnUpdate(gameObject, this);
+
+        // 3. 遍历执行其他已解锁技能
+        foreach (var skill in unlockedSkills)
         {
-            moveSkill.OnUpdate(gameObject, this);
+            skill.OnUpdate(gameObject, this);
         }
 
-        // 3. 处理重力与跳跃触发
+        // 4. 处理物理重力与触发信号
+        HandleGravityAndJump();
+
+        // 5. 执行垂直位移
+        cc.Move(new Vector3(0, verticalVelocity, 0) * Time.deltaTime);
+
+        HandleFallDeath();
+    }
+
+    private void HandleGravityAndJump()
+    {
         if (isGrounded && verticalVelocity < 0)
         {
-            verticalVelocity = -2f; // 贴地力
+            verticalVelocity = -2f; 
         }
 
         if (!isClimbing)
         {
-            // 只有不在爬墙时才受重力影响
             verticalVelocity += gravity * Time.deltaTime;
 
-            // 地面跳跃触发
+            // 发送起跳信号：如果是蓄力跳，OnActivate 用于标记“开始蓄力”
             if (controls.Player.Jump.WasPressedThisFrame() && isGrounded)
             {
                 if (jumpSkill != null) jumpSkill.OnActivate(gameObject, this);
@@ -87,52 +101,41 @@ public class PlayerCC : MonoBehaviour
         }
         else
         {
-            // 爬墙时重力置零，垂直位移由 MoveSkill 完全接管
             verticalVelocity = 0;
         }
-
-        // 4. 执行垂直位移
-        cc.Move(new Vector3(0, verticalVelocity, 0) * Time.deltaTime);
-
-        // 5. 摔死检测
-        HandleFallDeath();
     }
 
     void LateUpdate()
     {
-        // 强力锁定 Z 轴，防止 2.5D 游戏中角色前后偏移
+        // 2.5D 锁定 Z 轴
         transform.position = new Vector3(transform.position.x, transform.position.y, 0);
+    }
+
+    public void UnlockNewSkill(string id)
+    {
+        if (masterDatabase == null) return;
+        SkillBase newSkill = masterDatabase.GetSkillByID(id);
+        if (newSkill != null && !unlockedSkills.Contains(newSkill))
+        {
+            unlockedSkills.Add(newSkill);
+        }
     }
 
     private void HandleFallDeath()
     {
-        // 离开地面瞬间
-        if (wasGrounded && !isGrounded)
-        {
-            airStartY = transform.position.y;
-        }
-
-        // 落地瞬间
+        if (wasGrounded && !isGrounded) airStartY = transform.position.y;
         if (!wasGrounded && isGrounded)
         {
             float fallHeight = airStartY - transform.position.y;
-            if (fallHeight > deathDistance)
-            {
-                Die();
-            }
+            if (fallHeight > deathDistance) Die();
         }
         wasGrounded = isGrounded;
     }
 
-    private void Die()
-    {
-        Debug.Log("<color=red><b>角色摔死了！</b></color>");
-        // 重生逻辑：比如重载场景或回到存盘点
-    }
+    private void Die() => Debug.Log("<color=red>角色摔死了！</color>");
 
     private void OnDrawGizmos()
     {
-        // 画出脚底位置，方便调试射线起始点
         Gizmos.color = isGrounded ? Color.green : Color.red;
         Gizmos.DrawWireSphere(transform.position + Vector3.up * 0.1f, 0.2f);
     }
