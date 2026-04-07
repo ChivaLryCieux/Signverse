@@ -394,9 +394,16 @@ MonoBehaviour:
   isClimbing: 0
   moveSkill: {fileID: 11400000, guid: 7e4fcba96b5756b74a4a692ce2020b1e, type: 2}
   jumpSkill: {fileID: 11400000, guid: 0b9a1847280dc89b1954f612eb54b2ce, type: 2}
-  unlockedSkills: []
+  unlockedSkills:
+  - {fileID: 11400000, guid: 2c3ff86940322c42eb201693f61d6aa7, type: 2}
   masterDatabase: {fileID: 11400000, guid: 6c7fa50fa25f9d569a8378dc6b3967b9, type: 2}
   deathDistance: 5
+--- !u!4 &565158957 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 6148535628497002512, guid: a46874199daebc840aa9391ad093ad5b,
+    type: 3}
+  m_PrefabInstance: {fileID: 4568232566593516789}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &638022496
 GameObject:
   m_ObjectHideFlags: 0
@@ -551,12 +558,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!4 &946298380 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 3611831215344741737, guid: a46874199daebc840aa9391ad093ad5b,
-    type: 3}
-  m_PrefabInstance: {fileID: 4568232566593516789}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1003571120
 GameObject:
   m_ObjectHideFlags: 0
@@ -1069,7 +1070,7 @@ PrefabInstance:
         type: 3}
       propertyPath: target
       value: 
-      objectReference: {fileID: 946298380}
+      objectReference: {fileID: 565158957}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []

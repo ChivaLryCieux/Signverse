@@ -6,6 +6,7 @@ namespace Skills
     public class LongJumpSkill : SkillBase
     {
         [Header("蓄力与距离设置")]
+        public float minChargeTime = 0.4f;
         public float minJumpDistance = 4f;   
         public float maxJumpDistance = 15f;  
         public float jumpHeight = 3.5f;      
@@ -42,7 +43,15 @@ namespace Skills
                 }
                 else
                 {
-                    Launch(controller);
+                    if (chargeTimer >= minChargeTime)
+                    {
+                        Launch(controller);
+                    }
+                    else
+                    {
+                        Debug.Log("<color=orange>蓄力不足，立定跳远未触发</color>");
+                    }
+
                     isCharging = false;
                 }
                 return; // 蓄力时不需要执行位移
@@ -57,14 +66,17 @@ namespace Skills
                 // 计算本帧位移量
                 Vector3 moveDelta = moveDirection * airForwardSpeed * Time.deltaTime;
                 
-                // 执行位移
-                controller.GetCharacterController().Move(moveDelta);
+                // 执行位移；一旦撞到侧面，立刻停止水平惯性，让角色自然下落
+                CollisionFlags collisionFlags = controller.GetCharacterController().Move(moveDelta);
 
                 // 调试射线：在 Scene 窗口看红色的水平线，代表你的惯性
                 Debug.DrawRay(user.transform.position, moveDelta * 10f, Color.red);
                 
-                // 细节处理：如果碰到墙体（开始攀爬），立刻停掉水平惯性
-                if (controller.isClimbing) airForwardSpeed = 0;
+                // 碰撞侧墙或进入攀爬状态时，只取消水平推进，不影响重力下落
+                if ((collisionFlags & CollisionFlags.Sides) != 0 || controller.isClimbing)
+                {
+                    airForwardSpeed = 0f;
+                }
             }
 
             // 3. 落地重置一切
@@ -77,7 +89,8 @@ namespace Skills
 
         private void Launch(PlayerCC controller)
         {
-            float power = chargeTimer / maxChargeTime;
+            float usableChargeRange = Mathf.Max(0.01f, maxChargeTime - minChargeTime);
+            float power = Mathf.Clamp01((chargeTimer - minChargeTime) / usableChargeRange);
 
             // 1. 锁定方向：绝对不能是 zero
             moveDirection = controller.GetFacing();

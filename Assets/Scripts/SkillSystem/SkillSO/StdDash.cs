@@ -2,12 +2,12 @@ using UnityEngine;
 
 namespace Skills
 {
-    [CreateAssetMenu(fileName = "31-dm", menuName = "Game/Skills/31 DM Dash Distance Up")]
-    public class Skill31DMDashDistanceUp : SkillBase
+    [CreateAssetMenu(fileName = "StdDash", menuName = "Game/Skills/Standard Dash")]
+    public class StdDash : SkillBase
     {
         [Header("冲刺设置")]
         public KeyCode dashKey = KeyCode.L;
-        public float dashDistance = 7f;
+        public float dashDistance = 4f;
         public float cooldown = 0.4f;
 
         private float cooldownTimer;
@@ -43,9 +43,9 @@ namespace Skills
                 return;
             }
 
-            Vector3 dir = horizontal > 0f ? Vector3.right : Vector3.left;
-            controller.SetFacing(dir);
-            controller.GetCharacterController().Move(dir * dashDistance);
+            Vector3 dashDir = horizontal > 0f ? Vector3.right : Vector3.left;
+            controller.SetFacing(dashDir);
+            controller.GetCharacterController().Move(dashDir * dashDistance);
             cooldownTimer = cooldown;
         }
     }
