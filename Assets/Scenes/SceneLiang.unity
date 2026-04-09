@@ -13236,6 +13236,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8560771527190619558, guid: a46874199daebc840aa9391ad093ad5b,
         type: 3}
+      propertyPath: deathDistance
+      value: 20
+      objectReference: {fileID: 0}
+    - target: {fileID: 8560771527190619558, guid: a46874199daebc840aa9391ad093ad5b,
+        type: 3}
       propertyPath: unlockedSkills.Array.size
       value: 1
       objectReference: {fileID: 0}
@@ -64194,10 +64199,10 @@ SceneRoots:
   - {fileID: 1802205044}
   - {fileID: 527597953}
   - {fileID: 338133416}
+  - {fileID: 623054517}
   - {fileID: 2084479461}
   - {fileID: 18703171}
   - {fileID: 644080958}
-  - {fileID: 623054517}
   - {fileID: 168975626}
   - {fileID: 9068794041062772403}
   - {fileID: 4181720298900275583}

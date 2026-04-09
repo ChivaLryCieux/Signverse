@@ -1,5 +1,6 @@
 using UnityEngine;
 using System.Collections.Generic;
+using System.Collections;
 using Skills; 
 
 [RequireComponent(typeof(CharacterController))]
@@ -26,9 +27,14 @@ public class PlayerCC : MonoBehaviour
     public SkillDatabase masterDatabase; 
 
     [Header("摔死检测")]
-    public float deathDistance = 5.0f;
+    public float deathDistance = 8.0f;
+    public float respawnDelay = 3.0f;
     private float airStartY;
     private bool wasGrounded;
+
+    [Header("重生状态")]
+    [SerializeField] private Vector3 currentCheckpoint;
+    [SerializeField] private bool isDead;
 
     // --- 给技能脚本提供的“遥控器”接口 ---
     public CharacterController GetCharacterController() => cc;
@@ -41,6 +47,7 @@ public class PlayerCC : MonoBehaviour
     public bool WasJumpReleased() => controls.Player.Jump.WasReleasedThisFrame();
 
     public Vector3 GetFacing() => facingDirection;
+    public bool IsDead => isDead;
     public void SetVerticalVelocity(float val) => verticalVelocity = val;
     public void SetFacing(Vector3 dir)
     {
@@ -52,6 +59,7 @@ public class PlayerCC : MonoBehaviour
     {
         cc = GetComponent<CharacterController>();
         controls = new PlayerControls();
+        currentCheckpoint = transform.position;
     }
 
     void OnEnable() => controls.Player.Enable();
@@ -59,6 +67,11 @@ public class PlayerCC : MonoBehaviour
 
     void Update()
     {
+        if (isDead)
+        {
+            return;
+        }
+
         isGrounded = cc.isGrounded;
 
         // 1. 基础移动逻辑
@@ -121,6 +134,12 @@ public class PlayerCC : MonoBehaviour
         }
     }
 
+    public void SetCheckpoint(Vector3 checkpointPosition)
+    {
+        currentCheckpoint = checkpointPosition;
+        Debug.Log($"<color=green>已更新存档点：</color>{currentCheckpoint}");
+    }
+
     private void HandleFallDeath()
     {
         if (wasGrounded && !isGrounded) airStartY = transform.position.y;
@@ -132,7 +151,49 @@ public class PlayerCC : MonoBehaviour
         wasGrounded = isGrounded;
     }
 
-    private void Die() => Debug.Log("<color=red>角色摔死了！</color>");
+    private void Die()
+    {
+        if (isDead)
+        {
+            return;
+        }
+
+        isDead = true;
+        verticalVelocity = 0f;
+        isClimbing = false;
+        isGrounded = false;
+        controls.Player.Disable();
+        cc.enabled = false;
+
+        Debug.Log("<color=red>角色死亡！3 秒后将在存档点复活。</color>");
+        StartCoroutine(RespawnAfterDelay());
+    }
+
+    private IEnumerator RespawnAfterDelay()
+    {
+        yield return new WaitForSeconds(respawnDelay);
+        RespawnAtCheckpoint();
+    }
+
+    private void RespawnAtCheckpoint()
+    {
+        Vector3 respawnPosition = new Vector3(currentCheckpoint.x, currentCheckpoint.y, 0f);
+
+        transform.position = respawnPosition;
+        facingDirection = Vector3.right;
+        transform.forward = facingDirection;
+
+        verticalVelocity = -2f;
+        airStartY = respawnPosition.y;
+        wasGrounded = false;
+        isClimbing = false;
+        isDead = false;
+
+        cc.enabled = true;
+        controls.Player.Enable();
+
+        Debug.Log("<color=cyan>角色已在存档点复活。</color>");
+    }
 
     private void OnDrawGizmos()
     {
