@@ -2,10 +2,13 @@ using UnityEngine;
 using System.Collections.Generic;
 using System.Collections;
 using Skills; 
+using System;
 
 [RequireComponent(typeof(CharacterController))]
 public class PlayerCC : MonoBehaviour
 {
+    public event Action<SkillBase> SkillUnlocked;
+
     [Header("核心引用")]
     private CharacterController cc;
     private PlayerControls controls; 
@@ -131,6 +134,7 @@ public class PlayerCC : MonoBehaviour
         if (newSkill != null && !unlockedSkills.Contains(newSkill))
         {
             unlockedSkills.Add(newSkill);
+            SkillUnlocked?.Invoke(newSkill);
         }
     }
 

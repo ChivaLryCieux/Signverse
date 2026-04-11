@@ -7,20 +7,33 @@ public class UImanager : MonoBehaviour
 {
     public GameObject UI_Camera;
     public bool enableUI = false;
+    private SkillPauseUIController skillPauseUIController;
 
     // Start is called before the first frame update
     void Awake()
     {
-        UI_Camera.SetActive(enableUI);
+        skillPauseUIController = GetComponent<SkillPauseUIController>();
+        if (skillPauseUIController == null && UI_Camera != null)
+        {
+            UI_Camera.SetActive(enableUI);
+        }
     }
 
     // Update is called once per frame
     void Update()
     {
-        if(Keyboard.current.escapeKey.wasPressedThisFrame)
+        if (skillPauseUIController != null)
+        {
+            return;
+        }
+
+        if(Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)
         {
             enableUI =!enableUI;
-            UI_Camera.SetActive(enableUI);
+            if (UI_Camera != null)
+            {
+                UI_Camera.SetActive(enableUI);
+            }
         }
     }
 }

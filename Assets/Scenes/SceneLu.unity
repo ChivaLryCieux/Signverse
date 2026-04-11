@@ -306,7 +306,11 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 7380719804208909204, guid: c3163d5c400284f40b36aa00625fb3e5,
+        type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1263672943}
   m_SourcePrefab: {fileID: 100100000, guid: c3163d5c400284f40b36aa00625fb3e5, type: 3}
 --- !u!1 &1120940434
 GameObject:
@@ -480,6 +484,52 @@ MonoBehaviour:
     m_MipBias: 0
     m_VarianceClampScale: 0.9
     m_ContrastAdaptiveSharpening: 0
+--- !u!1 &1263672938 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 7380719804208909204, guid: c3163d5c400284f40b36aa00625fb3e5,
+    type: 3}
+  m_PrefabInstance: {fileID: 543585369}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &1263672943
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1263672938}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 05faf3fcf4d647d45a8ecb6bbeacb27a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  uiCameraRoot: {fileID: 1477334508}
+  player: {fileID: 0}
+  librarySlotsBottomToTop: []
+  equipSlots: []
+  skillEntriesBottomToTop: []
+  startingUnlockedCount: 1
+  boltLimit: 6
+  boltPanel: {fileID: 0}
+  boltText: {fileID: 0}
+  boltNormalColor: {r: 1, g: 1, b: 1, a: 1}
+  boltOverflowColor: {r: 1, g: 0, b: 0, a: 1}
+  boltBlinkSpeed: 5
+  detailPage: {fileID: 0}
+  detailTitleText: {fileID: 0}
+  detailCostText: {fileID: 0}
+  hoverClip: {fileID: 0}
+  selectClip: {fileID: 0}
+  equipSuccessClip: {fileID: 0}
+  detachClip: {fileID: 0}
+  sfxVolume: 1
+  pauseOnOpen: 1
+  unlockCursorOnOpen: 1
+--- !u!1 &1477334508 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 8121638552419687197, guid: c3163d5c400284f40b36aa00625fb3e5,
+    type: 3}
+  m_PrefabInstance: {fileID: 543585369}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1753371793
 GameObject:
   m_ObjectHideFlags: 0
