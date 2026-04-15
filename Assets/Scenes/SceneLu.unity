@@ -555,6 +555,39 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &302412442 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 5965382074034556226, guid: c3163d5c400284f40b36aa00625fb3e5,
+    type: 3}
+  m_PrefabInstance: {fileID: 543585369}
+  m_PrefabAsset: {fileID: 0}
+--- !u!95 &302412445 stripped
+Animator:
+  m_CorrespondingSourceObject: {fileID: 1108649788898643330, guid: c3163d5c400284f40b36aa00625fb3e5,
+    type: 3}
+  m_PrefabInstance: {fileID: 543585369}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &302412446
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 302412442}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 79b8e7ee609b69d4282534c87405ecc8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  animator: {fileID: 302412445}
+  isGrounded: 1
+  isMidAir: 0
+  isClimbing: 1
+  locomotion: 2
+  jumpHold: 0
+  firstJump: 0.5
+  jumpMaxTime: 0.5
+  jumpReleaseSpeed: 5
 --- !u!1001 &398905342
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -981,6 +1014,11 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 7024729150839131256, guid: c3163d5c400284f40b36aa00625fb3e5,
+        type: 3}
+      propertyPath: m_Enabled
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 7984628016834799895, guid: c3163d5c400284f40b36aa00625fb3e5,
         type: 3}
       propertyPath: m_Priority
@@ -994,6 +1032,10 @@ PrefabInstance:
         type: 3}
       insertIndex: -1
       addedObject: {fileID: 1263672943}
+    - targetCorrespondingSourceObject: {fileID: 5965382074034556226, guid: c3163d5c400284f40b36aa00625fb3e5,
+        type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 302412446}
   m_SourcePrefab: {fileID: 100100000, guid: c3163d5c400284f40b36aa00625fb3e5, type: 3}
 --- !u!1 &620705188
 GameObject:
