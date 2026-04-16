@@ -1,28 +1,48 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
+// Legacy component kept for prefab compatibility.
 public class SkillUI : MonoBehaviour
 {
     public GameObject highLight;
     public float pickScale = 1.1f;
 
+    private Vector3 baseScale = Vector3.one;
 
-    void OnMouseExit()
+    private void Awake()
     {
-        highLight.SetActive(false);
-        gameObject.transform.localScale = new Vector3(1f,1f,1f);
+        baseScale = transform.localScale;
     }
-    void OnEnable()
+
+    private void OnEnable()
     {
-        highLight.SetActive(false);
+        if (highLight != null)
+        {
+            highLight.SetActive(false);
+        }
+
+        transform.localScale = baseScale;
     }
-    void OnMouseEnter()
+
+    private void OnMouseEnter()
     {
-        highLight.SetActive(true);
+        if (highLight != null)
+        {
+            highLight.SetActive(true);
+        }
     }
-    void OnMouseDown()
+
+    private void OnMouseExit()
     {
-        gameObject.transform.localScale *= pickScale;
+        if (highLight != null)
+        {
+            highLight.SetActive(false);
+        }
+
+        transform.localScale = baseScale;
+    }
+
+    private void OnMouseDown()
+    {
+        transform.localScale = baseScale * pickScale;
     }
 }

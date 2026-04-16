@@ -2,633 +2,789 @@ using System;
 using System.Collections.Generic;
 using Skills;
 using UnityEngine;
-using UnityEngine.InputSystem;
 using UnityEngine.UI;
 
 public class SkillPauseUIController : MonoBehaviour
 {
-    public enum SelectionState
-    {
-        None,
-        LibrarySkillSelected,
-        EquippedSkillSelected
-    }
-
     [Serializable]
     public class SkillUiEntry
     {
+        [Tooltip("唯一键，不填会尝试使用 Skill.skillID")]
+        public string id;
+        public string displayName;
         public SkillBase skill;
-        public Sprite frontSprite;
-        public Sprite backSprite;
-        public int boltCost;
+        [Tooltip("用于主副技能组合解析，例如 m/j/d/c")]
+        public string comboCode = "m";
+        [Min(1)] public int boltCost = 1;
+
+        [Header("图标")]
+        public Sprite backpackSprite;
+        public Sprite backpackSelectedSprite;
+        public Sprite configSprite;
+
+        [Header("详情页")]
+        public Sprite detailSprite;
+        [TextArea(2, 5)] public string detailDescLine1;
+        [TextArea(2, 5)] public string detailDescLine2;
     }
 
-    [Header("Core References")]
-    [SerializeField] private GameObject uiCameraRoot;
+    [Serializable]
+    public class ConfigRow
+    {
+        public SkillScreenSlotView mainSlot;
+        public SkillScreenSlotView subSlot;
+    }
+
+    [Serializable]
+    public class ComboResult
+    {
+        public string mainCode = "m";
+        public string subCode = "m";
+        public SkillBase resultSkill;
+    }
+
+    [Header("基础结构")]
+    [SerializeField] private SkillScreenSlotView[] backpackSlots;
+    [SerializeField] private ConfigRow[] configRows;
+    [SerializeField] private SkillUiEntry[] skillEntries;
+
+    [Header("螺栓点数")]
+    [SerializeField, Min(1)] private int maxBolts = 3;
+    [SerializeField] private Image[] boltIcons;
+    [SerializeField] private Sprite boltConfiguredSprite;
+    [SerializeField] private Sprite boltEmptySprite;
+    [SerializeField] private Sprite boltWarningSprite;
+    [SerializeField] private float boltBlinkSpeed = 6f;
+
+    [Header("技能组合")]
+    [SerializeField] private ComboResult[] comboResults;
+
+    [Header("技能系统接入（可选）")]
     [SerializeField] private PlayerCC player;
-    [SerializeField] private Skill2DSlot[] librarySlotsBottomToTop;
-    [SerializeField] private Skill3DSlot[] equipSlots;
+    [SerializeField] private bool syncResolvedSkillsToPlayerUnlockedList = true;
+    [SerializeField] private bool replaceUnlockedListWithResolvedSkills = true;
 
-    [Header("Skill Data")]
-    [SerializeField] private SkillUiEntry[] skillEntriesBottomToTop;
-    [SerializeField] private int startingUnlockedCount = 1;
-    [SerializeField] private int boltLimit = 6;
-
-    [Header("Bolt UI")]
-    [SerializeField] private GameObject boltPanel;
-    [SerializeField] private Text boltText;
-    [SerializeField] private Color boltNormalColor = Color.white;
-    [SerializeField] private Color boltOverflowColor = Color.red;
-    [SerializeField] private float boltBlinkSpeed = 5f;
-
-    [Header("Detail UI")]
-    [SerializeField] private GameObject detailPage;
+    [Header("技能详情页（可选）")]
+    [SerializeField] private GameObject detailPanel;
+    [SerializeField] private Image detailImage;
     [SerializeField] private Text detailTitleText;
-    [SerializeField] private Text detailCostText;
+    [SerializeField] private Text detailDescLine1Text;
+    [SerializeField] private Text detailDescLine2Text;
 
-    [Header("Audio")]
-    [SerializeField] private AudioClip hoverClip;
-    [SerializeField] private AudioClip selectClip;
-    [SerializeField] private AudioClip equipSuccessClip;
-    [SerializeField] private AudioClip detachClip;
-    [SerializeField, Range(0f, 1f)] private float sfxVolume = 1f;
+    public event Action<IReadOnlyList<SkillBase>> ResolvedSkillsChanged;
 
-    [Header("Pause")]
-    [SerializeField] private bool pauseOnOpen = true;
-    [SerializeField] private bool unlockCursorOnOpen = true;
+    private class RowRuntime
+    {
+        public SkillUiEntry main;
+        public SkillUiEntry sub;
+    }
 
-    public bool IsOpen { get; private set; }
-    public SelectionState CurrentSelectionState { get; private set; }
-    public event Action<int, SkillBase> SkillEquipped;
-    public event Action<int, SkillBase> SkillDetached;
-
+    private readonly Dictionary<string, SkillUiEntry> entryById = new Dictionary<string, SkillUiEntry>();
     private readonly Dictionary<SkillBase, SkillUiEntry> entryBySkill = new Dictionary<SkillBase, SkillUiEntry>();
-    private readonly Dictionary<SkillBase, Skill2DSlot> librarySlotBySkill = new Dictionary<SkillBase, Skill2DSlot>();
-    private Skill2DSlot selectedLibrarySlot;
-    private Skill3DSlot selectedEquipSlot;
-    private float previousTimeScale = 1f;
-    private CursorLockMode previousLockMode;
-    private bool previousCursorVisible;
+    private readonly Dictionary<SkillScreenSlotView, SkillUiEntry> backpackEntryBySlot = new Dictionary<SkillScreenSlotView, SkillUiEntry>();
+    private readonly Dictionary<string, SkillScreenSlotView> backpackSlotById = new Dictionary<string, SkillScreenSlotView>();
+    private readonly Dictionary<string, SkillBase> comboLookup = new Dictionary<string, SkillBase>();
+    private readonly List<SkillBase> resolvedSkillsCache = new List<SkillBase>();
+
+    private RowRuntime[] rowRuntime;
+    private SkillUiEntry selectedEntry;
+    private SkillScreenSlotView selectedBackpackSlot;
+    private bool selectedEntryCanAfford;
 
     private void Awake()
     {
-        BuildEntryLookup();
-        RegisterSlots();
-        SetOpen(false, true);
-    }
-
-    private void OnEnable()
-    {
-        if (player != null)
-        {
-            player.SkillUnlocked += HandlePlayerSkillUnlocked;
-        }
-    }
-
-    private void Start()
-    {
-        SyncUnlockedSlots();
-    }
-
-    private void OnDisable()
-    {
-        if (player != null)
-        {
-            player.SkillUnlocked -= HandlePlayerSkillUnlocked;
-        }
-
-        if (IsOpen)
-        {
-            RestorePauseState();
-        }
+        BuildLookups();
+        InitializeSlots();
+        RebuildResolvedSkills();
+        RefreshSelectionVisual();
+        UpdateBoltBarVisual();
+        CloseDetailPanel();
     }
 
     private void Update()
     {
-        if (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)
+        if (detailPanel != null && detailPanel.activeSelf && Input.GetKeyDown(KeyCode.Escape))
         {
-            SetOpen(!IsOpen);
+            CloseDetailPanel();
+            return;
         }
 
-        UpdateBoltBlink();
+        if (selectedEntry != null)
+        {
+            UpdateBoltBarVisual();
+        }
     }
 
-    public void SetOpen(bool open)
+    public void OnSlotLeftClick(SkillScreenSlotView slot)
     {
-        SetOpen(open, false);
-    }
-
-    public void OnLibrarySlotHover(Skill2DSlot slot)
-    {
-        if (!CanInteractWithLibrarySlot(slot))
+        if (slot == null)
         {
             return;
         }
 
-        slot.SetHighlighted(true);
-        PlaySfx(hoverClip);
-        ShowBoltCost(slot.AssignedSkill);
-    }
-
-    public void OnLibrarySlotExit(Skill2DSlot slot)
-    {
-        if (slot != selectedLibrarySlot)
+        if (slot.Role == SkillScreenSlotView.SlotRole.Backpack)
         {
-            slot.SetHighlighted(false);
+            HandleBackpackClick(slot);
+            return;
         }
 
-        if (CurrentSelectionState != SelectionState.LibrarySkillSelected)
-        {
-            HideBoltCost();
-        }
+        HandleConfigLeftClick(slot);
     }
 
-    public void OnLibrarySlotClicked(Skill2DSlot slot)
+    public void OnSlotRightClick(SkillScreenSlotView slot)
     {
-        if (!CanInteractWithLibrarySlot(slot))
+        if (slot == null || slot.Role != SkillScreenSlotView.SlotRole.Config)
         {
             return;
         }
 
-        ClearEquipSelection();
-        SelectLibrarySlot(slot);
-        PlaySfx(selectClip);
+        HandleConfigRightClick(slot);
     }
 
-    public void OnEquipSlotHover(Skill3DSlot slot)
+    public void OnSlotMiddleClick(SkillScreenSlotView slot)
     {
-        if (!IsOpen)
+        if (slot == null || slot.Role != SkillScreenSlotView.SlotRole.Config)
         {
             return;
         }
 
-        if (CurrentSelectionState == SelectionState.LibrarySkillSelected || slot.HasSkill)
+        if (TryGetConfigEntry(slot, out SkillUiEntry entry))
         {
-            slot.SetHighlighted(true);
-            PlaySfx(hoverClip);
+            OpenDetailPanel(entry);
         }
     }
 
-    public void OnEquipSlotExit(Skill3DSlot slot)
+    public void OnSlotDoubleClick(SkillScreenSlotView slot)
     {
-        if (slot != selectedEquipSlot)
+        OnSlotMiddleClick(slot);
+    }
+
+    public void CloseDetailPanel()
+    {
+        if (detailPanel != null)
         {
-            slot.SetHighlighted(false);
+            detailPanel.SetActive(false);
         }
     }
 
-    public void OnEquipSlotLeftClicked(Skill3DSlot slot)
+    private void BuildLookups()
     {
-        if (!IsOpen)
+        entryById.Clear();
+        entryBySkill.Clear();
+        comboLookup.Clear();
+
+        if (skillEntries == null)
         {
-            return;
+            skillEntries = Array.Empty<SkillUiEntry>();
         }
 
-        if (CurrentSelectionState == SelectionState.LibrarySkillSelected)
+        for (int i = 0; i < skillEntries.Length; i++)
         {
-            TryEquipSelectedLibrarySkill(slot);
-            return;
-        }
-
-        if (!slot.HasSkill)
-        {
-            ClearSelection();
-            return;
-        }
-
-        if (selectedEquipSlot == slot)
-        {
-            OpenDetailPage(slot.EquippedSkill);
-            return;
-        }
-
-        ClearLibrarySelection(false);
-        SelectEquipSlot(slot);
-        PlaySfx(selectClip);
-    }
-
-    public void OnEquipSlotRightClicked(Skill3DSlot slot)
-    {
-        if (!IsOpen || !slot.HasSkill)
-        {
-            return;
-        }
-
-        SkillBase detachedSkill = slot.EquippedSkill;
-        slot.ClearSkill();
-        RestoreLibraryCard(detachedSkill);
-        SkillDetached?.Invoke(slot.Index, detachedSkill);
-
-        if (selectedEquipSlot == slot)
-        {
-            ClearEquipSelection();
-        }
-
-        CloseDetailPage();
-        PlaySfx(detachClip);
-    }
-
-    public void UnlockSkill(SkillBase skill)
-    {
-        if (skill == null)
-        {
-            return;
-        }
-
-        if (librarySlotsBottomToTop == null)
-        {
-            librarySlotsBottomToTop = new Skill2DSlot[0];
-        }
-
-        for (int i = 0; i < librarySlotsBottomToTop.Length; i++)
-        {
-            Skill2DSlot slot = librarySlotsBottomToTop[i];
-            if (slot == null)
+            SkillUiEntry entry = skillEntries[i];
+            if (entry == null)
             {
                 continue;
             }
 
-            if (slot.AssignedSkill == skill)
+            NormalizeEntry(entry);
+
+            if (!string.IsNullOrWhiteSpace(entry.id) && !entryById.ContainsKey(entry.id))
             {
-                slot.SetUnlocked(true);
-                return;
+                entryById.Add(entry.id, entry);
             }
 
-            if (slot.AssignedSkill == null)
-            {
-                AssignSlot(slot, skill);
-                slot.SetUnlocked(true);
-                return;
-            }
-        }
-    }
-
-    private void SetOpen(bool open, bool immediate)
-    {
-        if (IsOpen == open && !immediate)
-        {
-            return;
-        }
-
-        IsOpen = open;
-
-        if (uiCameraRoot != null)
-        {
-            uiCameraRoot.SetActive(open);
-        }
-
-        if (open)
-        {
-            previousTimeScale = Time.timeScale;
-            previousLockMode = Cursor.lockState;
-            previousCursorVisible = Cursor.visible;
-
-            if (pauseOnOpen)
-            {
-                Time.timeScale = 0f;
-            }
-
-            if (unlockCursorOnOpen)
-            {
-                Cursor.lockState = CursorLockMode.None;
-                Cursor.visible = true;
-            }
-
-            SyncUnlockedSlots();
-        }
-        else
-        {
-            ClearSelection();
-            CloseDetailPage();
-            HideBoltCost();
-            RestorePauseState();
-        }
-    }
-
-    private void RestorePauseState()
-    {
-        if (pauseOnOpen)
-        {
-            Time.timeScale = previousTimeScale <= 0f ? 1f : previousTimeScale;
-        }
-
-        if (unlockCursorOnOpen)
-        {
-            Cursor.lockState = previousLockMode;
-            Cursor.visible = previousCursorVisible;
-        }
-    }
-
-    private void BuildEntryLookup()
-    {
-        entryBySkill.Clear();
-
-        if (skillEntriesBottomToTop == null)
-        {
-            return;
-        }
-
-        foreach (SkillUiEntry entry in skillEntriesBottomToTop)
-        {
-            if (entry != null && entry.skill != null && !entryBySkill.ContainsKey(entry.skill))
+            if (entry.skill != null && !entryBySkill.ContainsKey(entry.skill))
             {
                 entryBySkill.Add(entry.skill, entry);
             }
         }
+
+        if (comboResults == null)
+        {
+            comboResults = Array.Empty<ComboResult>();
+        }
+
+        for (int i = 0; i < comboResults.Length; i++)
+        {
+            ComboResult combo = comboResults[i];
+            if (combo == null || combo.resultSkill == null)
+            {
+                continue;
+            }
+
+            string key = BuildComboKey(combo.mainCode, combo.subCode);
+            if (!comboLookup.ContainsKey(key))
+            {
+                comboLookup.Add(key, combo.resultSkill);
+            }
+        }
     }
 
-    private void RegisterSlots()
+    private void InitializeSlots()
     {
-        librarySlotBySkill.Clear();
+        backpackEntryBySlot.Clear();
+        backpackSlotById.Clear();
 
-        if (librarySlotsBottomToTop == null)
+        if (backpackSlots == null)
         {
-            librarySlotsBottomToTop = new Skill2DSlot[0];
+            backpackSlots = Array.Empty<SkillScreenSlotView>();
         }
 
-        if (equipSlots == null)
+        for (int i = 0; i < backpackSlots.Length; i++)
         {
-            equipSlots = new Skill3DSlot[0];
-        }
-
-        if (skillEntriesBottomToTop == null)
-        {
-            skillEntriesBottomToTop = new SkillUiEntry[0];
-        }
-
-        for (int i = 0; i < librarySlotsBottomToTop.Length; i++)
-        {
-            Skill2DSlot slot = librarySlotsBottomToTop[i];
+            SkillScreenSlotView slot = backpackSlots[i];
             if (slot == null)
             {
                 continue;
             }
 
-            slot.Initialize(this, i);
+            slot.Initialize(this, SkillScreenSlotView.SlotRole.Backpack, -1, SkillScreenSlotView.SlotColumn.Main);
 
-            SkillUiEntry entry = i < skillEntriesBottomToTop.Length ? skillEntriesBottomToTop[i] : null;
-            if (entry != null && entry.skill != null)
+            SkillUiEntry entry = i < skillEntries.Length ? skillEntries[i] : null;
+            if (entry == null)
             {
-                AssignSlot(slot, entry.skill);
+                slot.SetVisible(false);
+                continue;
             }
-            else
+
+            backpackEntryBySlot[slot] = entry;
+            if (!backpackSlotById.ContainsKey(entry.id))
             {
-                slot.SetUnlocked(false);
+                backpackSlotById.Add(entry.id, slot);
             }
+
+            slot.SetBackpackSprites(entry.backpackSprite, entry.backpackSelectedSprite);
+            slot.SetVisible(true);
+            slot.SetSelected(false);
         }
 
-        for (int i = 0; i < equipSlots.Length; i++)
+        if (configRows == null)
         {
-            if (equipSlots[i] != null)
-            {
-                equipSlots[i].Initialize(this, i);
-                equipSlots[i].ClearSkill();
-            }
-        }
-    }
-
-    private void AssignSlot(Skill2DSlot slot, SkillBase skill)
-    {
-        SkillUiEntry entry = GetEntry(skill);
-        slot.Assign(skill, entry != null ? entry.frontSprite : null, entry != null ? entry.backSprite : null);
-
-        if (skill != null && !librarySlotBySkill.ContainsKey(skill))
-        {
-            librarySlotBySkill.Add(skill, slot);
-        }
-    }
-
-    private void SyncUnlockedSlots()
-    {
-        if (librarySlotsBottomToTop == null)
-        {
-            librarySlotsBottomToTop = new Skill2DSlot[0];
+            configRows = Array.Empty<ConfigRow>();
         }
 
-        int initialCount = Mathf.Clamp(startingUnlockedCount, 0, librarySlotsBottomToTop.Length);
-        HashSet<SkillBase> unlockedSkills = BuildUnlockedSkillSet();
+        rowRuntime = new RowRuntime[configRows.Length];
 
-        for (int i = 0; i < librarySlotsBottomToTop.Length; i++)
+        for (int i = 0; i < configRows.Length; i++)
         {
-            Skill2DSlot slot = librarySlotsBottomToTop[i];
-            if (slot == null)
+            rowRuntime[i] = new RowRuntime();
+            ConfigRow row = configRows[i];
+            if (row == null)
             {
                 continue;
             }
 
-            bool isInitiallyUnlocked = i < initialCount;
-            bool isPlayerUnlocked = slot.AssignedSkill != null && unlockedSkills.Contains(slot.AssignedSkill);
-            slot.SetUnlocked((isInitiallyUnlocked || isPlayerUnlocked) && slot.AssignedSkill != null);
-        }
-    }
-
-    private HashSet<SkillBase> BuildUnlockedSkillSet()
-    {
-        HashSet<SkillBase> unlockedSkills = new HashSet<SkillBase>();
-
-        if (player == null)
-        {
-            return unlockedSkills;
-        }
-
-        foreach (SkillBase skill in player.unlockedSkills)
-        {
-            if (skill != null)
+            if (row.mainSlot != null)
             {
-                unlockedSkills.Add(skill);
+                row.mainSlot.Initialize(this, SkillScreenSlotView.SlotRole.Config, i, SkillScreenSlotView.SlotColumn.Main);
+                row.mainSlot.ClearConfigSprite();
+                row.mainSlot.SetSelected(false);
+            }
+
+            if (row.subSlot != null)
+            {
+                row.subSlot.Initialize(this, SkillScreenSlotView.SlotRole.Config, i, SkillScreenSlotView.SlotColumn.Sub);
+                row.subSlot.ClearConfigSprite();
+                row.subSlot.SetSelected(false);
             }
         }
-
-        return unlockedSkills;
     }
 
-    private bool CanInteractWithLibrarySlot(Skill2DSlot slot)
+    private void HandleBackpackClick(SkillScreenSlotView slot)
     {
-        return IsOpen && slot != null && slot.IsUnlocked && slot.IsFaceUp && slot.AssignedSkill != null;
-    }
+        if (!backpackEntryBySlot.TryGetValue(slot, out SkillUiEntry entry))
+        {
+            return;
+        }
 
-    private void SelectLibrarySlot(Skill2DSlot slot)
-    {
-        ClearLibrarySelection(false);
-        selectedLibrarySlot = slot;
-        CurrentSelectionState = SelectionState.LibrarySkillSelected;
-        slot.SetSelected(true);
-        ShowBoltCost(slot.AssignedSkill);
-    }
+        if (!slot.gameObject.activeInHierarchy)
+        {
+            return;
+        }
 
-    private void SelectEquipSlot(Skill3DSlot slot)
-    {
-        ClearEquipSelection();
-        selectedEquipSlot = slot;
-        CurrentSelectionState = SelectionState.EquippedSkillSelected;
-        slot.SetSelected(true);
-        ShowBoltCost(slot.EquippedSkill);
-    }
-
-    private void TryEquipSelectedLibrarySkill(Skill3DSlot targetSlot)
-    {
-        if (selectedLibrarySlot == null || targetSlot == null)
+        if (selectedEntry == entry)
         {
             ClearSelection();
             return;
         }
 
-        if (targetSlot.HasSkill)
-        {
-            PlaySfx(selectClip);
-            ClearLibrarySelection(true);
-            return;
-        }
+        selectedEntry = entry;
+        selectedBackpackSlot = slot;
+        selectedEntryCanAfford = GetUsedBoltCount() + Mathf.Max(1, selectedEntry.boltCost) <= maxBolts;
 
-        SkillBase skill = selectedLibrarySlot.AssignedSkill;
-        targetSlot.SetSkill(skill);
-        SkillEquipped?.Invoke(targetSlot.Index, skill);
-        selectedLibrarySlot.SetFaceUp(false);
-        selectedLibrarySlot.SetSelected(false);
-        selectedLibrarySlot = null;
-        CurrentSelectionState = SelectionState.None;
-        HideBoltCost();
-        PlaySfx(equipSuccessClip);
+        RefreshSelectionVisual();
+        UpdateBoltBarVisual();
     }
 
-    private void RestoreLibraryCard(SkillBase skill)
+    private void HandleConfigLeftClick(SkillScreenSlotView slot)
     {
-        if (skill == null)
+        if (selectedEntry == null)
         {
             return;
         }
 
-        if (librarySlotBySkill.TryGetValue(skill, out Skill2DSlot slot) && slot != null)
+        if (TryGetConfigEntry(slot, out _))
         {
-            slot.SetUnlocked(true);
-            slot.SetFaceUp(true);
+            ClearSelection();
+            return;
+        }
+
+        if (!selectedEntryCanAfford)
+        {
+            ClearSelection();
+            return;
+        }
+
+        if (!TryGetRow(slot.RowIndex, out RowRuntime rowRuntimeData))
+        {
+            ClearSelection();
+            return;
+        }
+
+        if (slot.Column == SkillScreenSlotView.SlotColumn.Sub && rowRuntimeData.main == null)
+        {
+            ClearSelection();
+            return;
+        }
+
+        AssignToConfig(slot.RowIndex, slot.Column, selectedEntry);
+        SetBackpackVisible(selectedEntry, false);
+
+        ClearSelection();
+        RebuildResolvedSkills();
+        UpdateBoltBarVisual();
+    }
+
+    private void HandleConfigRightClick(SkillScreenSlotView slot)
+    {
+        if (!TryGetRow(slot.RowIndex, out RowRuntime rowData))
+        {
+            return;
+        }
+
+        if (slot.Column == SkillScreenSlotView.SlotColumn.Main)
+        {
+            if (rowData.main == null)
+            {
+                return;
+            }
+
+            SkillUiEntry removedMain = rowData.main;
+            SkillUiEntry removedSub = rowData.sub;
+
+            rowData.main = null;
+            rowData.sub = null;
+
+            SetConfigVisual(slot.RowIndex, SkillScreenSlotView.SlotColumn.Main, null);
+            SetConfigVisual(slot.RowIndex, SkillScreenSlotView.SlotColumn.Sub, null);
+
+            SetBackpackVisible(removedMain, true);
+            if (removedSub != null)
+            {
+                SetBackpackVisible(removedSub, true);
+            }
+        }
+        else
+        {
+            if (rowData.sub == null)
+            {
+                return;
+            }
+
+            SkillUiEntry removedSub = rowData.sub;
+            rowData.sub = null;
+            SetConfigVisual(slot.RowIndex, SkillScreenSlotView.SlotColumn.Sub, null);
+            SetBackpackVisible(removedSub, true);
+        }
+
+        ClearSelection();
+        RebuildResolvedSkills();
+        UpdateBoltBarVisual();
+    }
+
+    private void AssignToConfig(int rowIndex, SkillScreenSlotView.SlotColumn column, SkillUiEntry entry)
+    {
+        if (!TryGetRow(rowIndex, out RowRuntime rowData) || entry == null)
+        {
+            return;
+        }
+
+        if (column == SkillScreenSlotView.SlotColumn.Main)
+        {
+            rowData.main = entry;
+            SetConfigVisual(rowIndex, SkillScreenSlotView.SlotColumn.Main, entry);
+            return;
+        }
+
+        rowData.sub = entry;
+        SetConfigVisual(rowIndex, SkillScreenSlotView.SlotColumn.Sub, entry);
+    }
+
+    private void SetConfigVisual(int rowIndex, SkillScreenSlotView.SlotColumn column, SkillUiEntry entry)
+    {
+        SkillScreenSlotView slot = GetConfigSlot(rowIndex, column);
+        if (slot == null)
+        {
+            return;
+        }
+
+        if (entry == null)
+        {
+            slot.ClearConfigSprite();
+            return;
+        }
+
+        slot.SetConfigSprite(entry.id, entry.configSprite);
+    }
+
+    private void SetBackpackVisible(SkillUiEntry entry, bool visible)
+    {
+        if (entry == null)
+        {
+            return;
+        }
+
+        if (backpackSlotById.TryGetValue(entry.id, out SkillScreenSlotView slot) && slot != null)
+        {
+            slot.SetVisible(visible);
             slot.SetSelected(false);
+        }
+    }
+
+    private bool TryGetConfigEntry(SkillScreenSlotView slot, out SkillUiEntry entry)
+    {
+        entry = null;
+
+        if (slot == null || slot.Role != SkillScreenSlotView.SlotRole.Config)
+        {
+            return false;
+        }
+
+        if (!TryGetRow(slot.RowIndex, out RowRuntime rowData))
+        {
+            return false;
+        }
+
+        entry = slot.Column == SkillScreenSlotView.SlotColumn.Main ? rowData.main : rowData.sub;
+        return entry != null;
+    }
+
+    private bool TryGetRow(int rowIndex, out RowRuntime rowData)
+    {
+        rowData = null;
+        if (rowRuntime == null || rowIndex < 0 || rowIndex >= rowRuntime.Length)
+        {
+            return false;
+        }
+
+        rowData = rowRuntime[rowIndex];
+        return rowData != null;
+    }
+
+    private SkillScreenSlotView GetConfigSlot(int rowIndex, SkillScreenSlotView.SlotColumn column)
+    {
+        if (configRows == null || rowIndex < 0 || rowIndex >= configRows.Length)
+        {
+            return null;
+        }
+
+        ConfigRow row = configRows[rowIndex];
+        if (row == null)
+        {
+            return null;
+        }
+
+        return column == SkillScreenSlotView.SlotColumn.Main ? row.mainSlot : row.subSlot;
+    }
+
+    private void RebuildResolvedSkills()
+    {
+        resolvedSkillsCache.Clear();
+
+        if (rowRuntime != null)
+        {
+            for (int i = 0; i < rowRuntime.Length; i++)
+            {
+                RowRuntime row = rowRuntime[i];
+                if (row == null || row.main == null)
+                {
+                    continue;
+                }
+
+                SkillUiEntry subEntry = row.sub != null ? row.sub : row.main;
+                SkillBase resolved = ResolveComboSkill(row.main, subEntry);
+                if (resolved != null && !resolvedSkillsCache.Contains(resolved))
+                {
+                    resolvedSkillsCache.Add(resolved);
+                }
+            }
+        }
+
+        ApplyResolvedSkillsToPlayer();
+        ResolvedSkillsChanged?.Invoke(resolvedSkillsCache);
+    }
+
+    private SkillBase ResolveComboSkill(SkillUiEntry mainEntry, SkillUiEntry subEntry)
+    {
+        if (mainEntry == null)
+        {
+            return null;
+        }
+
+        string mainCode = string.IsNullOrWhiteSpace(mainEntry.comboCode) ? "m" : mainEntry.comboCode;
+        string subCode = subEntry != null && !string.IsNullOrWhiteSpace(subEntry.comboCode)
+            ? subEntry.comboCode
+            : mainCode;
+
+        string comboKey = BuildComboKey(mainCode, subCode);
+        if (comboLookup.TryGetValue(comboKey, out SkillBase mappedSkill) && mappedSkill != null)
+        {
+            return mappedSkill;
+        }
+
+        return mainEntry.skill;
+    }
+
+    private void ApplyResolvedSkillsToPlayer()
+    {
+        if (!syncResolvedSkillsToPlayerUnlockedList || player == null)
+        {
+            return;
+        }
+
+        if (player.unlockedSkills == null)
+        {
+            player.unlockedSkills = new List<SkillBase>();
+        }
+
+        if (replaceUnlockedListWithResolvedSkills)
+        {
+            player.unlockedSkills.Clear();
+            for (int i = 0; i < resolvedSkillsCache.Count; i++)
+            {
+                SkillBase skill = resolvedSkillsCache[i];
+                if (skill != null)
+                {
+                    player.unlockedSkills.Add(skill);
+                }
+            }
+
+            return;
+        }
+
+        for (int i = 0; i < resolvedSkillsCache.Count; i++)
+        {
+            SkillBase skill = resolvedSkillsCache[i];
+            if (skill != null && !player.unlockedSkills.Contains(skill))
+            {
+                player.unlockedSkills.Add(skill);
+            }
+        }
+    }
+
+    private int GetUsedBoltCount()
+    {
+        int used = 0;
+
+        if (rowRuntime == null)
+        {
+            return 0;
+        }
+
+        for (int i = 0; i < rowRuntime.Length; i++)
+        {
+            RowRuntime row = rowRuntime[i];
+            if (row == null)
+            {
+                continue;
+            }
+
+            if (row.main != null)
+            {
+                used += Mathf.Max(1, row.main.boltCost);
+            }
+
+            if (row.sub != null)
+            {
+                used += Mathf.Max(1, row.sub.boltCost);
+            }
+        }
+
+        return used;
+    }
+
+    private void UpdateBoltBarVisual()
+    {
+        if (boltIcons == null || boltIcons.Length == 0)
+        {
+            return;
+        }
+
+        int used = GetUsedBoltCount();
+        float blinkAlpha = 0.45f + Mathf.Abs(Mathf.Sin(Time.unscaledTime * boltBlinkSpeed)) * 0.55f;
+
+        if (selectedEntry == null)
+        {
+            for (int i = 0; i < boltIcons.Length; i++)
+            {
+                SetBoltIconVisual(i, i < used ? boltConfiguredSprite : boltEmptySprite, 1f);
+            }
+
+            return;
+        }
+
+        int selectedCost = Mathf.Max(1, selectedEntry.boltCost);
+
+        if (!selectedEntryCanAfford)
+        {
+            int warningCount = Mathf.Min(selectedCost, boltIcons.Length);
+            for (int i = 0; i < boltIcons.Length; i++)
+            {
+                if (i < warningCount)
+                {
+                    SetBoltIconVisual(i, boltWarningSprite, blinkAlpha);
+                }
+                else
+                {
+                    SetBoltIconVisual(i, boltEmptySprite, 1f);
+                }
+            }
+
+            return;
+        }
+
+        int previewEnd = used + selectedCost;
+        for (int i = 0; i < boltIcons.Length; i++)
+        {
+            if (i < used)
+            {
+                SetBoltIconVisual(i, boltConfiguredSprite, 1f);
+                continue;
+            }
+
+            if (i < previewEnd)
+            {
+                SetBoltIconVisual(i, boltConfiguredSprite, blinkAlpha);
+                continue;
+            }
+
+            SetBoltIconVisual(i, boltEmptySprite, 1f);
+        }
+    }
+
+    private void SetBoltIconVisual(int index, Sprite sprite, float alpha)
+    {
+        Image image = boltIcons[index];
+        if (image == null)
+        {
+            return;
+        }
+
+        if (sprite != null)
+        {
+            image.sprite = sprite;
+        }
+
+        Color color = image.color;
+        color.a = alpha;
+        image.color = color;
+    }
+
+    private void OpenDetailPanel(SkillUiEntry entry)
+    {
+        if (entry == null)
+        {
+            return;
+        }
+
+        if (detailPanel != null)
+        {
+            detailPanel.SetActive(true);
+        }
+
+        if (detailImage != null)
+        {
+            detailImage.sprite = entry.detailSprite != null ? entry.detailSprite : entry.configSprite;
+        }
+
+        if (detailTitleText != null)
+        {
+            detailTitleText.text = !string.IsNullOrWhiteSpace(entry.displayName)
+                ? entry.displayName
+                : (entry.skill != null ? entry.skill.skillName : entry.id);
+        }
+
+        if (detailDescLine1Text != null)
+        {
+            detailDescLine1Text.text = entry.detailDescLine1;
+        }
+
+        if (detailDescLine2Text != null)
+        {
+            detailDescLine2Text.text = entry.detailDescLine2;
+        }
+    }
+
+    private void RefreshSelectionVisual()
+    {
+        if (backpackSlots == null)
+        {
+            return;
+        }
+
+        for (int i = 0; i < backpackSlots.Length; i++)
+        {
+            SkillScreenSlotView slot = backpackSlots[i];
+            if (slot == null)
+            {
+                continue;
+            }
+
+            bool selected = slot == selectedBackpackSlot && selectedEntry != null;
+            slot.SetSelected(selected);
         }
     }
 
     private void ClearSelection()
     {
-        ClearLibrarySelection(false);
-        ClearEquipSelection();
-        CurrentSelectionState = SelectionState.None;
+        selectedEntry = null;
+        selectedBackpackSlot = null;
+        selectedEntryCanAfford = false;
+        RefreshSelectionVisual();
+        UpdateBoltBarVisual();
     }
 
-    private void ClearLibrarySelection(bool shrinkOnly)
+    private void NormalizeEntry(SkillUiEntry entry)
     {
-        if (selectedLibrarySlot != null)
-        {
-            selectedLibrarySlot.SetSelected(false);
-            selectedLibrarySlot.SetHighlighted(false);
-            selectedLibrarySlot = null;
-        }
-
-        if (!shrinkOnly && CurrentSelectionState == SelectionState.LibrarySkillSelected)
-        {
-            CurrentSelectionState = SelectionState.None;
-        }
-    }
-
-    private void ClearEquipSelection()
-    {
-        if (selectedEquipSlot != null)
-        {
-            selectedEquipSlot.SetSelected(false);
-            selectedEquipSlot.SetHighlighted(false);
-            selectedEquipSlot = null;
-        }
-
-        if (CurrentSelectionState == SelectionState.EquippedSkillSelected)
-        {
-            CurrentSelectionState = SelectionState.None;
-        }
-    }
-
-    private void ShowBoltCost(SkillBase skill)
-    {
-        SkillUiEntry entry = GetEntry(skill);
-
-        if (boltPanel != null)
-        {
-            boltPanel.SetActive(entry != null);
-        }
-
-        if (boltText != null && entry != null)
-        {
-            boltText.text = entry.boltCost.ToString();
-            boltText.color = entry.boltCost > boltLimit ? boltOverflowColor : boltNormalColor;
-        }
-    }
-
-    private void HideBoltCost()
-    {
-        if (boltPanel != null)
-        {
-            boltPanel.SetActive(false);
-        }
-    }
-
-    private void UpdateBoltBlink()
-    {
-        if (!IsOpen || boltText == null || boltPanel == null || !boltPanel.activeSelf)
+        if (entry == null)
         {
             return;
         }
 
-        Color baseColor = boltText.color;
-        float alpha = 0.45f + Mathf.Abs(Mathf.Sin(Time.unscaledTime * boltBlinkSpeed)) * 0.55f;
-        boltText.color = new Color(baseColor.r, baseColor.g, baseColor.b, alpha);
+        if (string.IsNullOrWhiteSpace(entry.id))
+        {
+            if (entry.skill != null && !string.IsNullOrWhiteSpace(entry.skill.skillID))
+            {
+                entry.id = entry.skill.skillID.Trim();
+            }
+            else
+            {
+                entry.id = Guid.NewGuid().ToString("N");
+            }
+        }
+        else
+        {
+            entry.id = entry.id.Trim();
+        }
+
+        entry.comboCode = string.IsNullOrWhiteSpace(entry.comboCode) ? "m" : entry.comboCode.Trim().ToLowerInvariant();
+        entry.boltCost = Mathf.Max(1, entry.boltCost);
     }
 
-    private void OpenDetailPage(SkillBase skill)
+    private static string BuildComboKey(string mainCode, string subCode)
     {
-        SkillUiEntry entry = GetEntry(skill);
-
-        if (detailPage != null)
-        {
-            detailPage.SetActive(true);
-        }
-
-        if (detailTitleText != null)
-        {
-            detailTitleText.text = skill != null ? skill.skillName : string.Empty;
-        }
-
-        if (detailCostText != null)
-        {
-            detailCostText.text = entry != null ? entry.boltCost.ToString() : string.Empty;
-        }
-    }
-
-    private void CloseDetailPage()
-    {
-        if (detailPage != null)
-        {
-            detailPage.SetActive(false);
-        }
-    }
-
-    private SkillUiEntry GetEntry(SkillBase skill)
-    {
-        if (skill != null && entryBySkill.TryGetValue(skill, out SkillUiEntry entry))
-        {
-            return entry;
-        }
-
-        return null;
-    }
-
-    private void HandlePlayerSkillUnlocked(SkillBase skill)
-    {
-        UnlockSkill(skill);
-    }
-
-    private void PlaySfx(AudioClip clip)
-    {
-        if (clip == null || AudioManager.Instance == null)
-        {
-            return;
-        }
-
-        AudioManager.Instance.PlaySFX(clip, sfxVolume);
+        string m = string.IsNullOrWhiteSpace(mainCode) ? "m" : mainCode.Trim().ToLowerInvariant();
+        string s = string.IsNullOrWhiteSpace(subCode) ? m : subCode.Trim().ToLowerInvariant();
+        return m + "|" + s;
     }
 }
