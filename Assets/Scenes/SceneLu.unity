@@ -580,14 +580,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   animator: {fileID: 302412445}
+  groundDetect: 0.5
   isGrounded: 1
   isMidAir: 0
-  isClimbing: 1
+  isClimbing: 0
   locomotion: 2
-  jumpHold: 0
-  firstJump: 0.5
-  jumpMaxTime: 0.5
-  jumpReleaseSpeed: 5
+  jumpChangeRate: 5
 --- !u!1001 &398905342
 PrefabInstance:
   m_ObjectHideFlags: 0

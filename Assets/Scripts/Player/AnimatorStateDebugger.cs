@@ -12,8 +12,10 @@ public class AnimatorStateDebugger : MonoBehaviour
     float jumpAxis;
     bool dashPressed;
     bool hidePressed;
+    [Header("环境检测")]
+    public float groundDetect = 0.5f;
 
-    [Header("Locomotion Select (Inspector Debug)")]
+    [Header("状态检测判断")]
     public bool isGrounded = true;
     public bool isMidAir = false;
     public bool isClimbing = false;
@@ -28,15 +30,11 @@ public class AnimatorStateDebugger : MonoBehaviour
     public Locomotion locomotion;
 
     [Header("Jump Settings")]
-    public float jumpHold = 0f;
+    public float jumpChangeRate = 5f;
 
-    public float firstJump = 0.5f;
-
-    public float jumpMaxTime = 0.5f;
-
-    public float jumpReleaseSpeed = 5f;
-
-    float jumpTimer = 0f;
+    float jumpHold = 0f;
+    bool jumpRising = false;
+    bool jumpFalling = false;
 
     void Awake()
     {
@@ -55,8 +53,8 @@ public class AnimatorStateDebugger : MonoBehaviour
 
     void Update()
     {
-        EasyLocomotionSet();
-        //HandleLocomotionSelection();
+        SwitchLocomotion();
+  
 
         HandleInput();
 
@@ -66,37 +64,36 @@ public class AnimatorStateDebugger : MonoBehaviour
     //========================
     // Locomotion选择
     //========================
-    void EasyLocomotionSet()
+    void SwitchLocomotion()
+{
+    // 1️⃣ 默认状态：Ground
+    locomotion = Locomotion.isGrounded;
+
+    // 2️⃣ 如果有垂直输入（爬梯等）
+    if (Mathf.Abs(move.y) > 0.01f)
     {
-        if(move.x > 0) locomotion = Locomotion.isGrounded;
-        if(move.y > 0) locomotion = Locomotion.isClimbing;
-        
+        locomotion = Locomotion.isClimbing;
+        return;
     }
-    void HandleLocomotionSelection()
+
+    // 3️⃣ 向下发射射线检测地面
+    RaycastHit hit;
+
+    if (Physics.Raycast(transform.position , Vector3.down, out hit, groundDetect))
     {
-        int trueCount = 0;
-
-        if (isGrounded) trueCount++;
-        if (isMidAir) trueCount++;
-        if (isClimbing) trueCount++;
-
-        // 保证始终只有一个为true
-        if (trueCount > 1)
+        // 检测到地面，且没有垂直输入
+        if (Mathf.Abs(move.y) <= 0.01f)
         {
-            isGrounded = true;
-            isMidAir = false;
-            isClimbing = true;
-        }
-
-        if (isGrounded)
             locomotion = Locomotion.isGrounded;
-
-        if (isMidAir)
-            locomotion = Locomotion.isMidAir;
-
-        if (isClimbing)
-            locomotion = Locomotion.isClimbing;
+        }
     }
+    else
+    {
+        // 没检测到地面 → 在空中
+        locomotion = Locomotion.isMidAir;
+    }
+}
+  
 
     //========================
     // 输入获取
@@ -198,61 +195,43 @@ public class AnimatorStateDebugger : MonoBehaviour
     //========================
 
     void HandleJump()
+{
+    // 按下Jump，开始上升
+    if (jumpAxis > 0f  && !jumpRising && !jumpFalling)
     {
-        if (locomotion != Locomotion.isGrounded)
-        {
-            jumpHold = Mathf.Lerp(
-                jumpHold,
-                0f,
-                jumpReleaseSpeed * Time.deltaTime
-            );
-
-            animator.SetFloat("Jump", jumpHold);
-            return;
-        }
-
-        bool jumpHeld = jumpAxis > 0.01f;
-
-        // 按下跳跃
-        if (jumpHeld)
-        {
-            if (jumpTimer == 0f)
-            {
-                jumpHold = firstJump;
-            }
-
-            jumpTimer += Time.deltaTime;
-
-            float t = jumpTimer / jumpMaxTime;
-
-            jumpHold = Mathf.Lerp(
-                firstJump,
-                1f,
-                t
-            );
-
-            if (jumpHold >= 1f)
-            {
-                jumpHold = Mathf.Lerp(
-                    jumpHold,
-                    0f,
-                    jumpReleaseSpeed * Time.deltaTime
-                );
-            }
-        }
-        else
-        {
-            jumpTimer = 0f;
-
-            jumpHold = Mathf.Lerp(
-                jumpHold,
-                0f,
-                jumpReleaseSpeed * Time.deltaTime
-            );
-        }
-
-        animator.SetFloat("Jump", jumpHold);
+        jumpRising = true;
     }
+
+    // 上升阶段：0 → 1
+    if (jumpRising)
+    {
+        jumpHold += jumpChangeRate * Time.deltaTime;
+
+        if (jumpHold >= 1f)
+        {
+            jumpHold = 1f;
+
+            jumpRising = false;
+            jumpFalling = true;
+        }
+    }
+
+    // 下降阶段：1 → 0
+    if (jumpFalling)
+    {
+        jumpHold -= jumpChangeRate * Time.deltaTime;
+
+        if (jumpHold <= 0f)
+        {
+            jumpHold = 0f;
+
+            jumpFalling = false;
+        }
+    }
+
+    // 持续更新 Animator
+    animator.SetFloat("Jump", jumpHold);
+}
 
     //========================
     // Dash
