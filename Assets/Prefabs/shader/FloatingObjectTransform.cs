@@ -8,12 +8,12 @@ public class FloatingObjectTransform : MonoBehaviour
 
     [Header("随机化")]
     public bool randomizeSpeed = true;
-    public float minSpeed = 0.7f;
-    public float maxSpeed = 1.3f;
+    public float minSpeed = 0.9f;
+    public float maxSpeed = 1.5f;
     public Vector2 speedRange;
     public bool randomizeAmplitude = true;
-    public float minAmplitude = 0.2f;
-    public float maxAmplitude = 0.5f;
+    public float minAmplitude = 0.3f;
+    public float maxAmplitude = 0.7f;
     public Vector2 amplitudeRange;
 
     [Header("相位偏移")]
