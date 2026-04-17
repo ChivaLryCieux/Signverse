@@ -9,12 +9,14 @@ public class CameraSwitch : MonoBehaviour
     CinemachineVirtualCamera localCamera;
     public CinemachineVirtualCamera playerForwardCamera;
     public CinemachineVirtualCamera playerBackwardCamera;
+    public CinemachineVirtualCamera playerCloseShotCamera;
 
     public enum TargetSwitchCamera
     {
         localCamera,
         playerForwardCamera,
-        playerBackwardCamera
+        playerBackwardCamera,
+        playerCloseShotCamera
     }
     public TargetSwitchCamera targetSwitchCamera;
 
@@ -32,6 +34,7 @@ public class CameraSwitch : MonoBehaviour
         localCamera.Priority = inactivePriority;
         playerForwardCamera.Priority = inactivePriority;
         playerBackwardCamera.Priority = inactivePriority;
+        playerCloseShotCamera.Priority = inactivePriority;
     }
     void OnTriggerEnter(Collider other)
     {
@@ -62,6 +65,14 @@ public class CameraSwitch : MonoBehaviour
             }
             
         }
+        if(targetSwitchCamera == TargetSwitchCamera.playerCloseShotCamera)
+        {
+            if (other.CompareTag(playerTag))
+            {
+                playerCloseShotCamera.Priority = activePriority;
+            }
+            
+        }
     }
     void OnTriggerExit(Collider other)
     {
@@ -70,6 +81,7 @@ public class CameraSwitch : MonoBehaviour
             localCamera.Priority = inactivePriority;
             playerForwardCamera.Priority = inactivePriority;
             playerBackwardCamera.Priority = inactivePriority;
+            playerCloseShotCamera.Priority = inactivePriority;
         }
     }
 }
