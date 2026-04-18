@@ -63,7 +63,6 @@ namespace Skills
                 dashDirection = Vector3.left;
                 return true;
             }
-
             dashDirection = Vector3.zero;
             return false;
         }
