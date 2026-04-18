@@ -245,7 +245,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
-  m_RaycastTarget: 1
+  m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
@@ -365,6 +365,20 @@ MonoBehaviour:
   detailTitleText: {fileID: 0}
   detailDescLine1Text: {fileID: 0}
   detailDescLine2Text: {fileID: 0}
+  selectedEntry:
+    id: 
+    displayName: 
+    skill: {fileID: 0}
+    comboCode: m
+    boltCost: 1
+    backpackSprite: {fileID: 0}
+    backpackSelectedSprite: {fileID: 0}
+    configSprite: {fileID: 0}
+    detailSprite: {fileID: 0}
+    detailDescLine1: 
+    detailDescLine2: 
+  selectedBackpackSlot: {fileID: 0}
+  selectedEntryCanAfford: 0
 --- !u!1 &370842523
 GameObject:
   m_ObjectHideFlags: 0
@@ -2135,7 +2149,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
-  m_RaycastTarget: 1
+  m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:

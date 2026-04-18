@@ -23,10 +23,17 @@ public class PickupUISlotView : MonoBehaviour, IPointerClickHandler, IPointerEnt
     private Vector3 baseScale = Vector3.one;
     private bool initialized;
     private bool hasItem;
+    private bool hasBaseScale;
 
     private void Awake()
     {
-        baseScale = transform.localScale;
+        if (iconImage == null)
+        {
+            iconImage = GetComponent<Image>();
+        }
+
+        CacheBaseScale();
+        EnsureRaycastTarget();
         SetHighlight(false);
     }
 
@@ -38,8 +45,10 @@ public class PickupUISlotView : MonoBehaviour, IPointerClickHandler, IPointerEnt
         equippedIndex = -1;
         initialized = true;
         hasItem = true;
-        baseScale = transform.localScale;
 
+        CacheBaseScale();
+        transform.localScale = baseScale;
+        EnsureRaycastTarget();
         SetIcon(icon);
 
         SetHighlight(false);
@@ -52,8 +61,10 @@ public class PickupUISlotView : MonoBehaviour, IPointerClickHandler, IPointerEnt
         equippedIndex = index;
         initialized = true;
         hasItem = false;
-        baseScale = transform.localScale;
 
+        CacheBaseScale();
+        transform.localScale = baseScale;
+        EnsureRaycastTarget();
         ClearIcon();
         SetHighlight(false);
     }
@@ -73,7 +84,10 @@ public class PickupUISlotView : MonoBehaviour, IPointerClickHandler, IPointerEnt
         if (iconImage != null)
         {
             iconImage.sprite = emptySprite;
-            iconImage.enabled = emptySprite != null;
+            iconImage.enabled = true;
+            Color color = iconImage.color;
+            color.a = emptySprite != null ? 1f : 0f;
+            iconImage.color = color;
         }
 
         SetHighlight(false);
@@ -120,7 +134,29 @@ public class PickupUISlotView : MonoBehaviour, IPointerClickHandler, IPointerEnt
         }
 
         iconImage.sprite = icon;
-        iconImage.enabled = icon != null;
+        iconImage.enabled = true;
+        Color color = iconImage.color;
+        color.a = icon != null ? 1f : 0f;
+        iconImage.color = color;
+    }
+
+    private void EnsureRaycastTarget()
+    {
+        if (iconImage != null)
+        {
+            iconImage.raycastTarget = true;
+        }
+    }
+
+    private void CacheBaseScale()
+    {
+        if (hasBaseScale)
+        {
+            return;
+        }
+
+        baseScale = transform.localScale;
+        hasBaseScale = true;
     }
 
     private void SetHighlight(bool visible)
