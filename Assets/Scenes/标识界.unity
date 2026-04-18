@@ -2035,6 +2035,11 @@ PrefabInstance:
       propertyPath: m_Name
       value: Player Bundle
       objectReference: {fileID: 0}
+    - target: {fileID: 2984590370921728260, guid: c3163d5c400284f40b36aa00625fb3e5,
+        type: 3}
+      propertyPath: m_TagString
+      value: Player
+      objectReference: {fileID: 0}
     - target: {fileID: 3401670698332942791, guid: c3163d5c400284f40b36aa00625fb3e5,
         type: 3}
       propertyPath: m_LocalPosition.y
@@ -4460,56 +4465,6 @@ Transform:
     type: 3}
   m_PrefabInstance: {fileID: 2029550025}
   m_PrefabAsset: {fileID: 0}
---- !u!21 &267094962
-Material:
-  serializedVersion: 8
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_Name: Height Fog Global
-  m_Shader: {fileID: 4800000, guid: 3a7ef1b66bafb7a448a880ef76d2e6e6, type: 3}
-  m_Parent: {fileID: 0}
-  m_ModifiedSerializedProperties: 0
-  m_ValidKeywords: []
-  m_InvalidKeywords:
-  - _RECEIVESHADOWS_OFF
-  - _SURFACE_TYPE_TRANSPARENT
-  m_LightmapFlags: 4
-  m_EnableInstancingVariants: 0
-  m_DoubleSidedGI: 0
-  m_CustomRenderQueue: 3001
-  stringTagMap: {}
-  disabledShaderPasses: []
-  m_LockedProperties: 
-  m_SavedProperties:
-    serializedVersion: 3
-    m_TexEnvs:
-    - unity_Lightmaps:
-        m_Texture: {fileID: 0}
-        m_Scale: {x: 1, y: 1}
-        m_Offset: {x: 0, y: 0}
-    - unity_LightmapsInd:
-        m_Texture: {fileID: 0}
-        m_Scale: {x: 1, y: 1}
-        m_Offset: {x: 0, y: 0}
-    - unity_ShadowMasks:
-        m_Texture: {fileID: 0}
-        m_Scale: {x: 1, y: 1}
-        m_Offset: {x: 0, y: 0}
-    m_Ints: []
-    m_Floats:
-    - _AlphaCutoff: 0.5
-    - _Banner: 1
-    - _FogCameraMode: 0
-    - _HeightFogGlobal: 1
-    - _IsHeightFogShader: 1
-    - _QueueControl: -1
-    - _QueueOffset: 0
-    - _ReceiveShadows: 0
-    m_Colors:
-    - _EmissionColor: {r: 1, g: 1, b: 1, a: 1}
-  m_BuildTextureStacks: []
 --- !u!1001 &273993179
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -32648,6 +32603,56 @@ MonoBehaviour:
   amplitudeRange: {x: 0, y: 0}
   phaseOffset: 0
   randomizePhase: 1
+--- !u!21 &1537943276
+Material:
+  serializedVersion: 8
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: Height Fog Global
+  m_Shader: {fileID: 4800000, guid: 3a7ef1b66bafb7a448a880ef76d2e6e6, type: 3}
+  m_Parent: {fileID: 0}
+  m_ModifiedSerializedProperties: 0
+  m_ValidKeywords: []
+  m_InvalidKeywords:
+  - _RECEIVESHADOWS_OFF
+  - _SURFACE_TYPE_TRANSPARENT
+  m_LightmapFlags: 4
+  m_EnableInstancingVariants: 0
+  m_DoubleSidedGI: 0
+  m_CustomRenderQueue: 3001
+  stringTagMap: {}
+  disabledShaderPasses: []
+  m_LockedProperties: 
+  m_SavedProperties:
+    serializedVersion: 3
+    m_TexEnvs:
+    - unity_Lightmaps:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - unity_LightmapsInd:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - unity_ShadowMasks:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    m_Ints: []
+    m_Floats:
+    - _AlphaCutoff: 0.5
+    - _Banner: 1
+    - _FogCameraMode: 0
+    - _HeightFogGlobal: 1
+    - _IsHeightFogShader: 1
+    - _QueueControl: -1
+    - _QueueOffset: 0
+    - _ReceiveShadows: 0
+    m_Colors:
+    - _EmissionColor: {r: 1, g: 1, b: 1, a: 1}
+  m_BuildTextureStacks: []
 --- !u!1 &1543424799
 GameObject:
   m_ObjectHideFlags: 0
@@ -32762,7 +32767,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 267094962}
+  - {fileID: 1537943276}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -37439,16 +37444,26 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: -0.986
       objectReference: {fileID: 0}
+    - target: {fileID: 8368425032228727043, guid: 2bfa61bb8bb855d41852fe25b0dd6074,
+        type: 3}
+      propertyPath: m_Enabled
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 9155119512903637258, guid: 2bfa61bb8bb855d41852fe25b0dd6074,
         type: 3}
       propertyPath: m_Materials.Array.data[1]
       value: 
       objectReference: {fileID: 550017532719254610, guid: c8e13f278f08cde4ebc6732be04782c4,
         type: 3}
-    m_RemovedComponents: []
+    m_RemovedComponents:
+    - {fileID: 8368425032228727043, guid: 2bfa61bb8bb855d41852fe25b0dd6074, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 1951976115159672350, guid: 2bfa61bb8bb855d41852fe25b0dd6074,
+        type: 3}
+      insertIndex: 2
+      addedObject: {fileID: 2051955250}
   m_SourcePrefab: {fileID: 100100000, guid: 2bfa61bb8bb855d41852fe25b0dd6074, type: 3}
 --- !u!4 &1809677588 stripped
 Transform:
@@ -41456,6 +41471,81 @@ Transform:
     type: 3}
   m_PrefabInstance: {fileID: 695909989}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &2051955247 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 1951976115159672350, guid: 2bfa61bb8bb855d41852fe25b0dd6074,
+    type: 3}
+  m_PrefabInstance: {fileID: 1809677587}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &2051955250
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2051955247}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f713f856707d31e4e962c30ec8f70095, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  moveAxis: 1
+  strokeDistance: 7.91
+  bounceRatio: 0.051
+  impactTime: 0.25
+  returnTime: 2
+  bounceTime: 0.08
+  waitTime: 0.5
+  cooldownTime: 1
+  startDelay: 0
+  impactCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1
+      value: 1
+      inSlope: 2.127297
+      outSlope: 2.127297
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.044816434
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  returnCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: -0.034760527
+      outSlope: -0.034760527
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0.16576673
+    - serializedVersion: 3
+      time: 1
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
 --- !u!1 &2056518351 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 100000, guid: 7e2bcef4c87e3fd4a9059f3183385609,
