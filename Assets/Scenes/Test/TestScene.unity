@@ -130,6 +130,11 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 1031480690567101006, guid: 442dd687be27363f1880dbeef3e867a1,
+        type: 3}
+      propertyPath: unlockedSkills.Array.data[0]
+      value: 
+      objectReference: {fileID: 0}
     - target: {fileID: 2165770545944897919, guid: 442dd687be27363f1880dbeef3e867a1,
         type: 3}
       propertyPath: m_Name
@@ -138,12 +143,12 @@ PrefabInstance:
     - target: {fileID: 7020566751297728477, guid: 442dd687be27363f1880dbeef3e867a1,
         type: 3}
       propertyPath: m_LocalPosition.x
-      value: -2.24
+      value: -2.2400513
       objectReference: {fileID: 0}
     - target: {fileID: 7020566751297728477, guid: 442dd687be27363f1880dbeef3e867a1,
         type: 3}
       propertyPath: m_LocalPosition.y
-      value: 3.46
+      value: 3.459961
       objectReference: {fileID: 0}
     - target: {fileID: 7020566751297728477, guid: 442dd687be27363f1880dbeef3e867a1,
         type: 3}
@@ -158,17 +163,17 @@ PrefabInstance:
     - target: {fileID: 7020566751297728477, guid: 442dd687be27363f1880dbeef3e867a1,
         type: 3}
       propertyPath: m_LocalRotation.x
-      value: 0
+      value: -0
       objectReference: {fileID: 0}
     - target: {fileID: 7020566751297728477, guid: 442dd687be27363f1880dbeef3e867a1,
         type: 3}
       propertyPath: m_LocalRotation.y
-      value: 0
+      value: -0
       objectReference: {fileID: 0}
     - target: {fileID: 7020566751297728477, guid: 442dd687be27363f1880dbeef3e867a1,
         type: 3}
       propertyPath: m_LocalRotation.z
-      value: 0
+      value: -0
       objectReference: {fileID: 0}
     - target: {fileID: 7020566751297728477, guid: 442dd687be27363f1880dbeef3e867a1,
         type: 3}
@@ -379,6 +384,18 @@ MonoBehaviour:
     detailDescLine2: 
   selectedBackpackSlot: {fileID: 0}
   selectedEntryCanAfford: 0
+--- !u!114 &347281699 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 1031480690567101006, guid: 442dd687be27363f1880dbeef3e867a1,
+    type: 3}
+  m_PrefabInstance: {fileID: 185779661}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 347281692}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d32f1993a53126c3a998c1d879d477f6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &370842523
 GameObject:
   m_ObjectHideFlags: 0
@@ -2324,22 +2341,27 @@ MonoBehaviour:
   entries:
   - id: 0
     displayName: 
+    comboCode: 
     icon: {fileID: 21300000, guid: a7930e5eba0b54f58ae428adb9a440bf, type: 3}
     unlockSlot: {fileID: 1237705981}
   - id: 1
     displayName: 
+    comboCode: 
     icon: {fileID: 21300000, guid: 78acef917e2b88ffc975cf76b5065aa0, type: 3}
     unlockSlot: {fileID: 1254845545}
   - id: 2
     displayName: 
+    comboCode: 
     icon: {fileID: 21300000, guid: 6e737c034bb4dcc8c96fa5f4777bf801, type: 3}
     unlockSlot: {fileID: 647640090}
   - id: 3
     displayName: 
+    comboCode: 
     icon: {fileID: 21300000, guid: 7f80701a68cf25b2980b4d66282de19a, type: 3}
     unlockSlot: {fileID: 631178332}
   - id: 4
     displayName: 
+    comboCode: 
     icon: {fileID: 21300000, guid: 07663609e6f44a8a7aab8188a3bbcda2, type: 3}
     unlockSlot: {fileID: 1504396492}
   equippedSlots:
@@ -2349,6 +2371,11 @@ MonoBehaviour:
   - {fileID: 562046770}
   - {fileID: 1799033823}
   hideLockedSlotsOnStart: 1
+  player: {fileID: 347281699}
+  skillDatabase: {fileID: 11400000, guid: 6c7fa50fa25f9d569a8378dc6b3967b9, type: 2}
+  syncLinkedSkillsToPlayer: 1
+  removePreviousLinkedSkills: 1
+  allowPrefixFallback: 1
 --- !u!1 &1707459466
 GameObject:
   m_ObjectHideFlags: 0
@@ -2745,6 +2772,11 @@ PrefabInstance:
       propertyPath: m_Name
       value: Pickup-4
       objectReference: {fileID: 0}
+    - target: {fileID: 6032746975147376783, guid: fd10ded66f5cd6e4986f95f9d708a73c,
+        type: 3}
+      propertyPath: skillId
+      value: c
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -2826,6 +2858,11 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 4696606602497154121, guid: ee2e7dd02ce3aebdba807898838bba23,
+        type: 3}
+      propertyPath: skillId
+      value: d
+      objectReference: {fileID: 0}
     - target: {fileID: 4831629427782886822, guid: ee2e7dd02ce3aebdba807898838bba23,
         type: 3}
       propertyPath: m_Name
@@ -2894,6 +2931,11 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 610951700755590808, guid: 598e4636c4757bddeaaed4999af0c37f,
+        type: 3}
+      propertyPath: skillId
+      value: m
+      objectReference: {fileID: 0}
     - target: {fileID: 1532281194063057881, guid: 598e4636c4757bddeaaed4999af0c37f,
         type: 3}
       propertyPath: m_LocalPosition.x
@@ -3080,6 +3122,11 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 8653757134757633163, guid: 46bcf93df99e23043bb16815804da2b7,
+        type: 3}
+      propertyPath: skillId
+      value: i
+      objectReference: {fileID: 0}
     - target: {fileID: 9019023239622023752, guid: 46bcf93df99e23043bb16815804da2b7,
         type: 3}
       propertyPath: m_Name
@@ -3098,6 +3145,11 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 1231540633721089359, guid: 184b992ff6e284feb8e1af8cec02e284,
+        type: 3}
+      propertyPath: skillId
+      value: j
+      objectReference: {fileID: 0}
     - target: {fileID: 6518817207510997390, guid: 184b992ff6e284feb8e1af8cec02e284,
         type: 3}
       propertyPath: m_Name

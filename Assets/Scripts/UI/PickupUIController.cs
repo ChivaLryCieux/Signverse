@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Skills;
 using UnityEngine;
 
 public class PickupUIController : MonoBehaviour
@@ -9,6 +10,8 @@ public class PickupUIController : MonoBehaviour
     {
         public PickupItemId id;
         public string displayName;
+        [Tooltip("用于匹配技能名后缀，例如 m/j/d/c。可留空，留空时只按 13-/24- 这类前缀匹配。")]
+        public string comboCode;
         public Sprite icon;
         [Tooltip("右上角用于点击装备的槽位。")]
         public PickupUISlotView unlockSlot;
@@ -26,6 +29,13 @@ public class PickupUIController : MonoBehaviour
     [Header("行为")]
     [SerializeField] private bool hideLockedSlotsOnStart = true;
 
+    [Header("联动技能")]
+    [SerializeField] private PlayerCC player;
+    [SerializeField] private SkillDatabase skillDatabase;
+    [SerializeField] private bool syncLinkedSkillsToPlayer = true;
+    [SerializeField] private bool removePreviousLinkedSkills = true;
+    [SerializeField] private bool allowPrefixFallback = true;
+
     public event Action<PickupItemId> ItemUnlocked;
     public event Action<PickupItemId> ItemEquipped;
     public event Action<PickupItemId> ItemUnequipped;
@@ -33,6 +43,7 @@ public class PickupUIController : MonoBehaviour
     private readonly Dictionary<PickupItemId, PickupUiEntry> entryById = new Dictionary<PickupItemId, PickupUiEntry>();
     private readonly HashSet<PickupItemId> unlockedItems = new HashSet<PickupItemId>();
     private readonly List<PickupItemId> equippedItems = new List<PickupItemId>(5);
+    private readonly List<SkillBase> appliedLinkedSkills = new List<SkillBase>();
 
     public IReadOnlyList<PickupItemId> EquippedItems => equippedItems;
 
@@ -48,9 +59,11 @@ public class PickupUIController : MonoBehaviour
         }
 
         BuildEntries();
+        ResolveSkillReferences();
         RefreshAllSlots();
         RefreshUnlockedSlots();
         RefreshEquippedSlots();
+        SyncLinkedSkills();
     }
 
     private void OnDestroy()
@@ -101,6 +114,7 @@ public class PickupUIController : MonoBehaviour
         equippedItems.Add(id);
         RefreshUnlockedSlots();
         RefreshEquippedSlots();
+        SyncLinkedSkills();
 
         ItemEquipped?.Invoke(id);
     }
@@ -117,6 +131,7 @@ public class PickupUIController : MonoBehaviour
 
         RefreshUnlockedSlots();
         RefreshEquippedSlots();
+        SyncLinkedSkills();
 
         ItemUnequipped?.Invoke(removedItem);
     }
@@ -148,6 +163,19 @@ public class PickupUIController : MonoBehaviour
             {
                 entryById.Add(entry.id, entry);
             }
+        }
+    }
+
+    private void ResolveSkillReferences()
+    {
+        if (player == null)
+        {
+            player = FindObjectOfType<PlayerCC>();
+        }
+
+        if (skillDatabase == null && player != null)
+        {
+            skillDatabase = player.masterDatabase;
         }
     }
 
@@ -232,5 +260,131 @@ public class PickupUIController : MonoBehaviour
                 slot.ClearIcon();
             }
         }
+    }
+
+    private void SyncLinkedSkills()
+    {
+        if (!syncLinkedSkillsToPlayer)
+        {
+            return;
+        }
+
+        ResolveSkillReferences();
+
+        if (player == null || skillDatabase == null)
+        {
+            return;
+        }
+
+        if (player.unlockedSkills == null)
+        {
+            player.unlockedSkills = new List<SkillBase>();
+        }
+
+        if (removePreviousLinkedSkills)
+        {
+            for (int i = 0; i < appliedLinkedSkills.Count; i++)
+            {
+                SkillBase oldSkill = appliedLinkedSkills[i];
+                if (oldSkill != null)
+                {
+                    player.unlockedSkills.Remove(oldSkill);
+                }
+            }
+
+            appliedLinkedSkills.Clear();
+        }
+
+        AddLinkedSkillIfPresent(1, 2);
+        AddLinkedSkillIfPresent(3, 4);
+    }
+
+    private void AddLinkedSkillIfPresent(int firstSlotNumber, int secondSlotNumber)
+    {
+        if (!TryGetEquippedEntry(firstSlotNumber, out PickupUiEntry firstEntry) ||
+            !TryGetEquippedEntry(secondSlotNumber, out PickupUiEntry secondEntry))
+        {
+            return;
+        }
+
+        string prefix = firstSlotNumber.ToString() + secondSlotNumber + "-";
+        string exactId = BuildLinkedSkillId(prefix, firstEntry.comboCode, secondEntry.comboCode);
+        SkillBase skill = FindSkill(exactId, prefix);
+
+        if (skill == null)
+        {
+            Debug.LogWarning($"没有在 SkillDatabase 中找到联动技能：{exactId} 或前缀 {prefix}", this);
+            return;
+        }
+
+        if (!player.unlockedSkills.Contains(skill))
+        {
+            player.unlockedSkills.Add(skill);
+            appliedLinkedSkills.Add(skill);
+        }
+    }
+
+    private bool TryGetEquippedEntry(int slotNumber, out PickupUiEntry entry)
+    {
+        entry = null;
+
+        int index = slotNumber - 1;
+        if (index < 0 || index >= equippedItems.Count)
+        {
+            return false;
+        }
+
+        PickupItemId itemId = equippedItems[index];
+        return entryById.TryGetValue(itemId, out entry) && entry != null;
+    }
+
+    private SkillBase FindSkill(string exactId, string prefix)
+    {
+        if (skillDatabase == null || skillDatabase.allSkills == null)
+        {
+            return null;
+        }
+
+        for (int i = 0; i < skillDatabase.allSkills.Count; i++)
+        {
+            SkillBase skill = skillDatabase.allSkills[i];
+            if (skill != null && string.Equals(GetSkillKey(skill), exactId, StringComparison.OrdinalIgnoreCase))
+            {
+                return skill;
+            }
+        }
+
+        if (!allowPrefixFallback)
+        {
+            return null;
+        }
+
+        for (int i = 0; i < skillDatabase.allSkills.Count; i++)
+        {
+            SkillBase skill = skillDatabase.allSkills[i];
+            if (skill != null && GetSkillKey(skill).StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+            {
+                return skill;
+            }
+        }
+
+        return null;
+    }
+
+    private static string BuildLinkedSkillId(string prefix, string firstCode, string secondCode)
+    {
+        string a = string.IsNullOrWhiteSpace(firstCode) ? "x" : firstCode.Trim().ToLowerInvariant();
+        string b = string.IsNullOrWhiteSpace(secondCode) ? "x" : secondCode.Trim().ToLowerInvariant();
+        return prefix + a + b;
+    }
+
+    private static string GetSkillKey(SkillBase skill)
+    {
+        if (skill == null)
+        {
+            return string.Empty;
+        }
+
+        return string.IsNullOrWhiteSpace(skill.skillID) ? skill.name : skill.skillID.Trim();
     }
 }
