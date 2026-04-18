@@ -288,11 +288,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   backpackSlots:
-  - {fileID: 525477795}
-  - {fileID: 751064098}
-  - {fileID: 1425352052}
-  - {fileID: 562046767}
-  - {fileID: 1799033820}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
   configRows: []
   skillEntries:
   - id: 
@@ -599,7 +599,7 @@ GameObject:
   - component: {fileID: 525477794}
   - component: {fileID: 525477797}
   - component: {fileID: 525477796}
-  - component: {fileID: 525477795}
+  - component: {fileID: 525477798}
   m_Layer: 5
   m_Name: L-Sign-1
   m_TagString: Untagged
@@ -626,23 +626,6 @@ RectTransform:
   m_AnchoredPosition: {x: 148.09998, y: -8.299988}
   m_SizeDelta: {x: 100, y: 100}
   m_Pivot: {x: 0, y: 1}
---- !u!114 &525477795
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 525477793}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 3cb8c1339c9648e3aab9ec6f5e2f8ab0, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  iconImage: {fileID: 525477796}
-  highlight: {fileID: 0}
-  selectedScale: 1.08
-  emptyConfigSprite: {fileID: 21300000, guid: a7930e5eba0b54f58ae428adb9a440bf, type: 3}
-  doubleClickInterval: 0.28
 --- !u!114 &525477796
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -663,7 +646,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: a7930e5eba0b54f58ae428adb9a440bf, type: 3}
+  m_Sprite: {fileID: 0}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -681,6 +664,22 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 525477793}
   m_CullTransparentMesh: 1
+--- !u!114 &525477798
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 525477793}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1dd68be28a13f1bd4ae2f8bb29e2d804, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  iconImage: {fileID: 525477796}
+  emptySprite: {fileID: 0}
+  highlight: {fileID: 0}
+  hoverScale: 1.08
 --- !u!1 &562046765
 GameObject:
   m_ObjectHideFlags: 0
@@ -692,7 +691,7 @@ GameObject:
   - component: {fileID: 562046766}
   - component: {fileID: 562046769}
   - component: {fileID: 562046768}
-  - component: {fileID: 562046767}
+  - component: {fileID: 562046770}
   m_Layer: 5
   m_Name: L-Sign-4
   m_TagString: Untagged
@@ -719,23 +718,6 @@ RectTransform:
   m_AnchoredPosition: {x: 275.9, y: -144}
   m_SizeDelta: {x: 100, y: 100}
   m_Pivot: {x: 0, y: 1}
---- !u!114 &562046767
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 562046765}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 3cb8c1339c9648e3aab9ec6f5e2f8ab0, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  iconImage: {fileID: 562046768}
-  highlight: {fileID: 0}
-  selectedScale: 1.08
-  emptyConfigSprite: {fileID: 21300000, guid: 7f80701a68cf25b2980b4d66282de19a, type: 3}
-  doubleClickInterval: 0.28
 --- !u!114 &562046768
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -756,7 +738,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 7f80701a68cf25b2980b4d66282de19a, type: 3}
+  m_Sprite: {fileID: 0}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -774,6 +756,22 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 562046765}
   m_CullTransparentMesh: 1
+--- !u!114 &562046770
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 562046765}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1dd68be28a13f1bd4ae2f8bb29e2d804, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  iconImage: {fileID: 562046768}
+  emptySprite: {fileID: 0}
+  highlight: {fileID: 0}
+  hoverScale: 1.08
 --- !u!1001 &579127892
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -923,6 +921,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   iconImage: {fileID: 631178331}
+  emptySprite: {fileID: 0}
   highlight: {fileID: 0}
   hoverScale: 1.08
 --- !u!222 &631178333
@@ -1119,6 +1118,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   iconImage: {fileID: 647640089}
+  emptySprite: {fileID: 0}
   highlight: {fileID: 0}
   hoverScale: 1.08
 --- !u!222 &647640091
@@ -1140,7 +1140,7 @@ GameObject:
   - component: {fileID: 751064097}
   - component: {fileID: 751064100}
   - component: {fileID: 751064099}
-  - component: {fileID: 751064098}
+  - component: {fileID: 751064101}
   m_Layer: 5
   m_Name: L-Sign-2
   m_TagString: Untagged
@@ -1167,23 +1167,6 @@ RectTransform:
   m_AnchoredPosition: {x: 275.09998, y: -18.099976}
   m_SizeDelta: {x: 100, y: 100}
   m_Pivot: {x: 0, y: 1}
---- !u!114 &751064098
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 751064096}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 3cb8c1339c9648e3aab9ec6f5e2f8ab0, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  iconImage: {fileID: 751064099}
-  highlight: {fileID: 0}
-  selectedScale: 1.08
-  emptyConfigSprite: {fileID: 21300000, guid: 78acef917e2b88ffc975cf76b5065aa0, type: 3}
-  doubleClickInterval: 0.28
 --- !u!114 &751064099
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1204,7 +1187,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 78acef917e2b88ffc975cf76b5065aa0, type: 3}
+  m_Sprite: {fileID: 0}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -1222,6 +1205,22 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 751064096}
   m_CullTransparentMesh: 1
+--- !u!114 &751064101
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 751064096}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1dd68be28a13f1bd4ae2f8bb29e2d804, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  iconImage: {fileID: 751064099}
+  emptySprite: {fileID: 0}
+  highlight: {fileID: 0}
+  hoverScale: 1.08
 --- !u!1 &832575517
 GameObject:
   m_ObjectHideFlags: 0
@@ -1513,6 +1512,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   iconImage: {fileID: 1237705980}
+  emptySprite: {fileID: 0}
   highlight: {fileID: 0}
   hoverScale: 1.08
 --- !u!222 &1237705982
@@ -1604,6 +1604,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   iconImage: {fileID: 1254845544}
+  emptySprite: {fileID: 0}
   highlight: {fileID: 0}
   hoverScale: 1.08
 --- !u!222 &1254845546
@@ -1755,7 +1756,7 @@ GameObject:
   - component: {fileID: 1425352051}
   - component: {fileID: 1425352054}
   - component: {fileID: 1425352053}
-  - component: {fileID: 1425352052}
+  - component: {fileID: 1425352055}
   m_Layer: 5
   m_Name: L-Sign-3
   m_TagString: Untagged
@@ -1782,23 +1783,6 @@ RectTransform:
   m_AnchoredPosition: {x: 150.4, y: -134.7}
   m_SizeDelta: {x: 100, y: 100}
   m_Pivot: {x: 0, y: 1}
---- !u!114 &1425352052
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1425352050}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 3cb8c1339c9648e3aab9ec6f5e2f8ab0, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  iconImage: {fileID: 1425352053}
-  highlight: {fileID: 0}
-  selectedScale: 1.08
-  emptyConfigSprite: {fileID: 21300000, guid: 6e737c034bb4dcc8c96fa5f4777bf801, type: 3}
-  doubleClickInterval: 0.28
 --- !u!114 &1425352053
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1819,7 +1803,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 6e737c034bb4dcc8c96fa5f4777bf801, type: 3}
+  m_Sprite: {fileID: 0}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -1837,6 +1821,22 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1425352050}
   m_CullTransparentMesh: 1
+--- !u!114 &1425352055
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1425352050}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1dd68be28a13f1bd4ae2f8bb29e2d804, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  iconImage: {fileID: 1425352053}
+  emptySprite: {fileID: 0}
+  highlight: {fileID: 0}
+  hoverScale: 1.08
 --- !u!1 &1474618164
 GameObject:
   m_ObjectHideFlags: 0
@@ -2023,6 +2023,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   iconImage: {fileID: 1504396491}
+  emptySprite: {fileID: 0}
   highlight: {fileID: 0}
   hoverScale: 1.08
 --- !u!222 &1504396493
@@ -2327,8 +2328,12 @@ MonoBehaviour:
     displayName: 
     icon: {fileID: 21300000, guid: 07663609e6f44a8a7aab8188a3bbcda2, type: 3}
     unlockSlot: {fileID: 1504396492}
-  equippedRoot: {fileID: 1070318121}
-  equippedIcon: {fileID: 0}
+  equippedSlots:
+  - {fileID: 525477798}
+  - {fileID: 751064101}
+  - {fileID: 1425352055}
+  - {fileID: 562046770}
+  - {fileID: 1799033823}
   hideLockedSlotsOnStart: 1
 --- !u!1 &1707459466
 GameObject:
@@ -2446,7 +2451,7 @@ GameObject:
   - component: {fileID: 1799033819}
   - component: {fileID: 1799033822}
   - component: {fileID: 1799033821}
-  - component: {fileID: 1799033820}
+  - component: {fileID: 1799033823}
   m_Layer: 5
   m_Name: L-Sign-5
   m_TagString: Untagged
@@ -2473,23 +2478,6 @@ RectTransform:
   m_AnchoredPosition: {x: 154.6, y: -265.3}
   m_SizeDelta: {x: 100, y: 100}
   m_Pivot: {x: 0, y: 1}
---- !u!114 &1799033820
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1799033818}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 3cb8c1339c9648e3aab9ec6f5e2f8ab0, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  iconImage: {fileID: 1799033821}
-  highlight: {fileID: 0}
-  selectedScale: 1.08
-  emptyConfigSprite: {fileID: 21300000, guid: 07663609e6f44a8a7aab8188a3bbcda2, type: 3}
-  doubleClickInterval: 0.28
 --- !u!114 &1799033821
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2510,7 +2498,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 07663609e6f44a8a7aab8188a3bbcda2, type: 3}
+  m_Sprite: {fileID: 0}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -2528,6 +2516,22 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1799033818}
   m_CullTransparentMesh: 1
+--- !u!114 &1799033823
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1799033818}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1dd68be28a13f1bd4ae2f8bb29e2d804, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  iconImage: {fileID: 1799033821}
+  emptySprite: {fileID: 0}
+  highlight: {fileID: 0}
+  hoverScale: 1.08
 --- !u!1 &1823293818
 GameObject:
   m_ObjectHideFlags: 0

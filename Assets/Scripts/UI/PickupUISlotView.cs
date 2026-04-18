@@ -4,15 +4,25 @@ using UnityEngine.UI;
 
 public class PickupUISlotView : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler, IPointerExitHandler
 {
+    public enum SlotRole
+    {
+        Unlock,
+        Equipped
+    }
+
     [Header("显示")]
     [SerializeField] private Image iconImage;
+    [SerializeField] private Sprite emptySprite;
     [SerializeField] private GameObject highlight;
     [SerializeField] private float hoverScale = 1.08f;
 
     private PickupUIController owner;
+    private SlotRole role;
     private PickupItemId itemId;
+    private int equippedIndex = -1;
     private Vector3 baseScale = Vector3.one;
     private bool initialized;
+    private bool hasItem;
 
     private void Awake()
     {
@@ -20,46 +30,74 @@ public class PickupUISlotView : MonoBehaviour, IPointerClickHandler, IPointerEnt
         SetHighlight(false);
     }
 
-    public void Initialize(PickupUIController controller, PickupItemId id, Sprite icon)
+    public void InitializeUnlockSlot(PickupUIController controller, PickupItemId id, Sprite icon)
     {
         owner = controller;
+        role = SlotRole.Unlock;
         itemId = id;
+        equippedIndex = -1;
         initialized = true;
+        hasItem = true;
         baseScale = transform.localScale;
+
+        SetIcon(icon);
+
+        SetHighlight(false);
+    }
+
+    public void InitializeEquippedSlot(PickupUIController controller, int index)
+    {
+        owner = controller;
+        role = SlotRole.Equipped;
+        equippedIndex = index;
+        initialized = true;
+        hasItem = false;
+        baseScale = transform.localScale;
+
+        ClearIcon();
+        SetHighlight(false);
+    }
+
+    public void SetItem(PickupItemId id, Sprite icon)
+    {
+        itemId = id;
+        hasItem = true;
+        SetIcon(icon);
+    }
+
+    public void ClearIcon()
+    {
+        hasItem = false;
+        transform.localScale = baseScale;
 
         if (iconImage != null)
         {
-            iconImage.sprite = icon;
-            iconImage.enabled = icon != null;
+            iconImage.sprite = emptySprite;
+            iconImage.enabled = emptySprite != null;
         }
 
         SetHighlight(false);
     }
 
-    public void SetIcon(Sprite icon)
-    {
-        if (iconImage == null)
-        {
-            return;
-        }
-
-        iconImage.sprite = icon;
-        iconImage.enabled = icon != null;
-    }
-
     public void OnPointerClick(PointerEventData eventData)
     {
-        if (!initialized || owner == null || eventData.button != PointerEventData.InputButton.Left)
+        if (!initialized || owner == null || !hasItem || eventData.button != PointerEventData.InputButton.Left)
         {
             return;
         }
 
-        owner.Equip(itemId);
+        if (role == SlotRole.Unlock)
+        {
+            owner.Equip(itemId);
+            return;
+        }
+
+        owner.UnequipAt(equippedIndex);
     }
 
     public void OnPointerEnter(PointerEventData eventData)
     {
-        if (!initialized)
+        if (!initialized || !hasItem)
         {
             return;
         }
@@ -72,6 +110,17 @@ public class PickupUISlotView : MonoBehaviour, IPointerClickHandler, IPointerEnt
     {
         transform.localScale = baseScale;
         SetHighlight(false);
+    }
+
+    private void SetIcon(Sprite icon)
+    {
+        if (iconImage == null)
+        {
+            return;
+        }
+
+        iconImage.sprite = icon;
+        iconImage.enabled = icon != null;
     }
 
     private void SetHighlight(bool visible)

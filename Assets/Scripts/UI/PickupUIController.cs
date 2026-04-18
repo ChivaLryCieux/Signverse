@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.UI;
 
 public class PickupUIController : MonoBehaviour
 {
@@ -21,22 +20,21 @@ public class PickupUIController : MonoBehaviour
     [SerializeField] private PickupUiEntry[] entries = new PickupUiEntry[5];
 
     [Header("左上角装备栏")]
-    [SerializeField] private GameObject equippedRoot;
-    [SerializeField] private Image equippedIcon;
+    [Tooltip("按顺序拖入左上角 5 个装备槽。")]
+    [SerializeField] private PickupUISlotView[] equippedSlots = new PickupUISlotView[5];
 
     [Header("行为")]
     [SerializeField] private bool hideLockedSlotsOnStart = true;
 
     public event Action<PickupItemId> ItemUnlocked;
     public event Action<PickupItemId> ItemEquipped;
+    public event Action<PickupItemId> ItemUnequipped;
 
     private readonly Dictionary<PickupItemId, PickupUiEntry> entryById = new Dictionary<PickupItemId, PickupUiEntry>();
     private readonly HashSet<PickupItemId> unlockedItems = new HashSet<PickupItemId>();
-    private bool hasEquippedItem;
-    private PickupItemId equippedItem;
+    private readonly List<PickupItemId> equippedItems = new List<PickupItemId>(5);
 
-    public bool HasEquippedItem => hasEquippedItem;
-    public PickupItemId EquippedItem => equippedItem;
+    public IReadOnlyList<PickupItemId> EquippedItems => equippedItems;
 
     private void Awake()
     {
@@ -51,7 +49,8 @@ public class PickupUIController : MonoBehaviour
 
         BuildEntries();
         RefreshAllSlots();
-        RefreshEquippedSlot();
+        RefreshUnlockedSlots();
+        RefreshEquippedSlots();
     }
 
     private void OnDestroy()
@@ -64,7 +63,7 @@ public class PickupUIController : MonoBehaviour
 
     public void Unlock(PickupItemId id)
     {
-        if (!entryById.TryGetValue(id, out PickupUiEntry entry))
+        if (!entryById.ContainsKey(id))
         {
             Debug.LogWarning($"PickupUIController 没有配置拾取物 {id}。", this);
             return;
@@ -75,42 +74,51 @@ public class PickupUIController : MonoBehaviour
             return;
         }
 
-        if (entry.unlockSlot != null)
-        {
-            entry.unlockSlot.gameObject.SetActive(true);
-            entry.unlockSlot.Initialize(this, id, entry.icon);
-        }
+        RefreshUnlockedSlots();
 
         ItemUnlocked?.Invoke(id);
     }
 
     public void Equip(PickupItemId id)
     {
-        if (!unlockedItems.Contains(id))
+        if (!unlockedItems.Contains(id) || equippedItems.Contains(id))
         {
             return;
         }
 
-        if (!entryById.TryGetValue(id, out PickupUiEntry entry))
+        int maxEquippedCount = equippedSlots != null ? equippedSlots.Length : 0;
+        if (equippedItems.Count >= maxEquippedCount)
+        {
+            Debug.LogWarning("左上角装备栏已满，无法继续装备。", this);
+            return;
+        }
+
+        if (!entryById.ContainsKey(id))
         {
             return;
         }
 
-        hasEquippedItem = true;
-        equippedItem = id;
-
-        if (equippedRoot != null)
-        {
-            equippedRoot.SetActive(true);
-        }
-
-        if (equippedIcon != null)
-        {
-            equippedIcon.sprite = entry.icon;
-            equippedIcon.enabled = entry.icon != null;
-        }
+        equippedItems.Add(id);
+        RefreshUnlockedSlots();
+        RefreshEquippedSlots();
 
         ItemEquipped?.Invoke(id);
+    }
+
+    public void UnequipAt(int equippedIndex)
+    {
+        if (equippedIndex < 0 || equippedIndex >= equippedItems.Count)
+        {
+            return;
+        }
+
+        PickupItemId removedItem = equippedItems[equippedIndex];
+        equippedItems.RemoveAt(equippedIndex);
+
+        RefreshUnlockedSlots();
+        RefreshEquippedSlots();
+
+        ItemUnequipped?.Invoke(removedItem);
     }
 
     public bool IsUnlocked(PickupItemId id)
@@ -152,24 +160,77 @@ public class PickupUIController : MonoBehaviour
                 continue;
             }
 
-            entry.unlockSlot.Initialize(this, entry.id, entry.icon);
-            if (hideLockedSlotsOnStart)
+            entry.unlockSlot.InitializeUnlockSlot(this, entry.id, entry.icon);
+        }
+
+        if (equippedSlots == null)
+        {
+            equippedSlots = Array.Empty<PickupUISlotView>();
+        }
+
+        for (int i = 0; i < equippedSlots.Length; i++)
+        {
+            if (equippedSlots[i] != null)
             {
-                entry.unlockSlot.gameObject.SetActive(unlockedItems.Contains(entry.id));
+                equippedSlots[i].InitializeEquippedSlot(this, i);
             }
         }
     }
 
-    private void RefreshEquippedSlot()
+    private void RefreshUnlockedSlots()
     {
-        if (equippedRoot != null)
+        foreach (PickupUiEntry entry in entryById.Values)
         {
-            equippedRoot.SetActive(hasEquippedItem);
+            if (entry.unlockSlot == null)
+            {
+                continue;
+            }
+
+            bool visible = unlockedItems.Contains(entry.id) && !equippedItems.Contains(entry.id);
+            if (!hideLockedSlotsOnStart && !unlockedItems.Contains(entry.id))
+            {
+                visible = true;
+            }
+
+            entry.unlockSlot.gameObject.SetActive(visible);
+            if (visible)
+            {
+                entry.unlockSlot.InitializeUnlockSlot(this, entry.id, entry.icon);
+            }
+        }
+    }
+
+    private void RefreshEquippedSlots()
+    {
+        if (equippedSlots == null)
+        {
+            return;
         }
 
-        if (equippedIcon != null)
+        for (int i = 0; i < equippedSlots.Length; i++)
         {
-            equippedIcon.enabled = hasEquippedItem && equippedIcon.sprite != null;
+            PickupUISlotView slot = equippedSlots[i];
+            if (slot == null)
+            {
+                continue;
+            }
+
+            slot.InitializeEquippedSlot(this, i);
+            if (i >= equippedItems.Count)
+            {
+                slot.ClearIcon();
+                continue;
+            }
+
+            PickupItemId itemId = equippedItems[i];
+            if (entryById.TryGetValue(itemId, out PickupUiEntry entry))
+            {
+                slot.SetItem(itemId, entry.icon);
+            }
+            else
+            {
+                slot.ClearIcon();
+            }
         }
     }
 }
