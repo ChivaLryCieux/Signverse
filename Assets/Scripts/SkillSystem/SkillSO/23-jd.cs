@@ -2,20 +2,63 @@ using UnityEngine;
 
 namespace Skills
 {
-    [CreateAssetMenu(fileName = "23-jd", menuName = "Game/Skills/23 JD Blink Jump")]
+    [CreateAssetMenu(fileName = "23-jd", menuName = "Game/Skills/23 JD Jetpack")]
     public class Skill23JDBlinkJump : SkillBase
     {
-        [Header("跃迁闪现")]
-        public float jumpHeight = 2.5f;
-        public float blinkDistance = 4f;
+        [Header("喷气背包")]
+        public float startHeight = 1f;
+        public float accumulateThrustSpeed = 1f;
+        public float maxThrustHeight = 5f;
+        public float PureThrustTime = 0.5f;
+
+        [Header("运行时")]
+        public float ThrustHeight;
+
+        private bool isCharging;
 
         public override void OnActivate(GameObject user, PlayerCC controller)
         {
-            float verticalVel = Mathf.Sqrt(jumpHeight * -2f * controller.gravity);
-            controller.SetVerticalVelocity(verticalVel);
+            BeginCharge();
+        }
 
-            Vector3 dir = controller.GetFacing().sqrMagnitude > 0.01f ? controller.GetFacing() : Vector3.right;
-            controller.GetCharacterController().Move(dir * blinkDistance);
+        public override void OnUpdate(GameObject user, PlayerCC controller)
+        {
+            if (controller.WasJumpPressed())
+            {
+                BeginCharge();
+            }
+
+            if (!isCharging)
+            {
+                return;
+            }
+
+            if (controller.IsJumpPressed())
+            {
+                ThrustHeight = Mathf.Min(maxThrustHeight, ThrustHeight + accumulateThrustSpeed * Time.deltaTime);
+                return;
+            }
+
+            if (controller.WasJumpReleased())
+            {
+                Launch(controller);
+            }
+        }
+
+        private void BeginCharge()
+        {
+            isCharging = true;
+            ThrustHeight = Mathf.Clamp(startHeight, 0f, maxThrustHeight);
+        }
+
+        private void Launch(PlayerCC controller)
+        {
+            isCharging = false;
+
+            float launchHeight = Mathf.Clamp(ThrustHeight, 0f, maxThrustHeight);
+            float verticalVelocity = Mathf.Sqrt(launchHeight * -2f * controller.gravity);
+            controller.SetVerticalVelocity(verticalVelocity);
+            controller.DisableMoveXFor(PureThrustTime);
         }
     }
 }

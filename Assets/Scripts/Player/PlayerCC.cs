@@ -17,6 +17,7 @@ public class PlayerCC : MonoBehaviour
     public float gravity = -25f;
     private float verticalVelocity;
     private Vector3 facingDirection = Vector3.right;
+    private float moveXDisableTimer;
 
     [Header("状态监控")]
     public bool isGrounded;
@@ -41,7 +42,16 @@ public class PlayerCC : MonoBehaviour
 
     // --- 给技能脚本提供的“遥控器”接口 ---
     public CharacterController GetCharacterController() => cc;
-    public Vector2 GetMoveInput() => controls.Player.Move.ReadValue<Vector2>();
+    public Vector2 GetMoveInput()
+    {
+        Vector2 input = controls.Player.Move.ReadValue<Vector2>();
+        if (moveXDisableTimer > 0f)
+        {
+            input.x = 0f;
+        }
+
+        return input;
+    }
     
     // 供蓄力跳检测：空格是否正被按住
     public bool IsJumpPressed() => controls.Player.Jump.IsPressed();
@@ -59,6 +69,11 @@ public class PlayerCC : MonoBehaviour
     public Vector3 GetFacing() => facingDirection;
     public bool IsDead => isDead;
     public void SetVerticalVelocity(float val) => verticalVelocity = val;
+    public void DisableMoveXFor(float duration)
+    {
+        moveXDisableTimer = Mathf.Max(moveXDisableTimer, duration);
+    }
+
     public void SetFacing(Vector3 dir)
     {
         facingDirection = dir;
@@ -97,6 +112,11 @@ public class PlayerCC : MonoBehaviour
         if (isDead)
         {
             return;
+        }
+
+        if (moveXDisableTimer > 0f)
+        {
+            moveXDisableTimer -= Time.deltaTime;
         }
 
         isGrounded = cc.isGrounded;
@@ -202,6 +222,7 @@ public class PlayerCC : MonoBehaviour
         verticalVelocity = 0f;
         isClimbing = false;
         isGrounded = false;
+        moveXDisableTimer = 0f;
         controls.Player.Disable();
         cc.enabled = false;
 
@@ -228,6 +249,7 @@ public class PlayerCC : MonoBehaviour
         wasGrounded = false;
         isClimbing = false;
         isDead = false;
+        moveXDisableTimer = 0f;
 
         cc.enabled = true;
         controls.Player.Enable();
