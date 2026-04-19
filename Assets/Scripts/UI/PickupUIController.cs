@@ -23,7 +23,7 @@ public class PickupUIController : MonoBehaviour
     [SerializeField] private PickupUiEntry[] entries = new PickupUiEntry[5];
 
     [Header("左上角装备栏")]
-    [Tooltip("按顺序拖入左上角 5 个装备槽。")]
+    [Tooltip("按界面位置顺序拖入左上角 5 个装备槽。装备不会自动补位，槽位允许空缺。")]
     [SerializeField] private PickupUISlotView[] equippedSlots = new PickupUISlotView[5];
 
     [Header("行为")]
@@ -42,10 +42,13 @@ public class PickupUIController : MonoBehaviour
 
     private readonly Dictionary<PickupItemId, PickupUiEntry> entryById = new Dictionary<PickupItemId, PickupUiEntry>();
     private readonly HashSet<PickupItemId> unlockedItems = new HashSet<PickupItemId>();
-    private readonly List<PickupItemId> equippedItems = new List<PickupItemId>(5);
+    private PickupItemId[] equippedSlotItems = Array.Empty<PickupItemId>();
+    private bool[] equippedSlotOccupied = Array.Empty<bool>();
+    private bool hasSelectedUnlockItem;
+    private PickupItemId selectedUnlockItem;
     private readonly List<SkillBase> appliedLinkedSkills = new List<SkillBase>();
 
-    public IReadOnlyList<PickupItemId> EquippedItems => equippedItems;
+    public bool HasSelectedUnlockItem => hasSelectedUnlockItem;
 
     private void Awake()
     {
@@ -92,17 +95,10 @@ public class PickupUIController : MonoBehaviour
         ItemUnlocked?.Invoke(id);
     }
 
-    public void Equip(PickupItemId id)
+    public void SelectForEquip(PickupItemId id)
     {
-        if (!unlockedItems.Contains(id) || equippedItems.Contains(id))
+        if (!unlockedItems.Contains(id) || IsEquipped(id))
         {
-            return;
-        }
-
-        int maxEquippedCount = equippedSlots != null ? equippedSlots.Length : 0;
-        if (equippedItems.Count >= maxEquippedCount)
-        {
-            Debug.LogWarning("左上角装备栏已满，无法继续装备。", this);
             return;
         }
 
@@ -111,23 +107,77 @@ public class PickupUIController : MonoBehaviour
             return;
         }
 
-        equippedItems.Add(id);
-        RefreshUnlockedSlots();
-        RefreshEquippedSlots();
-        SyncLinkedSkills();
+        if (hasSelectedUnlockItem && selectedUnlockItem.Equals(id))
+        {
+            ClearSelectedUnlockItem();
+            return;
+        }
 
-        ItemEquipped?.Invoke(id);
+        hasSelectedUnlockItem = true;
+        selectedUnlockItem = id;
+        RefreshUnlockedSlots();
     }
 
-    public void UnequipAt(int equippedIndex)
+    public void OnEquippedSlotClicked(int equippedIndex)
     {
-        if (equippedIndex < 0 || equippedIndex >= equippedItems.Count)
+        if (!IsValidEquippedIndex(equippedIndex))
         {
             return;
         }
 
-        PickupItemId removedItem = equippedItems[equippedIndex];
-        equippedItems.RemoveAt(equippedIndex);
+        if (hasSelectedUnlockItem)
+        {
+            EquipSelectedAt(equippedIndex);
+            return;
+        }
+
+        if (equippedSlotOccupied[equippedIndex])
+        {
+            UnequipAt(equippedIndex);
+        }
+    }
+
+    private void EquipSelectedAt(int equippedIndex)
+    {
+        if (!hasSelectedUnlockItem || !IsValidEquippedIndex(equippedIndex))
+        {
+            return;
+        }
+
+        PickupItemId itemToEquip = selectedUnlockItem;
+        if (!unlockedItems.Contains(itemToEquip) || IsEquipped(itemToEquip))
+        {
+            ClearSelectedUnlockItem();
+            return;
+        }
+
+        bool replacedExistingItem = equippedSlotOccupied[equippedIndex];
+        PickupItemId replacedItem = replacedExistingItem ? equippedSlotItems[equippedIndex] : default(PickupItemId);
+
+        equippedSlotItems[equippedIndex] = itemToEquip;
+        equippedSlotOccupied[equippedIndex] = true;
+
+        ClearSelectedUnlockItem();
+        RefreshEquippedSlots();
+        SyncLinkedSkills();
+
+        if (replacedExistingItem)
+        {
+            ItemUnequipped?.Invoke(replacedItem);
+        }
+
+        ItemEquipped?.Invoke(itemToEquip);
+    }
+
+    public void UnequipAt(int equippedIndex)
+    {
+        if (!IsValidEquippedIndex(equippedIndex) || !equippedSlotOccupied[equippedIndex])
+        {
+            return;
+        }
+
+        PickupItemId removedItem = equippedSlotItems[equippedIndex];
+        equippedSlotOccupied[equippedIndex] = false;
 
         RefreshUnlockedSlots();
         RefreshEquippedSlots();
@@ -196,6 +246,8 @@ public class PickupUIController : MonoBehaviour
             equippedSlots = Array.Empty<PickupUISlotView>();
         }
 
+        EnsureEquippedStateArrays();
+
         for (int i = 0; i < equippedSlots.Length; i++)
         {
             if (equippedSlots[i] != null)
@@ -214,7 +266,7 @@ public class PickupUIController : MonoBehaviour
                 continue;
             }
 
-            bool visible = unlockedItems.Contains(entry.id) && !equippedItems.Contains(entry.id);
+            bool visible = unlockedItems.Contains(entry.id) && !IsEquipped(entry.id);
             if (!hideLockedSlotsOnStart && !unlockedItems.Contains(entry.id))
             {
                 visible = true;
@@ -224,6 +276,7 @@ public class PickupUIController : MonoBehaviour
             if (visible)
             {
                 entry.unlockSlot.InitializeUnlockSlot(this, entry.id, entry.icon);
+                entry.unlockSlot.SetSelected(hasSelectedUnlockItem && selectedUnlockItem.Equals(entry.id));
             }
         }
     }
@@ -235,6 +288,8 @@ public class PickupUIController : MonoBehaviour
             return;
         }
 
+        EnsureEquippedStateArrays();
+
         for (int i = 0; i < equippedSlots.Length; i++)
         {
             PickupUISlotView slot = equippedSlots[i];
@@ -244,13 +299,13 @@ public class PickupUIController : MonoBehaviour
             }
 
             slot.InitializeEquippedSlot(this, i);
-            if (i >= equippedItems.Count)
+            if (!equippedSlotOccupied[i])
             {
                 slot.ClearIcon();
                 continue;
             }
 
-            PickupItemId itemId = equippedItems[i];
+            PickupItemId itemId = equippedSlotItems[i];
             if (entryById.TryGetValue(itemId, out PickupUiEntry entry))
             {
                 slot.SetItem(itemId, entry.icon);
@@ -329,13 +384,63 @@ public class PickupUIController : MonoBehaviour
         entry = null;
 
         int index = slotNumber - 1;
-        if (index < 0 || index >= equippedItems.Count)
+        if (!IsValidEquippedIndex(index) || !equippedSlotOccupied[index])
         {
             return false;
         }
 
-        PickupItemId itemId = equippedItems[index];
+        PickupItemId itemId = equippedSlotItems[index];
         return entryById.TryGetValue(itemId, out entry) && entry != null;
+    }
+
+    private void EnsureEquippedStateArrays()
+    {
+        int slotCount = equippedSlots != null ? equippedSlots.Length : 0;
+        if (equippedSlotItems.Length == slotCount && equippedSlotOccupied.Length == slotCount)
+        {
+            return;
+        }
+
+        PickupItemId[] oldItems = equippedSlotItems;
+        bool[] oldOccupied = equippedSlotOccupied;
+
+        equippedSlotItems = new PickupItemId[slotCount];
+        equippedSlotOccupied = new bool[slotCount];
+
+        int copyCount = Mathf.Min(slotCount, oldItems.Length, oldOccupied.Length);
+        for (int i = 0; i < copyCount; i++)
+        {
+            equippedSlotItems[i] = oldItems[i];
+            equippedSlotOccupied[i] = oldOccupied[i];
+        }
+    }
+
+    private bool IsValidEquippedIndex(int index)
+    {
+        return equippedSlotItems != null &&
+               equippedSlotOccupied != null &&
+               index >= 0 &&
+               index < equippedSlotItems.Length &&
+               index < equippedSlotOccupied.Length;
+    }
+
+    private bool IsEquipped(PickupItemId id)
+    {
+        for (int i = 0; i < equippedSlotItems.Length; i++)
+        {
+            if (equippedSlotOccupied[i] && equippedSlotItems[i].Equals(id))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private void ClearSelectedUnlockItem()
+    {
+        hasSelectedUnlockItem = false;
+        RefreshUnlockedSlots();
     }
 
     private SkillBase FindSkill(string exactId, string prefix)

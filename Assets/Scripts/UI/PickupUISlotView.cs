@@ -24,6 +24,7 @@ public class PickupUISlotView : MonoBehaviour, IPointerClickHandler, IPointerEnt
     private bool initialized;
     private bool hasItem;
     private bool hasBaseScale;
+    private bool selected;
 
     private void Awake()
     {
@@ -37,6 +38,13 @@ public class PickupUISlotView : MonoBehaviour, IPointerClickHandler, IPointerEnt
         SetHighlight(false);
     }
 
+    public void SetSelected(bool value)
+    {
+        selected = value;
+        transform.localScale = selected ? baseScale * hoverScale : baseScale;
+        SetHighlight(selected);
+    }
+
     public void InitializeUnlockSlot(PickupUIController controller, PickupItemId id, Sprite icon)
     {
         owner = controller;
@@ -45,6 +53,7 @@ public class PickupUISlotView : MonoBehaviour, IPointerClickHandler, IPointerEnt
         equippedIndex = -1;
         initialized = true;
         hasItem = true;
+        selected = false;
 
         CacheBaseScale();
         transform.localScale = baseScale;
@@ -61,6 +70,7 @@ public class PickupUISlotView : MonoBehaviour, IPointerClickHandler, IPointerEnt
         equippedIndex = index;
         initialized = true;
         hasItem = false;
+        selected = false;
 
         CacheBaseScale();
         transform.localScale = baseScale;
@@ -95,23 +105,33 @@ public class PickupUISlotView : MonoBehaviour, IPointerClickHandler, IPointerEnt
 
     public void OnPointerClick(PointerEventData eventData)
     {
-        if (!initialized || owner == null || !hasItem || eventData.button != PointerEventData.InputButton.Left)
+        if (!initialized || owner == null || eventData.button != PointerEventData.InputButton.Left)
         {
             return;
         }
 
         if (role == SlotRole.Unlock)
         {
-            owner.Equip(itemId);
+            if (hasItem)
+            {
+                owner.SelectForEquip(itemId);
+            }
+
             return;
         }
 
-        owner.UnequipAt(equippedIndex);
+        owner.OnEquippedSlotClicked(equippedIndex);
     }
 
     public void OnPointerEnter(PointerEventData eventData)
     {
-        if (!initialized || !hasItem)
+        if (!initialized)
+        {
+            return;
+        }
+
+        bool interactive = hasItem || (role == SlotRole.Equipped && owner != null && owner.HasSelectedUnlockItem);
+        if (!interactive)
         {
             return;
         }
@@ -122,8 +142,8 @@ public class PickupUISlotView : MonoBehaviour, IPointerClickHandler, IPointerEnt
 
     public void OnPointerExit(PointerEventData eventData)
     {
-        transform.localScale = baseScale;
-        SetHighlight(false);
+        transform.localScale = selected ? baseScale * hoverScale : baseScale;
+        SetHighlight(selected);
     }
 
     private void SetIcon(Sprite icon)
