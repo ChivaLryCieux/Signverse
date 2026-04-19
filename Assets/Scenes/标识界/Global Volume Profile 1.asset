@@ -15,10 +15,10 @@ MonoBehaviour:
   active: 1
   shadows:
     m_OverrideState: 1
-    m_Value: {x: 0.97848547, y: 1, z: 0.9801117, w: 0.0000001342515}
+    m_Value: {x: 0.97848547, y: 1, z: 0.9801117, w: -0.3953755}
   midtones:
     m_OverrideState: 1
-    m_Value: {x: 0.9945131, y: 1, z: 0.99757034, w: -8.724298e-10}
+    m_Value: {x: 1, y: 0.8666639, z: 0.8761634, w: 0.12002472}
   highlights:
     m_OverrideState: 1
     m_Value: {x: 1, y: 1, z: 1, w: -0.015220643}
@@ -150,13 +150,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 66f335fb1ffd8684294ad653bf1c7564, type: 3}
   m_Name: ColorAdjustments
   m_EditorClassIdentifier: 
-  active: 0
+  active: 1
   postExposure:
     m_OverrideState: 1
     m_Value: 0.16
   contrast:
     m_OverrideState: 1
-    m_Value: 0
+    m_Value: 0.9
   colorFilter:
     m_OverrideState: 1
     m_Value: {r: 1, g: 1, b: 1, a: 1}
