@@ -10,6 +10,8 @@ public class PickupUIController : MonoBehaviour
     {
         public PickupItemId id;
         public string displayName;
+        [Tooltip("右上角技能序号。不填或小于 1 时，默认使用 Item1=1、Item2=2 的枚举顺序。")]
+        public int rightSideIndex;
         [Tooltip("用于匹配技能名后缀，例如 m/j/d/c。可留空，留空时只按 13-/24- 这类前缀匹配。")]
         public string comboCode;
         public Sprite icon;
@@ -350,20 +352,25 @@ public class PickupUIController : MonoBehaviour
             appliedLinkedSkills.Clear();
         }
 
-        AddLinkedSkillIfPresent(1, 2);
-        AddLinkedSkillIfPresent(3, 4);
+        AddLinkedSkillForPair(1, 2);
+        AddLinkedSkillForPair(3, 4);
     }
 
-    private void AddLinkedSkillIfPresent(int firstSlotNumber, int secondSlotNumber)
+    private void AddLinkedSkillForPair(int mainSlotNumber, int subSlotNumber)
     {
-        if (!TryGetEquippedEntry(firstSlotNumber, out PickupUiEntry firstEntry) ||
-            !TryGetEquippedEntry(secondSlotNumber, out PickupUiEntry secondEntry))
+        if (!TryGetEquippedEntry(mainSlotNumber, out PickupUiEntry mainEntry))
         {
             return;
         }
 
-        string prefix = firstSlotNumber.ToString() + secondSlotNumber + "-";
-        string exactId = BuildLinkedSkillId(prefix, firstEntry.comboCode, secondEntry.comboCode);
+        bool hasSubEntry = TryGetEquippedEntry(subSlotNumber, out PickupUiEntry subEntry);
+        if (!hasSubEntry)
+        {
+            subEntry = mainEntry;
+        }
+
+        string prefix = GetRightSideIndex(mainEntry).ToString() + GetRightSideIndex(subEntry) + "-";
+        string exactId = BuildLinkedSkillId(prefix, mainEntry.comboCode, subEntry.comboCode);
         SkillBase skill = FindSkill(exactId, prefix);
 
         if (skill == null)
@@ -435,6 +442,16 @@ public class PickupUIController : MonoBehaviour
         }
 
         return false;
+    }
+
+    private static int GetRightSideIndex(PickupUiEntry entry)
+    {
+        if (entry == null)
+        {
+            return 0;
+        }
+
+        return entry.rightSideIndex > 0 ? entry.rightSideIndex : ((int)entry.id + 1);
     }
 
     private void ClearSelectedUnlockItem()

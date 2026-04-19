@@ -148,7 +148,7 @@ PrefabInstance:
     - target: {fileID: 7020566751297728477, guid: 442dd687be27363f1880dbeef3e867a1,
         type: 3}
       propertyPath: m_LocalPosition.y
-      value: 3.459961
+      value: 5.09
       objectReference: {fileID: 0}
     - target: {fileID: 7020566751297728477, guid: 442dd687be27363f1880dbeef3e867a1,
         type: 3}
@@ -292,98 +292,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 05faf3fcf4d647d45a8ecb6bbeacb27a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  backpackSlots:
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  configRows: []
-  skillEntries:
-  - id: 
-    displayName: 
-    skill: {fileID: 0}
-    comboCode: 
-    boltCost: 0
-    backpackSprite: {fileID: 21300000, guid: a7930e5eba0b54f58ae428adb9a440bf, type: 3}
-    backpackSelectedSprite: {fileID: 0}
-    configSprite: {fileID: 0}
-    detailSprite: {fileID: 0}
-    detailDescLine1: 
-    detailDescLine2: 
-  - id: 
-    displayName: 
-    skill: {fileID: 0}
-    comboCode: 
-    boltCost: 0
-    backpackSprite: {fileID: 21300000, guid: 78acef917e2b88ffc975cf76b5065aa0, type: 3}
-    backpackSelectedSprite: {fileID: 0}
-    configSprite: {fileID: 0}
-    detailSprite: {fileID: 0}
-    detailDescLine1: 
-    detailDescLine2: 
-  - id: 
-    displayName: 
-    skill: {fileID: 0}
-    comboCode: 
-    boltCost: 0
-    backpackSprite: {fileID: 21300000, guid: 6e737c034bb4dcc8c96fa5f4777bf801, type: 3}
-    backpackSelectedSprite: {fileID: 0}
-    configSprite: {fileID: 0}
-    detailSprite: {fileID: 0}
-    detailDescLine1: 
-    detailDescLine2: 
-  - id: 
-    displayName: 
-    skill: {fileID: 0}
-    comboCode: 
-    boltCost: 0
-    backpackSprite: {fileID: 21300000, guid: 7f80701a68cf25b2980b4d66282de19a, type: 3}
-    backpackSelectedSprite: {fileID: 0}
-    configSprite: {fileID: 0}
-    detailSprite: {fileID: 0}
-    detailDescLine1: 
-    detailDescLine2: 
-  - id: 
-    displayName: 
-    skill: {fileID: 0}
-    comboCode: 
-    boltCost: 0
-    backpackSprite: {fileID: 21300000, guid: 07663609e6f44a8a7aab8188a3bbcda2, type: 3}
-    backpackSelectedSprite: {fileID: 0}
-    configSprite: {fileID: 0}
-    detailSprite: {fileID: 0}
-    detailDescLine1: 
-    detailDescLine2: 
-  maxBolts: 3
-  boltIcons: []
-  boltConfiguredSprite: {fileID: 0}
-  boltEmptySprite: {fileID: 0}
-  boltWarningSprite: {fileID: 0}
-  boltBlinkSpeed: 6
-  comboResults: []
-  player: {fileID: 0}
-  syncResolvedSkillsToPlayerUnlockedList: 1
-  replaceUnlockedListWithResolvedSkills: 1
-  detailPanel: {fileID: 0}
-  detailImage: {fileID: 0}
-  detailTitleText: {fileID: 0}
-  detailDescLine1Text: {fileID: 0}
-  detailDescLine2Text: {fileID: 0}
-  selectedEntry:
-    id: 
-    displayName: 
-    skill: {fileID: 0}
-    comboCode: m
-    boltCost: 1
-    backpackSprite: {fileID: 0}
-    backpackSelectedSprite: {fileID: 0}
-    configSprite: {fileID: 0}
-    detailSprite: {fileID: 0}
-    detailDescLine1: 
-    detailDescLine2: 
-  selectedBackpackSlot: {fileID: 0}
-  selectedEntryCanAfford: 0
 --- !u!114 &347281699 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 1031480690567101006, guid: 442dd687be27363f1880dbeef3e867a1,
@@ -814,12 +722,12 @@ PrefabInstance:
     - target: {fileID: 438725774190904866, guid: 952714e7bb2884601b12a31e89faf900,
         type: 3}
       propertyPath: m_LocalPosition.x
-      value: -1.4996988
+      value: -1.4997501
       objectReference: {fileID: 0}
     - target: {fileID: 438725774190904866, guid: 952714e7bb2884601b12a31e89faf900,
         type: 3}
       propertyPath: m_LocalPosition.y
-      value: 4.901303
+      value: 6.5313034
       objectReference: {fileID: 0}
     - target: {fileID: 438725774190904866, guid: 952714e7bb2884601b12a31e89faf900,
         type: 3}
@@ -2341,26 +2249,31 @@ MonoBehaviour:
   entries:
   - id: 0
     displayName: 
+    rightSideIndex: 0
     comboCode: 
     icon: {fileID: 21300000, guid: a7930e5eba0b54f58ae428adb9a440bf, type: 3}
     unlockSlot: {fileID: 1237705981}
   - id: 1
     displayName: 
+    rightSideIndex: 0
     comboCode: 
     icon: {fileID: 21300000, guid: 78acef917e2b88ffc975cf76b5065aa0, type: 3}
     unlockSlot: {fileID: 1254845545}
   - id: 2
     displayName: 
+    rightSideIndex: 0
     comboCode: 
     icon: {fileID: 21300000, guid: 6e737c034bb4dcc8c96fa5f4777bf801, type: 3}
     unlockSlot: {fileID: 647640090}
   - id: 3
     displayName: 
+    rightSideIndex: 0
     comboCode: 
     icon: {fileID: 21300000, guid: 7f80701a68cf25b2980b4d66282de19a, type: 3}
     unlockSlot: {fileID: 631178332}
   - id: 4
     displayName: 
+    rightSideIndex: 0
     comboCode: 
     icon: {fileID: 21300000, guid: 07663609e6f44a8a7aab8188a3bbcda2, type: 3}
     unlockSlot: {fileID: 1504396492}
@@ -2939,7 +2852,7 @@ PrefabInstance:
     - target: {fileID: 1532281194063057881, guid: 598e4636c4757bddeaaed4999af0c37f,
         type: 3}
       propertyPath: m_LocalPosition.x
-      value: 1.4795521
+      value: -1.98
       objectReference: {fileID: 0}
     - target: {fileID: 1532281194063057881, guid: 598e4636c4757bddeaaed4999af0c37f,
         type: 3}

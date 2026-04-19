@@ -23,7 +23,7 @@ public class PlayerCC : MonoBehaviour
     public bool isClimbing; 
 
     [Header("技能系统 (Slot-Based)")]
-    [Tooltip("开局默认拥有的技能。基础移动/跳跃/冲刺也应放在这里，例如 11-mm、22-jj、33-dd。")]
+    [Tooltip("可选：调试或特殊关卡开局自带技能。正式流程可留空，移动/跳跃/冲刺由拾取和 UI 解锁。")]
     public List<SkillBase> startingSkills = new List<SkillBase>();
 
     public List<SkillBase> unlockedSkills = new List<SkillBase>();
