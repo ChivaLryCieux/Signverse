@@ -2,17 +2,29 @@ using UnityEngine;
 
 namespace Skills
 {
-    [CreateAssetMenu(fileName = "22-jj", menuName = "Game/Skills/22 JJ Z Axis Jump")]
+    [CreateAssetMenu(fileName = "22-jj", menuName = "Game/Skills/22 JJ Jump")]
     public class Skill22JJZAxisJump : SkillBase
     {
-        [Header("伪 Z 轴跳")]
+        [Header("基础跳跃")]
         public float jumpHeight = 3f;
-        [TextArea] public string note = "当前 PlayerCC 在 LateUpdate 会强制把 Z 锁定为 0，所以这里只做成更高的跳跃占位版。";
 
         public override void OnActivate(GameObject user, PlayerCC controller)
         {
+            if (!controller.isGrounded || controller.isClimbing)
+            {
+                return;
+            }
+
             float verticalVel = Mathf.Sqrt(jumpHeight * -2f * controller.gravity);
             controller.SetVerticalVelocity(verticalVel);
+        }
+
+        public override void OnUpdate(GameObject user, PlayerCC controller)
+        {
+            if (controller.WasJumpPressed())
+            {
+                OnActivate(user, controller);
+            }
         }
     }
 }

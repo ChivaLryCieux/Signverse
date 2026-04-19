@@ -3,7 +3,7 @@ using UnityEngine;
 namespace Skills
 {
     [CreateAssetMenu(fileName = "32-dj", menuName = "Game/Skills/32 DJ Eight Direction Dash")]
-    public class Skill32DJEightDirectionDash : StdDash
+    public class Skill32DJEightDirectionDash : Skill33DDUltraDash
     {
         protected override float DashCooldown => 0.8f;
         [SerializeField] [Range(0.1f, 2f)]

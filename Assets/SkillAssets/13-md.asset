@@ -9,12 +9,12 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 89cb841618d70644581924a813496d24, type: 3}
-  m_Name: 31-dm
+  m_Script: {fileID: 11500000, guid: eab35e30e6608b44dae18d842808c539, type: 3}
+  m_Name: 13-md
   m_EditorClassIdentifier: 
-  skillID: 31-dm
+  skillID: 13-md
   skillName: 
   type: 0
-  dashKey: 108
-  dashDistance: 7
-  cooldown: 0.4
+  slideSpeed: 8
+  acceleration: 12
+  deceleration: 2

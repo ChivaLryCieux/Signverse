@@ -75,8 +75,10 @@ MonoBehaviour:
   gravity: -25
   isGrounded: 0
   isClimbing: 0
-  moveSkill: {fileID: 11400000, guid: 7e4fcba96b5756b74a4a692ce2020b1e, type: 2}
-  jumpSkill: {fileID: 11400000, guid: f8259b7fe85dd8e10917cf6a2f1e264d, type: 2}
+  startingSkills:
+  - {fileID: 11400000, guid: 147bbba0a282b9452ba4f18e755434cc, type: 2}
+  - {fileID: 11400000, guid: 622505f61b5c877cfa87b2d86733097b, type: 2}
+  - {fileID: 11400000, guid: 04e76ffca2436db1dbbcdd3a948eb1fe, type: 2}
   unlockedSkills: []
   masterDatabase: {fileID: 11400000, guid: 6c7fa50fa25f9d569a8378dc6b3967b9, type: 2}
   deathDistance: 5

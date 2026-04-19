@@ -9,7 +9,6 @@ namespace Skills
         public float invisibleDuration = 0.75f;
         public float triggerRadius = 1f;
         public LayerMask enemyMask;
-        public KeyCode cloakKey = KeyCode.V;
 
         private float invisibleTimer;
         private bool isInvisible;
@@ -18,7 +17,7 @@ namespace Skills
 
         public override void OnUpdate(GameObject user, PlayerCC controller)
         {
-            if (!isInvisible && Input.GetKeyDown(cloakKey))
+            if (!isInvisible && controller.WasHidePressed())
             {
                 isInvisible = true;
                 invisibleTimer = invisibleDuration;

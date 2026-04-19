@@ -6,7 +6,6 @@ namespace Skills
     public class Skill41CMDecoy : SkillBase
     {
         [Header("替身设置")]
-        public KeyCode summonKey = KeyCode.C;
         public GameObject decoyPrefab;
         public float lifetime = 3f;
 
@@ -14,7 +13,7 @@ namespace Skills
 
         public override void OnUpdate(GameObject user, PlayerCC controller)
         {
-            if (!Input.GetKeyDown(summonKey)) return;
+            if (!controller.WasHidePressed()) return;
 
             if (decoyPrefab == null)
             {

@@ -2,49 +2,27 @@ using UnityEngine;
 
 namespace Skills
 {
-    [CreateAssetMenu(fileName = "11-mm", menuName = "Game/Skills/11 MM Custom Portal")]
+    [CreateAssetMenu(fileName = "11-mm", menuName = "Game/Skills/11 MM Move")]
     public class Skill11MMCustomPortal : SkillBase
     {
-        [Header("传送门设置")]
-        public KeyCode placePortalKey = KeyCode.P;
-        public float portalTriggerRadius = 0.75f;
-        public float portalYOffset = 0.5f;
-
-        private bool hasEntryPortal;
-        private bool hasExitPortal;
-        private Vector3 entryPortalPosition;
-        private Vector3 exitPortalPosition;
+        [Header("基础移动")]
+        public float moveSpeed = 6f;
 
         public override void OnActivate(GameObject user, PlayerCC controller) { }
 
         public override void OnUpdate(GameObject user, PlayerCC controller)
         {
-            if (Input.GetKeyDown(placePortalKey))
+            Vector2 input = controller.GetMoveInput();
+            float horizontal = input.x;
+
+            if (Mathf.Abs(horizontal) <= 0.01f)
             {
-                Vector3 portalPos = user.transform.position + Vector3.up * portalYOffset;
-                if (!hasEntryPortal)
-                {
-                    entryPortalPosition = portalPos;
-                    hasEntryPortal = true;
-                    Debug.Log("11-mm: 已放置入口传送门");
-                }
-                else
-                {
-                    exitPortalPosition = portalPos;
-                    hasExitPortal = true;
-                    Debug.Log("11-mm: 已放置出口传送门");
-                }
+                return;
             }
 
-            if (!hasEntryPortal || !hasExitPortal) return;
-
-            if (Vector3.Distance(user.transform.position, entryPortalPosition) <= portalTriggerRadius)
-            {
-                CharacterController cc = controller.GetCharacterController();
-                cc.enabled = false;
-                user.transform.position = exitPortalPosition;
-                cc.enabled = true;
-            }
+            Vector3 moveDelta = new Vector3(horizontal * moveSpeed, 0f, 0f) * Time.deltaTime;
+            controller.GetCharacterController().Move(moveDelta);
+            controller.SetFacing(horizontal > 0f ? Vector3.right : Vector3.left);
         }
     }
 }

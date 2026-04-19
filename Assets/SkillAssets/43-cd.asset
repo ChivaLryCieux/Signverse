@@ -9,12 +9,15 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 89cb841618d70644581924a813496d24, type: 3}
-  m_Name: 31-dm
+  m_Script: {fileID: 11500000, guid: cff5fd9b80f27aa0dbeab79380074445, type: 3}
+  m_Name: 43-cd
   m_EditorClassIdentifier: 
-  skillID: 31-dm
+  skillID: 43-cd
   skillName: 
   type: 0
-  dashKey: 108
-  dashDistance: 7
-  cooldown: 0.4
+  invisibleDuration: 0.75
+  triggerRadius: 1
+  enemyMask:
+    serializedVersion: 2
+    m_Bits: 0
+  cloakKey: 118

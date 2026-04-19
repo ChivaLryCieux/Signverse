@@ -23,9 +23,9 @@ public class PlayerCC : MonoBehaviour
     public bool isClimbing; 
 
     [Header("技能系统 (Slot-Based)")]
-    public SkillBase moveSkill; 
-    public SkillBase jumpSkill; 
-    
+    [Tooltip("开局默认拥有的技能。基础移动/跳跃/冲刺也应放在这里，例如 11-mm、22-jj、33-dd。")]
+    public List<SkillBase> startingSkills = new List<SkillBase>();
+
     public List<SkillBase> unlockedSkills = new List<SkillBase>();
     public SkillDatabase masterDatabase; 
 
@@ -45,9 +45,16 @@ public class PlayerCC : MonoBehaviour
     
     // 供蓄力跳检测：空格是否正被按住
     public bool IsJumpPressed() => controls.Player.Jump.IsPressed();
+    public bool WasJumpPressed() => controls.Player.Jump.WasPressedThisFrame();
     
     // 供技能检测：空格是否在这一帧松开
     public bool WasJumpReleased() => controls.Player.Jump.WasReleasedThisFrame();
+
+    public bool IsDashPressed() => controls.Player.Dash.IsPressed();
+    public bool WasDashPressed() => controls.Player.Dash.WasPressedThisFrame();
+
+    public bool IsHidePressed() => controls.Player.Hide.IsPressed();
+    public bool WasHidePressed() => controls.Player.Hide.WasPressedThisFrame();
 
     public Vector3 GetFacing() => facingDirection;
     public bool IsDead => isDead;
@@ -62,11 +69,28 @@ public class PlayerCC : MonoBehaviour
     {
         cc = GetComponent<CharacterController>();
         controls = new PlayerControls();
+        isGrounded = false;
+        isClimbing = false;
+        isDead = false;
         currentCheckpoint = transform.position;
+        InitializeStartingSkills();
     }
 
-    void OnEnable() => controls.Player.Enable();
-    void OnDisable() => controls.Player.Disable();
+    void OnEnable()
+    {
+        if (controls != null)
+        {
+            controls.Player.Enable();
+        }
+    }
+
+    void OnDisable()
+    {
+        if (controls != null)
+        {
+            controls.Player.Disable();
+        }
+    }
 
     void Update()
     {
@@ -77,28 +101,25 @@ public class PlayerCC : MonoBehaviour
 
         isGrounded = cc.isGrounded;
 
-        // 1. 基础移动逻辑
-        if (moveSkill != null) moveSkill.OnUpdate(gameObject, this);
-
-        // 2. 只有每帧执行 OnUpdate，LongJumpSkill 才能计算蓄力时间和处理空中惯性
-        if (jumpSkill != null) jumpSkill.OnUpdate(gameObject, this);
-
-        // 3. 遍历执行其他已解锁技能
-        foreach (var skill in unlockedSkills)
+        for (int i = 0; i < unlockedSkills.Count; i++)
         {
+            SkillBase skill = unlockedSkills[i];
+            if (skill == null)
+            {
+                continue;
+            }
+
             skill.OnUpdate(gameObject, this);
         }
 
-        // 4. 处理物理重力与触发信号
-        HandleGravityAndJump();
+        HandleGravity();
 
-        // 5. 执行垂直位移
         cc.Move(new Vector3(0, verticalVelocity, 0) * Time.deltaTime);
 
         HandleFallDeath();
     }
 
-    private void HandleGravityAndJump()
+    private void HandleGravity()
     {
         if (isGrounded && verticalVelocity < 0)
         {
@@ -108,12 +129,6 @@ public class PlayerCC : MonoBehaviour
         if (!isClimbing)
         {
             verticalVelocity += gravity * Time.deltaTime;
-
-            // 发送起跳信号：如果是蓄力跳，OnActivate 用于标记“开始蓄力”
-            if (controls.Player.Jump.WasPressedThisFrame() && isGrounded)
-            {
-                if (jumpSkill != null) jumpSkill.OnActivate(gameObject, this);
-            }
         }
         else
         {
@@ -131,10 +146,31 @@ public class PlayerCC : MonoBehaviour
     {
         if (masterDatabase == null) return;
         SkillBase newSkill = masterDatabase.GetSkillByID(id);
-        if (newSkill != null && !unlockedSkills.Contains(newSkill))
+        UnlockSkill(newSkill);
+    }
+
+    public void UnlockSkill(SkillBase skill)
+    {
+        if (skill != null && !unlockedSkills.Contains(skill))
         {
-            unlockedSkills.Add(newSkill);
-            SkillUnlocked?.Invoke(newSkill);
+            unlockedSkills.Add(skill);
+            SkillUnlocked?.Invoke(skill);
+        }
+    }
+
+    private void InitializeStartingSkills()
+    {
+        if (unlockedSkills == null)
+        {
+            unlockedSkills = new List<SkillBase>();
+        }
+
+        if (startingSkills != null)
+        {
+            for (int i = 0; i < startingSkills.Count; i++)
+            {
+                UnlockSkill(startingSkills[i]);
+            }
         }
     }
 
