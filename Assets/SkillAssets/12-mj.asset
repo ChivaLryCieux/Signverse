@@ -25,5 +25,13 @@ MonoBehaviour:
   drawClimbRay: 1
   climbRayHitColor: {r: 0, g: 1, b: 0, a: 1}
   climbRayMissColor: {r: 1, g: 0, b: 0, a: 1}
+  groundMask:
+    serializedVersion: 2
+    m_Bits: 8
+  groundExitCheckDistance: 0.25
+  groundExitCheckRadius: 0.18
+  drawGroundExitCheck: 1
+  groundExitHitColor: {r: 0, g: 1, b: 1, a: 1}
+  groundExitMissColor: {r: 1, g: 0.92156863, b: 0.015686275, a: 1}
   exitUpOffset: {x: 0.6, y: 1}
   exitUpDuration: 0.25

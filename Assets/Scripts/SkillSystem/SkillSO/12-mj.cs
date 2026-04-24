@@ -17,6 +17,14 @@ namespace Skills
         public Color climbRayHitColor = Color.green;
         public Color climbRayMissColor = Color.red;
 
+        [Header("底部退出检测")]
+        public LayerMask groundMask;
+        public float groundExitCheckDistance = 0.25f;
+        public float groundExitCheckRadius = 0.18f;
+        public bool drawGroundExitCheck = true;
+        public Color groundExitHitColor = Color.cyan;
+        public Color groundExitMissColor = Color.yellow;
+
         [Header("边缘翻越")]
         [Tooltip("攀爬到顶部时，向面朝方向和上方移动的距离，用于把角色送上平台。")]
         public Vector2 exitUpOffset = new Vector2(0.6f, 1.0f);
@@ -86,15 +94,18 @@ namespace Skills
 
         private void UpdateClimb(PlayerCC controller, bool canClimb, float vertical)
         {
-            if (controller.IsInClimbTransitionTrigger && vertical > inputThreshold)
+            bool wantsToClimbDown = vertical < -inputThreshold;
+            bool canExitToGround = controller.isGrounded || IsGroundBelow(controller);
+
+            if (canExitToGround && wantsToClimbDown)
             {
-                StartExitUp(controller);
+                StopClimb(controller);
                 return;
             }
 
-            if (controller.isGrounded && vertical <= 0f)
+            if (controller.IsInClimbTransitionTrigger && vertical > inputThreshold)
             {
-                controller.SetClimbState(false, 0f);
+                StartExitUp(controller);
                 return;
             }
 
@@ -106,7 +117,7 @@ namespace Skills
 
             if (!canClimb && !controller.IsInClimbTransitionTrigger)
             {
-                controller.SetClimbState(false, 0f);
+                StopClimb(controller);
                 return;
             }
 
@@ -116,6 +127,11 @@ namespace Skills
             if (Mathf.Abs(vertical) > inputThreshold)
             {
                 MoveClimb(controller, vertical);
+
+                if (vertical < -inputThreshold && IsGroundBelow(controller))
+                {
+                    StopClimb(controller);
+                }
             }
         }
 
@@ -136,6 +152,40 @@ namespace Skills
             Debug.DrawRay(rayOrigin, controller.GetFacing().normalized * climbRayLength, rayColor);
         }
 
+        private bool IsGroundBelow(PlayerCC controller)
+        {
+            CharacterController characterController = controller.GetCharacterController();
+            Vector3 origin = GetGroundExitCheckOrigin(characterController);
+            float checkDistance = Mathf.Max(0.01f, groundExitCheckDistance);
+            float checkRadius = Mathf.Max(0.01f, groundExitCheckRadius);
+            bool hitGround = Physics.SphereCast(origin, checkRadius, Vector3.down, out _, checkDistance, groundMask);
+
+            DrawGroundExitCheck(origin, checkRadius, checkDistance, hitGround);
+            return hitGround;
+        }
+
+        private Vector3 GetGroundExitCheckOrigin(CharacterController characterController)
+        {
+            Vector3 worldCenter = characterController.transform.TransformPoint(characterController.center);
+            float bottomOffset = Mathf.Max(0f, characterController.height * 0.5f - characterController.radius);
+            return worldCenter + Vector3.down * bottomOffset + Vector3.up * 0.05f;
+        }
+
+        private void DrawGroundExitCheck(Vector3 origin, float radius, float distance, bool hitGround)
+        {
+            if (!drawGroundExitCheck)
+            {
+                return;
+            }
+
+            Color color = hitGround ? groundExitHitColor : groundExitMissColor;
+            Debug.DrawRay(origin, Vector3.down * distance, color);
+            Debug.DrawRay(origin + Vector3.right * radius, Vector3.down * distance, color);
+            Debug.DrawRay(origin + Vector3.left * radius, Vector3.down * distance, color);
+            Debug.DrawRay(origin + Vector3.forward * radius, Vector3.down * distance, color);
+            Debug.DrawRay(origin + Vector3.back * radius, Vector3.down * distance, color);
+        }
+
         private void StartExitUp(PlayerCC controller)
         {
             Vector3 facing = controller.GetFacing().sqrMagnitude > 0.01f ? controller.GetFacing().normalized : Vector3.right;
@@ -153,6 +203,12 @@ namespace Skills
 
         private void UpdateExitUp(PlayerCC controller)
         {
+            if (controller.isGrounded)
+            {
+                FinishExitUp(controller);
+                return;
+            }
+
             float step = Mathf.Min(Time.deltaTime, exitUpTimer);
 
             controller.SetVerticalVelocity(0f);
@@ -166,9 +222,19 @@ namespace Skills
                 return;
             }
 
+            FinishExitUp(controller);
+        }
+
+        private void FinishExitUp(PlayerCC controller)
+        {
             isExitingUp = false;
             exitUpTimer = 0f;
             exitUpVelocity = Vector3.zero;
+            StopClimb(controller);
+        }
+
+        private void StopClimb(PlayerCC controller)
+        {
             controller.SetClimbState(false, 0f);
         }
     }
