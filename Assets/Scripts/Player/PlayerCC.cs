@@ -23,6 +23,11 @@ public class PlayerCC : MonoBehaviour
     [Header("状态监控")]
     public bool isGrounded;
     public bool isClimbing; 
+    public float ClimbInput { get; private set; }
+    public bool IsInClimbTransitionTrigger => climbTransitionTriggerCount > 0;
+    private int climbTransitionTriggerCount;
+    private bool climbExitUpRequested;
+    private bool climbExitDownRequested;
 
     [Header("技能系统 (Slot-Based)")]
     [Tooltip("可选：调试或特殊关卡开局自带技能。正式流程可留空，移动/跳跃/冲刺由拾取和 UI 解锁。")]
@@ -60,14 +65,14 @@ public class PlayerCC : MonoBehaviour
     }
     
     // 供蓄力跳检测：空格是否正被按住
-    public bool IsJumpPressed() => controls.Player.Jump.IsPressed();
-    public bool WasJumpPressed() => controls.Player.Jump.WasPressedThisFrame();
+    public bool IsJumpPressed() => !isClimbing && controls.Player.Jump.IsPressed();
+    public bool WasJumpPressed() => !isClimbing && controls.Player.Jump.WasPressedThisFrame();
     
     // 供技能检测：空格是否在这一帧松开
-    public bool WasJumpReleased() => controls.Player.Jump.WasReleasedThisFrame();
+    public bool WasJumpReleased() => !isClimbing && controls.Player.Jump.WasReleasedThisFrame();
 
-    public bool IsDashPressed() => controls.Player.Dash.IsPressed();
-    public bool WasDashPressed() => controls.Player.Dash.WasPressedThisFrame();
+    public bool IsDashPressed() => !isClimbing && controls.Player.Dash.IsPressed();
+    public bool WasDashPressed() => !isClimbing && controls.Player.Dash.WasPressedThisFrame();
 
     public bool IsHidePressed() => controls.Player.Hide.IsPressed();
     public bool WasHidePressed() => controls.Player.Hide.WasPressedThisFrame();
@@ -78,6 +83,86 @@ public class PlayerCC : MonoBehaviour
     public void DisableMoveXFor(float duration)
     {
         moveXDisableTimer = Mathf.Max(moveXDisableTimer, duration);
+    }
+
+    public void SetClimbState(bool climbing, float input)
+    {
+        isClimbing = climbing;
+        ClimbInput = climbing ? Mathf.Clamp(input, -1f, 1f) : 0f;
+    }
+
+    public void EnterClimbTransitionTrigger()
+    {
+        climbTransitionTriggerCount++;
+    }
+
+    public void ExitClimbTransitionTrigger()
+    {
+        climbTransitionTriggerCount = Mathf.Max(0, climbTransitionTriggerCount - 1);
+    }
+
+    public bool HasUnlockedSkill(string id)
+    {
+        if (string.IsNullOrEmpty(id))
+        {
+            return false;
+        }
+
+        for (int i = 0; i < unlockedSkills.Count; i++)
+        {
+            SkillBase skill = unlockedSkills[i];
+            if (skill != null && skill.skillID == id)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    public bool HasUnlockedSkill<T>() where T : SkillBase
+    {
+        for (int i = 0; i < unlockedSkills.Count; i++)
+        {
+            if (unlockedSkills[i] is T)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    public void RequestClimbExitUpAnimation()
+    {
+        climbExitUpRequested = true;
+    }
+
+    public void RequestClimbExitDownAnimation()
+    {
+        climbExitDownRequested = true;
+    }
+
+    public bool ConsumeClimbExitUpAnimationRequest()
+    {
+        if (!climbExitUpRequested)
+        {
+            return false;
+        }
+
+        climbExitUpRequested = false;
+        return true;
+    }
+
+    public bool ConsumeClimbExitDownAnimationRequest()
+    {
+        if (!climbExitDownRequested)
+        {
+            return false;
+        }
+
+        climbExitDownRequested = false;
+        return true;
     }
 
     public void SetFacing(Vector3 dir)
@@ -96,7 +181,7 @@ public class PlayerCC : MonoBehaviour
         cc = GetComponent<CharacterController>();
         controls = new PlayerControls();
         isGrounded = false;
-        isClimbing = false;
+        SetClimbState(false, 0f);
         isDead = false;
         currentCheckpoint = transform.position;
         InitializeStartingSkills();
@@ -245,7 +330,7 @@ public class PlayerCC : MonoBehaviour
 
         isDead = true;
         verticalVelocity = 0f;
-        isClimbing = false;
+        SetClimbState(false, 0f);
         isGrounded = false;
         moveXDisableTimer = 0f;
         controls.Player.Disable();
@@ -272,7 +357,7 @@ public class PlayerCC : MonoBehaviour
         verticalVelocity = -2f;
         airStartY = respawnPosition.y;
         wasGrounded = false;
-        isClimbing = false;
+        SetClimbState(false, 0f);
         isDead = false;
         moveXDisableTimer = 0f;
 

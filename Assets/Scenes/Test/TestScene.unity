@@ -532,6 +532,7 @@ GameObject:
   - component: {fileID: 638022499}
   - component: {fileID: 638022498}
   - component: {fileID: 638022497}
+  - component: {fileID: 638022501}
   m_Layer: 6
   m_Name: Ground (3)
   m_TagString: Untagged
@@ -554,7 +555,7 @@ BoxCollider:
     serializedVersion: 2
     m_Bits: 0
   m_LayerOverridePriority: 0
-  m_IsTrigger: 0
+  m_IsTrigger: 1
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
@@ -619,12 +620,25 @@ Transform:
   m_GameObject: {fileID: 638022496}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -5.14, y: 1.4, z: 0.3418437}
+  m_LocalPosition: {x: -5.14, y: 0.89, z: 0.3418437}
   m_LocalScale: {x: 1, y: 10, z: 3}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &638022501
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 638022496}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6f4b29d45e7b4c94d8f7b06f0e6a3b52, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  requiredSkillID: 12-mj
 --- !u!1 &832575517
 GameObject:
   m_ObjectHideFlags: 0
@@ -1119,7 +1133,7 @@ Transform:
   m_GameObject: {fileID: 1707459466}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -10.21, y: 6.14, z: 0.3418437}
+  m_LocalPosition: {x: -9.81, y: 6.14, z: 0.3418437}
   m_LocalScale: {x: 10, y: 0.5, z: 3}
   m_ConstrainProportionsScale: 0
   m_Children: []

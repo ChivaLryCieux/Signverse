@@ -20,4 +20,10 @@ MonoBehaviour:
   rayOffsetY: -0.8
   climbableMask:
     serializedVersion: 2
-    m_Bits: 0
+    m_Bits: 64
+  inputThreshold: 0.1
+  drawClimbRay: 1
+  climbRayHitColor: {r: 0, g: 1, b: 0, a: 1}
+  climbRayMissColor: {r: 1, g: 0, b: 0, a: 1}
+  exitUpOffset: {x: 0.6, y: 1}
+  exitUpDuration: 0.25

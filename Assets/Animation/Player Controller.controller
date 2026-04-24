@@ -76,7 +76,7 @@ BlendTree:
     m_CycleOffset: 0.5
     m_DirectBlendParameter: jumpHold
     m_Mirror: 1
-  m_BlendParameter: ClimbVel
+  m_BlendParameter: ClimbInput
   m_BlendParameterY: jumpHold
   m_MinThreshold: -1
   m_MaxThreshold: 1
@@ -149,6 +149,24 @@ AnimatorController:
     m_Controller: {fileID: 9100000}
   - m_Name: Jump
     m_Type: 1
+    m_DefaultFloat: 0
+    m_DefaultInt: 0
+    m_DefaultBool: 0
+    m_Controller: {fileID: 9100000}
+  - m_Name: ClimbInput
+    m_Type: 1
+    m_DefaultFloat: 0
+    m_DefaultInt: 0
+    m_DefaultBool: 0
+    m_Controller: {fileID: 9100000}
+  - m_Name: Climb_Exit_Up
+    m_Type: 9
+    m_DefaultFloat: 0
+    m_DefaultInt: 0
+    m_DefaultBool: 0
+    m_Controller: {fileID: 9100000}
+  - m_Name: Climb_Exit_Down
+    m_Type: 9
     m_DefaultFloat: 0
     m_DefaultInt: 0
     m_DefaultBool: 0

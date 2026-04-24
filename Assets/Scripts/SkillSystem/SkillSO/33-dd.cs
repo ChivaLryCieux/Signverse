@@ -21,6 +21,11 @@ namespace Skills
 
         public override void OnActivate(GameObject user, PlayerCC controller)
         {
+            if (controller.isClimbing)
+            {
+                return;
+            }
+
             if (isDashing || cooldownTimer > 0f)
             {
                 return;
@@ -36,6 +41,16 @@ namespace Skills
 
         public override void OnUpdate(GameObject user, PlayerCC controller)
         {
+            if (controller.isClimbing)
+            {
+                if (isDashing)
+                {
+                    StopDash();
+                }
+
+                return;
+            }
+
             if (cooldownTimer > 0f)
             {
                 cooldownTimer -= Time.deltaTime;
