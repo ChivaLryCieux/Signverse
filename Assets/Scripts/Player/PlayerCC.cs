@@ -27,6 +27,7 @@ public class PlayerCC : MonoBehaviour
     public bool isClimbing; 
     public float VerticalVelocity => verticalVelocity;
     public int JumpType { get; private set; }
+    public float DashPosture { get; private set; }
     public float ClimbInput { get; private set; }
     public bool IsInClimbTransitionTrigger => climbTransitionTriggerCount > 0;
     private int climbTransitionTriggerCount;
@@ -89,6 +90,7 @@ public class PlayerCC : MonoBehaviour
     public bool IsDead => isDead;
     public void SetVerticalVelocity(float val) => verticalVelocity = val;
     public void SetJumpType(int type) => JumpType = Mathf.Max(0, type);
+    public void SetDashPosture(float posture) => DashPosture = Mathf.Clamp01(posture);
     public void DisableMoveXFor(float duration)
     {
         moveXDisableTimer = Mathf.Max(moveXDisableTimer, duration);

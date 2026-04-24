@@ -23,6 +23,7 @@ public class PlayerAnimatorController : MonoBehaviour
     private bool hasLegacyJumpVelocity;
     private bool hasJumpType;
     private bool hasIsGrounded;
+    private bool hasDashPosture;
 
     public float jumpTime = 0.3f;
 
@@ -67,6 +68,7 @@ public class PlayerAnimatorController : MonoBehaviour
         // 设置 Run Bool
         SetBoolIfExists(hasRun, "Run", isRunning);
         UpdateJumpAnimator();
+        UpdateDashAnimator();
         UpdateClimbAnimator();
     }
 
@@ -81,6 +83,16 @@ public class PlayerAnimatorController : MonoBehaviour
         SetFloatImmediateIfExists(hasLegacyJumpVelocity, "Jump", controller.VerticalVelocity);
         SetIntIfExists(hasJumpType, "JumpType", controller.JumpType);
         SetBoolIfExists(hasIsGrounded, "IsGrounded", controller.isGrounded);
+    }
+
+    private void UpdateDashAnimator()
+    {
+        if (controller == null)
+        {
+            return;
+        }
+
+        SetFloatImmediateIfExists(hasDashPosture, "DashPosture", controller.DashPosture);
     }
 
     private void UpdateClimbAnimator()
@@ -132,6 +144,7 @@ public class PlayerAnimatorController : MonoBehaviour
             else if (parameterName == "Jump" && parameterType == AnimatorControllerParameterType.Float) hasLegacyJumpVelocity = true;
             else if (parameterName == "JumpType" && parameterType == AnimatorControllerParameterType.Int) hasJumpType = true;
             else if (parameterName == "IsGrounded" && parameterType == AnimatorControllerParameterType.Bool) hasIsGrounded = true;
+            else if (parameterName == "DashPosture" && parameterType == AnimatorControllerParameterType.Float) hasDashPosture = true;
         }
     }
 

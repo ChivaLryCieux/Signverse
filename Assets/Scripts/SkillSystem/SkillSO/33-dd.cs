@@ -9,10 +9,19 @@ namespace Skills
         [SerializeField] protected float dashDistance = 9f;
         [SerializeField] protected float dashDuration = 0.12f;
         [SerializeField] protected float cooldown = 1.25f;
+        [SerializeField] protected AnimationCurve dashPostureCurve = new AnimationCurve(
+            new Keyframe(0f, 0f),
+            new Keyframe(0.25f, 1f),
+            new Keyframe(1f, 0f)
+        );
+        [SerializeField] [Min(1)]
+        protected int dashCurveSamples = 20;
 
         protected float cooldownTimer;
         protected float dashTimer;
-        protected Vector3 dashVelocity;
+        protected float dashElapsed;
+        protected float dashCurveArea = 1f;
+        protected Vector3 dashDirection;
         protected bool isDashing;
 
         protected virtual float DashDistance => dashDistance;
@@ -45,7 +54,7 @@ namespace Skills
             {
                 if (isDashing)
                 {
-                    StopDash();
+                    StopDash(controller);
                 }
 
                 return;
@@ -95,8 +104,11 @@ namespace Skills
 
             isDashing = true;
             dashTimer = actualDuration;
-            dashVelocity = normalizedDirection * (DashDistance / actualDuration);
+            dashElapsed = 0f;
+            this.dashDirection = normalizedDirection;
+            dashCurveArea = Mathf.Max(0.01f, CalculateCurveArea(dashPostureCurve, dashCurveSamples));
             cooldownTimer = DashCooldown;
+            controller.SetDashPosture(EvaluateDashPosture(0f));
 
             if (Mathf.Abs(normalizedDirection.x) > 0.01f)
             {
@@ -106,21 +118,67 @@ namespace Skills
 
         protected virtual void UpdateDash(PlayerCC controller)
         {
-            dashTimer -= Time.deltaTime;
+            float actualDuration = Mathf.Max(0.01f, DashDuration);
+            float step = Mathf.Min(Time.deltaTime, dashTimer);
+            dashElapsed += step;
+            dashTimer -= step;
 
-            CollisionFlags flags = controller.GetCharacterController().Move(dashVelocity * Time.deltaTime);
+            float normalizedTime = Mathf.Clamp01(dashElapsed / actualDuration);
+            float posture = EvaluateDashPosture(normalizedTime);
+            controller.SetDashPosture(posture);
+
+            Vector3 dashDelta = dashDirection * (DashDistance * posture / (dashCurveArea * actualDuration)) * step;
+            CollisionFlags flags = controller.GetCharacterController().Move(dashDelta);
 
             if ((flags & (CollisionFlags.Sides | CollisionFlags.Above)) != 0 || dashTimer <= 0f)
             {
-                StopDash();
+                StopDash(controller);
             }
         }
 
-        protected void StopDash()
+        protected void StopDash(PlayerCC controller)
         {
             isDashing = false;
             dashTimer = 0f;
-            dashVelocity = Vector3.zero;
+            dashElapsed = 0f;
+            dashDirection = Vector3.zero;
+
+            if (controller != null)
+            {
+                controller.SetDashPosture(0f);
+            }
+        }
+
+        protected float EvaluateDashPosture(float normalizedTime)
+        {
+            if (dashPostureCurve == null || dashPostureCurve.length == 0)
+            {
+                return 1f;
+            }
+
+            return Mathf.Clamp01(dashPostureCurve.Evaluate(Mathf.Clamp01(normalizedTime)));
+        }
+
+        private float CalculateCurveArea(AnimationCurve curve, int sampleCount)
+        {
+            if (curve == null || curve.length == 0)
+            {
+                return 1f;
+            }
+
+            int samples = Mathf.Max(1, sampleCount);
+            float area = 0f;
+            float previousValue = Mathf.Max(0f, curve.Evaluate(0f));
+
+            for (int i = 1; i <= samples; i++)
+            {
+                float time = i / (float)samples;
+                float value = Mathf.Max(0f, curve.Evaluate(time));
+                area += (previousValue + value) * 0.5f / samples;
+                previousValue = value;
+            }
+
+            return area;
         }
     }
 }
