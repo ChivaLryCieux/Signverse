@@ -14,12 +14,15 @@ public class PlayerAnimatorController : MonoBehaviour
     private bool isRunning;
     private bool isJumping;
     private bool hasRun;
-    private bool hasJump;
     private bool hasClimb;
     private bool hasClimbVel;
     private bool hasClimbInput;
     private bool hasClimbExitUp;
     private bool hasClimbExitDown;
+    private bool hasVerticalVelocity;
+    private bool hasLegacyJumpVelocity;
+    private bool hasJumpType;
+    private bool hasIsGrounded;
 
     public float jumpTime = 0.3f;
 
@@ -63,28 +66,21 @@ public class PlayerAnimatorController : MonoBehaviour
 
         // 设置 Run Bool
         SetBoolIfExists(hasRun, "Run", isRunning);
+        UpdateJumpAnimator();
         UpdateClimbAnimator();
+    }
 
-        if ((controller == null || !controller.isClimbing) && controls.Player.Jump.WasPressedThisFrame())
+    private void UpdateJumpAnimator()
+    {
+        if (controller == null)
         {
-            Jump();
+            return;
         }
-    }
 
-    void Jump()
-    {
-        // 设置 Jump Bool
-        SetBoolIfExists(hasJump, "Jump", true);
-
-        // 可选：延迟恢复（适合简单跳跃动画）
-        StartCoroutine(ResetJump());
-    }
-
-    IEnumerator ResetJump()
-    {
-        yield return new WaitForSeconds(jumpTime);
-
-        SetBoolIfExists(hasJump, "Jump", false);
+        SetFloatImmediateIfExists(hasVerticalVelocity, "VerticalVelocity", controller.VerticalVelocity);
+        SetFloatImmediateIfExists(hasLegacyJumpVelocity, "Jump", controller.VerticalVelocity);
+        SetIntIfExists(hasJumpType, "JumpType", controller.JumpType);
+        SetBoolIfExists(hasIsGrounded, "IsGrounded", controller.isGrounded);
     }
 
     private void UpdateClimbAnimator()
@@ -124,13 +120,18 @@ public class PlayerAnimatorController : MonoBehaviour
         {
             string parameterName = parameters[i].name;
 
-            if (parameterName == "Run") hasRun = true;
-            else if (parameterName == "Jump") hasJump = true;
-            else if (parameterName == "Climb") hasClimb = true;
-            else if (parameterName == "ClimbVel") hasClimbVel = true;
-            else if (parameterName == "ClimbInput") hasClimbInput = true;
-            else if (parameterName == "Climb_Exit_Up") hasClimbExitUp = true;
-            else if (parameterName == "Climb_Exit_Down") hasClimbExitDown = true;
+            AnimatorControllerParameterType parameterType = parameters[i].type;
+
+            if (parameterName == "Run" && parameterType == AnimatorControllerParameterType.Bool) hasRun = true;
+            else if (parameterName == "Climb" && parameterType == AnimatorControllerParameterType.Bool) hasClimb = true;
+            else if (parameterName == "ClimbVel" && parameterType == AnimatorControllerParameterType.Float) hasClimbVel = true;
+            else if (parameterName == "ClimbInput" && parameterType == AnimatorControllerParameterType.Float) hasClimbInput = true;
+            else if (parameterName == "Climb_Exit_Up" && parameterType == AnimatorControllerParameterType.Trigger) hasClimbExitUp = true;
+            else if (parameterName == "Climb_Exit_Down" && parameterType == AnimatorControllerParameterType.Trigger) hasClimbExitDown = true;
+            else if (parameterName == "VerticalVelocity" && parameterType == AnimatorControllerParameterType.Float) hasVerticalVelocity = true;
+            else if (parameterName == "Jump" && parameterType == AnimatorControllerParameterType.Float) hasLegacyJumpVelocity = true;
+            else if (parameterName == "JumpType" && parameterType == AnimatorControllerParameterType.Int) hasJumpType = true;
+            else if (parameterName == "IsGrounded" && parameterType == AnimatorControllerParameterType.Bool) hasIsGrounded = true;
         }
     }
 
@@ -147,6 +148,22 @@ public class PlayerAnimatorController : MonoBehaviour
         if (exists)
         {
             animator.SetFloat(parameterName, value, 0.1f, Time.deltaTime);
+        }
+    }
+
+    private void SetFloatImmediateIfExists(bool exists, string parameterName, float value)
+    {
+        if (exists)
+        {
+            animator.SetFloat(parameterName, value);
+        }
+    }
+
+    private void SetIntIfExists(bool exists, string parameterName, int value)
+    {
+        if (exists)
+        {
+            animator.SetInteger(parameterName, value);
         }
     }
 

@@ -15,6 +15,8 @@ public class PlayerCC : MonoBehaviour
 
     [Header("物理参数")]
     public float gravity = -25f;
+    [Tooltip("下落时的额外重力倍率，用于让 VerticalVelocity 更快进入下落段。")]
+    public float fallMultiplier = 1.6f;
     [SerializeField] private float turnInputThreshold = 0.1f;
     private float verticalVelocity;
     private Vector3 facingDirection = Vector3.right;
@@ -23,6 +25,8 @@ public class PlayerCC : MonoBehaviour
     [Header("状态监控")]
     public bool isGrounded;
     public bool isClimbing; 
+    public float VerticalVelocity => verticalVelocity;
+    public int JumpType { get; private set; }
     public float ClimbInput { get; private set; }
     public bool IsInClimbTransitionTrigger => climbTransitionTriggerCount > 0;
     private int climbTransitionTriggerCount;
@@ -45,6 +49,10 @@ public class PlayerCC : MonoBehaviour
     [Header("重生状态")]
     [SerializeField] private Vector3 currentCheckpoint;
     [SerializeField] private bool isDead;
+
+    [Header("地面检测调试")]
+    [SerializeField] private bool drawGroundedGizmo = true;
+    [SerializeField] private float groundedGizmoOffsetY;
 
     // --- 给技能脚本提供的“遥控器”接口 ---
     public CharacterController GetCharacterController() => cc;
@@ -80,6 +88,7 @@ public class PlayerCC : MonoBehaviour
     public Vector3 GetFacing() => facingDirection;
     public bool IsDead => isDead;
     public void SetVerticalVelocity(float val) => verticalVelocity = val;
+    public void SetJumpType(int type) => JumpType = Mathf.Max(0, type);
     public void DisableMoveXFor(float duration)
     {
         moveXDisableTimer = Mathf.Max(moveXDisableTimer, duration);
@@ -246,7 +255,8 @@ public class PlayerCC : MonoBehaviour
 
         if (!isClimbing)
         {
-            verticalVelocity += gravity * Time.deltaTime;
+            float gravityMultiplier = verticalVelocity < 0f ? fallMultiplier : 1f;
+            verticalVelocity += gravity * gravityMultiplier * Time.deltaTime;
         }
         else
         {
@@ -269,6 +279,11 @@ public class PlayerCC : MonoBehaviour
 
     private void HandleIntrinsicFacing()
     {
+        if (isClimbing)
+        {
+            return;
+        }
+
         float horizontal = GetRawMoveInput().x;
 
         if (Mathf.Abs(horizontal) <= turnInputThreshold)
@@ -369,7 +384,24 @@ public class PlayerCC : MonoBehaviour
 
     private void OnDrawGizmos()
     {
+        if (!drawGroundedGizmo)
+        {
+            return;
+        }
+
+        CharacterController debugCc = cc != null ? cc : GetComponent<CharacterController>();
+        if (debugCc == null)
+        {
+            return;
+        }
+
         Gizmos.color = isGrounded ? Color.green : Color.red;
-        Gizmos.DrawWireSphere(transform.position + Vector3.up * 0.1f, 0.2f);
+
+        Vector3 worldCenter = transform.TransformPoint(debugCc.center);
+        float bottomOffset = Mathf.Max(0f, debugCc.height * 0.5f - debugCc.radius);
+        Vector3 bottomSphereCenter = worldCenter + Vector3.down * bottomOffset + Vector3.up * groundedGizmoOffsetY;
+
+        Gizmos.DrawWireSphere(bottomSphereCenter, debugCc.radius);
+        Gizmos.DrawLine(worldCenter, bottomSphereCenter);
     }
 }

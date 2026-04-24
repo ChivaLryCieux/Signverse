@@ -171,6 +171,24 @@ AnimatorController:
     m_DefaultInt: 0
     m_DefaultBool: 0
     m_Controller: {fileID: 9100000}
+  - m_Name: VerticalVelocity
+    m_Type: 1
+    m_DefaultFloat: 0
+    m_DefaultInt: 0
+    m_DefaultBool: 0
+    m_Controller: {fileID: 9100000}
+  - m_Name: JumpType
+    m_Type: 3
+    m_DefaultFloat: 0
+    m_DefaultInt: 0
+    m_DefaultBool: 0
+    m_Controller: {fileID: 9100000}
+  - m_Name: IsGrounded
+    m_Type: 4
+    m_DefaultFloat: 0
+    m_DefaultInt: 0
+    m_DefaultBool: 1
+    m_Controller: {fileID: 9100000}
   m_AnimatorLayers:
   - serializedVersion: 5
     m_Name: Base Layer
@@ -195,13 +213,13 @@ AnimatorStateMachine:
   m_ChildStates:
   - serializedVersion: 1
     m_State: {fileID: 1521956399970718712}
-    m_Position: {x: 420, y: 110, z: 0}
+    m_Position: {x: 480, y: 230, z: 0}
   - serializedVersion: 1
     m_State: {fileID: 4085567725058537693}
-    m_Position: {x: 410, y: -10, z: 0}
+    m_Position: {x: 140, y: 0, z: 0}
   - serializedVersion: 1
     m_State: {fileID: 5321638477461970691}
-    m_Position: {x: 790, y: 40, z: 0}
+    m_Position: {x: 480, y: 0, z: 0}
   - serializedVersion: 1
     m_State: {fileID: 5242888459824217191}
     m_Position: {x: 140, y: 230, z: 0}
@@ -210,9 +228,9 @@ AnimatorStateMachine:
   m_EntryTransitions: []
   m_StateMachineTransitions: {}
   m_StateMachineBehaviours: []
-  m_AnyStatePosition: {x: 50, y: 20, z: 0}
-  m_EntryPosition: {x: 50, y: 120, z: 0}
-  m_ExitPosition: {x: 860, y: 160, z: 0}
+  m_AnyStatePosition: {x: 140, y: 350, z: 0}
+  m_EntryPosition: {x: 500, y: 350, z: 0}
+  m_ExitPosition: {x: 320, y: 350, z: 0}
   m_ParentStateMachinePosition: {x: 800, y: 20, z: 0}
   m_DefaultState: {fileID: 1521956399970718712}
 --- !u!1102 &1521956399970718712
@@ -453,7 +471,7 @@ BlendTree:
     m_CycleOffset: 0
     m_DirectBlendParameter: ClimbVel
     m_Mirror: 0
-  m_BlendParameter: Jump
+  m_BlendParameter: VerticalVelocity
   m_BlendParameterY: Blend
   m_MinThreshold: 0.1
   m_MaxThreshold: 0.5
