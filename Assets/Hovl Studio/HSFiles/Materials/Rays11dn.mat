@@ -44,6 +44,14 @@ Material:
         m_Texture: {fileID: 2800000, guid: 7d68a918c0765ff46bd6aa7513519399, type: 3}
         m_Scale: {x: 0.25, y: 0.35}
         m_Offset: {x: 0, y: 0}
+    - _EmissionMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _Flow:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     - _MainTex:
         m_Texture: {fileID: 2800000, guid: dec3ddadf6185ed4fbe226c3b9678541, type: 3}
         m_Scale: {x: 1, y: 1}
@@ -52,10 +60,18 @@ Material:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
-    - _TextureNoise:
+    - _OcclusionMap:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
+    - _ParallaxMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _TextureNoise:
+        m_Texture: {fileID: 2800000, guid: fecbc2dbf76d9ab4089330c3e5ee2423, type: 3}
+        m_Scale: {x: 0.25, y: 0.4}
+        m_Offset: {x: 0.4, y: 0.2}
     - _texcoord:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
@@ -90,12 +106,12 @@ Material:
     m_Colors:
     - _Color: {r: 1, g: 1, b: 1, a: 1}
     - _Dissolvecolor: {r: 1, g: 1, b: 1, a: 1}
-    - _DissolvespeedXY: {r: 2.82, g: 1.98, b: 0.79, a: 0.65}
+    - _DissolvespeedXY: {r: 0.1, g: 0, b: 0, a: 0}
     - _DistortionSpeedXYPowerZ: {r: 0, g: 0, b: 0, a: 0}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
     - _Maincolor: {r: 0, g: 0, b: 0, a: 1}
     - _Noisecolor: {r: 1, g: 1, b: 1, a: 1}
-    - _NoisespeedXYEmissonZPowerW: {r: 2.27, g: 1.49, b: 8.05, a: 9.48}
+    - _NoisespeedXYEmissonZPowerW: {r: 0.1, g: 0, b: 6, a: 2}
     - _SpeedMainTexUVNoiseZW: {r: 0, g: 0, b: 0, a: 0}
     - _TintColor: {r: 0.5, g: 0.5, b: 0.5, a: 0.5}
   m_BuildTextureStacks: []
