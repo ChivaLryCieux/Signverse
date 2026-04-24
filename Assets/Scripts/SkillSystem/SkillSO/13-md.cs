@@ -24,9 +24,6 @@ namespace Skills
             if (Mathf.Abs(currentSpeed) < 0.01f) return;
 
             controller.GetCharacterController().Move(new Vector3(currentSpeed, 0f, 0f) * Time.deltaTime);
-
-            if (currentSpeed > 0.01f) controller.SetFacing(Vector3.right);
-            else if (currentSpeed < -0.01f) controller.SetFacing(Vector3.left);
         }
     }
 }

@@ -15,6 +15,7 @@ public class PlayerCC : MonoBehaviour
 
     [Header("物理参数")]
     public float gravity = -25f;
+    [SerializeField] private float turnInputThreshold = 0.1f;
     private float verticalVelocity;
     private Vector3 facingDirection = Vector3.right;
     private float moveXDisableTimer;
@@ -42,9 +43,14 @@ public class PlayerCC : MonoBehaviour
 
     // --- 给技能脚本提供的“遥控器”接口 ---
     public CharacterController GetCharacterController() => cc;
+    public Vector2 GetRawMoveInput()
+    {
+        return controls.Player.Move.ReadValue<Vector2>();
+    }
+
     public Vector2 GetMoveInput()
     {
-        Vector2 input = controls.Player.Move.ReadValue<Vector2>();
+        Vector2 input = GetRawMoveInput();
         if (moveXDisableTimer > 0f)
         {
             input.x = 0f;
@@ -76,8 +82,13 @@ public class PlayerCC : MonoBehaviour
 
     public void SetFacing(Vector3 dir)
     {
+        if (dir.sqrMagnitude <= 0.01f)
+        {
+            return;
+        }
+
         facingDirection = dir;
-        transform.forward = dir;
+        transform.forward = dir.normalized;
     }
 
     void Awake()
@@ -118,6 +129,8 @@ public class PlayerCC : MonoBehaviour
         {
             moveXDisableTimer -= Time.deltaTime;
         }
+
+        HandleIntrinsicFacing();
 
         isGrounded = cc.isGrounded;
 
@@ -167,6 +180,18 @@ public class PlayerCC : MonoBehaviour
         if (masterDatabase == null) return;
         SkillBase newSkill = masterDatabase.GetSkillByID(id);
         UnlockSkill(newSkill);
+    }
+
+    private void HandleIntrinsicFacing()
+    {
+        float horizontal = GetRawMoveInput().x;
+
+        if (Mathf.Abs(horizontal) <= turnInputThreshold)
+        {
+            return;
+        }
+
+        SetFacing(horizontal > 0f ? Vector3.right : Vector3.left);
     }
 
     public void UnlockSkill(SkillBase skill)

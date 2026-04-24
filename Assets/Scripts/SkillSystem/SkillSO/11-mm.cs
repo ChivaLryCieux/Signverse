@@ -22,7 +22,6 @@ namespace Skills
 
             Vector3 moveDelta = new Vector3(horizontal * moveSpeed, 0f, 0f) * Time.deltaTime;
             controller.GetCharacterController().Move(moveDelta);
-            controller.SetFacing(horizontal > 0f ? Vector3.right : Vector3.left);
         }
     }
 }
