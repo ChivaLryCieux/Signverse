@@ -46,7 +46,11 @@ public class PlayerCC : MonoBehaviour
     public float respawnDelay = 3.0f;
     private float airStartY;
     private bool wasGrounded;
-
+    //————————————————————————————————————————————————————————————————————————————————————————————————————————————————临时用【卢】——————————————————————————————————————————————————————————————
+    [Header("地面检测")]
+    public float groundCheckDistance = 0.3f;
+    public LayerMask groundLayer;
+    //————————————————————————————————————————————————————————————————————————————————————————————————————————————————临时用【卢】——————————————————————————————————————————————————————————————
     [Header("重生状态")]
     [SerializeField] private Vector3 currentCheckpoint;
     [SerializeField] private bool isDead;
@@ -216,6 +220,7 @@ public class PlayerCC : MonoBehaviour
 
     void Update()
     {
+        GroundCheck();  //————————————————————————————————————————————————————————————————————————————————————————————————————————————————临时用【卢】——————————————————————————————————————————————————————————————
         if (isDead)
         {
             return;
@@ -248,6 +253,36 @@ public class PlayerCC : MonoBehaviour
         HandleFallDeath();
     }
 
+    //————————————————————————————————————————————————————————————————————————————————————————————————————————————————临时用【卢】——————————————————————————————————————————————————————————————
+    void GroundCheck()
+    {
+        RaycastHit hit;
+
+        if (Physics.Raycast(transform.position, Vector3.down, out hit, groundCheckDistance, groundLayer))
+        {
+            CheckElectricFloor(hit);
+        }
+    }
+
+    void CheckElectricFloor(RaycastHit hit)
+    {
+        ElectricFloor floor = hit.collider.GetComponent<ElectricFloor>();
+
+        if (floor == null) return;
+
+        if (floor.isElectrified)
+        {
+            PlayerDeath();
+        }
+    }
+
+    void PlayerDeath()
+    {
+        Debug.Log("玩家死亡");
+
+        
+    }
+    //————————————————————————————————————————————————————————————————————————————————————————————————————————————————临时用【卢】——————————————————————————————————————————————————————————————
     private void HandleGravity()
     {
         if (isGrounded && verticalVelocity < 0)

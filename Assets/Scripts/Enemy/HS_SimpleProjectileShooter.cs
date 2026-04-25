@@ -9,6 +9,7 @@ public class HS_SimpleProjectileShooter : MonoBehaviour
 {
     [Header("子弹效果")]
     public GameObject projectilePrefab;
+    public AudioClip fireSFX;
 
     [Header("发射点")]
     public Transform firePoint;
@@ -35,6 +36,13 @@ public class HS_SimpleProjectileShooter : MonoBehaviour
 
     // 当前蓄力计时
     private float chargeTimer = 0f;
+
+    AudioSource audioSource;
+
+    void Awake()
+    {
+        audioSource = GetComponent<AudioSource>();
+    }
 
     void Update()
     {
@@ -68,11 +76,8 @@ public class HS_SimpleProjectileShooter : MonoBehaviour
             return;
         }
 
-        Instantiate(
-            projectilePrefab,
-            firePoint.position,
-            firePoint.rotation
-        );
+        Instantiate( projectilePrefab, firePoint.position, firePoint.rotation );
+        audioSource.PlayOneShot(fireSFX);
 
         if (camAnim != null)
         {

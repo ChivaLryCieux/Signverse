@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 
+[RequireComponent(typeof(AudioSource))]
 public class EnemyLookAtPlayer : MonoBehaviour
 {
     [Header("检测范围")]
@@ -13,11 +14,21 @@ public class EnemyLookAtPlayer : MonoBehaviour
     [Tooltip("哪个轴的正方向用于朝向玩家")]
     public Axis forwardAxis = Axis.Z;
 
+    [Header("音效设置")]
+    [Tooltip("玩家进入范围时播放的音效")]
+    public AudioClip detectClip;
+
     [Header("调试")]
     public bool debugDraw = true;
 
     private Transform player;
+
     public bool playerInRange;
+
+    // 用于判断“刚进入”
+    private bool lastPlayerInRange;
+
+    private AudioSource audioSource;
 
     public enum Axis
     {
@@ -26,14 +37,51 @@ public class EnemyLookAtPlayer : MonoBehaviour
         Z
     }
 
+    // ------------------------
+    // 初始化
+    // ------------------------
+
+    void Awake()
+    {
+        audioSource = GetComponent<AudioSource>();
+    }
+
     void Update()
     {
         DetectPlayer();
+
+        // ------------------------
+        // 检测“进入瞬间”
+        // ------------------------
+
+        if (!lastPlayerInRange && playerInRange)
+        {
+            OnPlayerEnter();
+        }
+
+        lastPlayerInRange = playerInRange;
+
+        // ------------------------
+        // 持续朝向玩家
+        // ------------------------
 
         if (playerInRange && player != null)
         {
             RotateTowardsPlayer();
         }
+    }
+
+    // ------------------------
+    // 玩家进入时触发
+    // ------------------------
+
+    void OnPlayerEnter()
+    {
+        if (detectClip == null)
+            return;
+        audioSource.Stop();
+        audioSource.PlayOneShot(detectClip);
+       
     }
 
     // ------------------------
