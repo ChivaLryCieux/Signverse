@@ -143,17 +143,7 @@ namespace Skills
 
             controller.SetVerticalVelocity(0f);
             controller.SetClimbState(true, vertical);
-            animator.SetBool("Climb", true);
-
-            float climbVelTarget = 0f;
-
-            if (vertical > inputThreshold)
-                climbVelTarget = 1f;
-
-            else if (vertical < -inputThreshold)
-                climbVelTarget = -1f;
-
-            animator.SetFloat( "ClimbInput", climbVelTarget, 0.2f, Time.deltaTime * 6f );
+      
 
             if (Mathf.Abs(vertical) > inputThreshold)
             {
