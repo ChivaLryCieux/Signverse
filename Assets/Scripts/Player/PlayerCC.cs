@@ -1,10 +1,10 @@
 using UnityEngine;
 using System.Collections.Generic;
-using System.Collections;
 using Skills; 
 using System;
 
 [RequireComponent(typeof(CharacterController))]
+[RequireComponent(typeof(PlayerDeath))]
 public class PlayerCC : MonoBehaviour
 {
     public enum Posture
@@ -19,6 +19,7 @@ public class PlayerCC : MonoBehaviour
     [Header("核心引用")]
     private CharacterController cc;
     private PlayerControls controls; 
+    private PlayerDeath playerDeath;
 
     [Header("物理参数")]
     public float gravity = -25f;
@@ -48,20 +49,6 @@ public class PlayerCC : MonoBehaviour
 
     public List<SkillBase> unlockedSkills = new List<SkillBase>();
     public SkillDatabase masterDatabase; 
-
-    [Header("摔死检测")]
-    public float deathDistance = 8.0f;
-    public float respawnDelay = 3.0f;
-    private float airStartY;
-    private bool wasGrounded;
-    //————————————————————————————————————————————————————————————————————————————————————————————————————————————————临时用【卢】——————————————————————————————————————————————————————————————
-    [Header("地面检测")]
-    public float groundCheckDistance = 0.3f;
-    public LayerMask groundLayer;
-    //————————————————————————————————————————————————————————————————————————————————————————————————————————————————临时用【卢】——————————————————————————————————————————————————————————————
-    [Header("重生状态")]
-    [SerializeField] private Vector3 currentCheckpoint;
-    [SerializeField] private bool isDead;
 
     [Header("地面检测调试")]
     [SerializeField] private bool drawGroundedGizmo = true;
@@ -99,7 +86,7 @@ public class PlayerCC : MonoBehaviour
     public bool WasHidePressed() => controls.Player.Hide.WasPressedThisFrame();
 
     public Vector3 GetFacing() => facingDirection;
-    public bool IsDead => isDead;
+    public bool IsDead => playerDeath != null && playerDeath.IsDead;
     public bool IsPosture(Posture posture) => CurrentPosture == posture;
     public void SetVerticalVelocity(float val) => verticalVelocity = val;
     public void SetJumpType(int type) => JumpType = Mathf.Max(0, type);
@@ -107,6 +94,28 @@ public class PlayerCC : MonoBehaviour
     public void DisableMoveXFor(float duration)
     {
         moveXDisableTimer = Mathf.Max(moveXDisableTimer, duration);
+    }
+
+    public void ClearMovementLocks()
+    {
+        moveXDisableTimer = 0f;
+    }
+
+    public void SetInputEnabled(bool enabled)
+    {
+        if (controls == null)
+        {
+            return;
+        }
+
+        if (enabled)
+        {
+            controls.Player.Enable();
+        }
+        else
+        {
+            controls.Player.Disable();
+        }
     }
 
     public void SetClimbState(bool climbing, float input)
@@ -204,12 +213,16 @@ public class PlayerCC : MonoBehaviour
     void Awake()
     {
         cc = GetComponent<CharacterController>();
+        playerDeath = GetComponent<PlayerDeath>();
+        if (playerDeath == null)
+        {
+            playerDeath = gameObject.AddComponent<PlayerDeath>();
+        }
+
         controls = new PlayerControls();
         isGrounded = false;
         CurrentPosture = Posture.Airborne;
         SetClimbState(false, 0f);
-        isDead = false;
-        currentCheckpoint = transform.position;
         InitializeStartingSkills();
     }
 
@@ -231,8 +244,7 @@ public class PlayerCC : MonoBehaviour
 
     void Update()
     {
-        GroundCheck();  //————————————————————————————————————————————————————————————————————————————————————————————————————————————————临时用【卢】——————————————————————————————————————————————————————————————
-        if (isDead)
+        if (IsDead)
         {
             return;
         }
@@ -260,40 +272,7 @@ public class PlayerCC : MonoBehaviour
         HandleGravity();
 
         cc.Move(new Vector3(0, verticalVelocity, 0) * Time.deltaTime);
-
-        HandleFallDeath();
     }
-
-    //————————————————————————————————————————————————————————————————————————————————————————————————————————————————临时用【卢】——————————————————————————————————————————————————————————————
-    void GroundCheck()
-    {
-        RaycastHit hit;
-
-        if (Physics.Raycast(transform.position, Vector3.down, out hit, groundCheckDistance, groundLayer))
-        {
-            CheckElectricFloor(hit);
-        }
-    }
-
-    void CheckElectricFloor(RaycastHit hit)
-    {
-        ElectricFloor floor = hit.collider.GetComponent<ElectricFloor>();
-
-        if (floor == null) return;
-
-        if (floor.isElectrified)
-        {
-            PlayerDeath();
-        }
-    }
-
-    void PlayerDeath()
-    {
-        Debug.Log("玩家死亡");
-
-        
-    }
-    //————————————————————————————————————————————————————————————————————————————————————————————————————————————————临时用【卢】——————————————————————————————————————————————————————————————
     private void HandleGravity()
     {
         if (isGrounded && verticalVelocity < 0)
@@ -382,65 +361,18 @@ public class PlayerCC : MonoBehaviour
 
     public void SetCheckpoint(Vector3 checkpointPosition)
     {
-        currentCheckpoint = checkpointPosition;
-        Debug.Log($"<color=green>已更新存档点：</color>{currentCheckpoint}");
-    }
-
-    private void HandleFallDeath()
-    {
-        if (wasGrounded && !isGrounded) airStartY = transform.position.y;
-        if (!wasGrounded && isGrounded)
+        if (playerDeath != null)
         {
-            float fallHeight = airStartY - transform.position.y;
-            if (fallHeight > deathDistance) Die();
+            playerDeath.SetCheckpoint(checkpointPosition);
         }
-        wasGrounded = isGrounded;
     }
 
-    private void Die()
+    public void Die()
     {
-        if (isDead)
+        if (playerDeath != null)
         {
-            return;
+            playerDeath.Die();
         }
-
-        isDead = true;
-        verticalVelocity = 0f;
-        SetClimbState(false, 0f);
-        isGrounded = false;
-        moveXDisableTimer = 0f;
-        controls.Player.Disable();
-        cc.enabled = false;
-
-        Debug.Log("<color=red>角色死亡！3 秒后将在存档点复活。</color>");
-        StartCoroutine(RespawnAfterDelay());
-    }
-
-    private IEnumerator RespawnAfterDelay()
-    {
-        yield return new WaitForSeconds(respawnDelay);
-        RespawnAtCheckpoint();
-    }
-
-    private void RespawnAtCheckpoint()
-    {
-        Vector3 respawnPosition = new Vector3(currentCheckpoint.x, currentCheckpoint.y, 0f);
-
-        transform.position = respawnPosition;
-        facingDirection = Vector3.right;
-        transform.forward = facingDirection;
-
-        verticalVelocity = -2f;
-        airStartY = respawnPosition.y;
-        wasGrounded = false;
-        SetClimbState(false, 0f);
-        isDead = false;
-        moveXDisableTimer = 0f;
-
-        cc.enabled = true;
-        controls.Player.Enable();
-
-        Debug.Log("<color=cyan>角色已在存档点复活。</color>");
     }
 
     private void OnDrawGizmos()

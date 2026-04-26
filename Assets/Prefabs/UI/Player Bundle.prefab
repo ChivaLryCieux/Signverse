@@ -2177,6 +2177,7 @@ GameObject:
   - component: {fileID: 1921826500247216003}
   - component: {fileID: 6549374439513278110}
   - component: {fileID: 4122403130312153653}
+  - component: {fileID: 4857639083924152716}
   m_Layer: 0
   m_Name: Player
   m_TagString: Player
@@ -2246,12 +2247,28 @@ MonoBehaviour:
   startingSkills: []
   unlockedSkills: []
   masterDatabase: {fileID: 11400000, guid: 6c7fa50fa25f9d569a8378dc6b3967b9, type: 2}
-  deathDistance: 100
-  respawnDelay: 3
-  currentCheckpoint: {x: 0, y: 0, z: 0}
-  isDead: 0
   drawGroundedGizmo: 1
   groundedGizmoOffsetY: 0
+--- !u!114 &4857639083924152716
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7380719804208909204}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0c6a5d0a752c4d3498b94f7d0b2c3a11, type: 3}
+  m_Name:
+  m_EditorClassIdentifier:
+  deathDistance: 100
+  respawnDelay: 3
+  groundCheckDistance: 0.3
+  groundLayer:
+    serializedVersion: 2
+    m_Bits: 0
+  currentCheckpoint: {x: 0, y: 0, z: 0}
+  isDead: 0
 --- !u!1 &7503767776750342449
 GameObject:
   m_ObjectHideFlags: 0

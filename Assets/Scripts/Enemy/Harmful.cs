@@ -1,5 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class Harmful : MonoBehaviour
@@ -8,7 +6,11 @@ public class Harmful : MonoBehaviour
     {
         if (collision.gameObject.CompareTag("Player"))
         {
-            //全局播送：玩家死了！   或者引用玩家，然后调用PlayerDeath的方法
+            PlayerDeath playerDeath = collision.gameObject.GetComponentInParent<PlayerDeath>();
+            if (playerDeath != null)
+            {
+                playerDeath.Die();
+            }
         }
     }
 }
