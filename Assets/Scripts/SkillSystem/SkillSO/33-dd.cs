@@ -32,6 +32,7 @@ namespace Skills
         protected virtual float DashDuration => dashDuration;
         protected virtual float DashCooldown => cooldown;
 
+        // 满足姿态和冷却条件时开始冲刺。
         public override void OnActivate(GameObject user, PlayerCC controller, PlayerCC.Posture posture)
         {
             if (posture == PlayerCC.Posture.Climbing)
@@ -52,6 +53,7 @@ namespace Skills
             StartDash(controller, dashDirection);
         }
 
+        // 每帧处理冲刺冷却、冲刺推进和按键触发。
         public override void OnUpdate(GameObject user, PlayerCC controller, PlayerCC.Posture posture)
         {
             if (posture == PlayerCC.Posture.Climbing)
@@ -81,6 +83,7 @@ namespace Skills
             }
         }
 
+        // 根据输入或角色朝向计算本次冲刺方向。
         protected virtual bool TryGetDashDirection(PlayerCC controller, out Vector3 dashDirection)
         {
             Vector2 input = controller.GetMoveInput();
@@ -101,6 +104,7 @@ namespace Skills
             return true;
         }
 
+        // 初始化冲刺计时、方向、曲线面积和动画姿态值。
         protected void StartDash(PlayerCC controller, Vector3 dashDirection)
         {
             float actualDuration = Mathf.Max(0.01f, DashDuration);
@@ -120,6 +124,7 @@ namespace Skills
             }
         }
 
+        // 按曲线逐帧推进角色，并在碰撞或时间结束时停止。
         protected virtual void UpdateDash(PlayerCC controller)
         {
             float actualDuration = Mathf.Max(0.01f, DashDuration);
@@ -140,6 +145,7 @@ namespace Skills
             }
         }
 
+        // 停止冲刺并重置冲刺运行时状态。
         protected void StopDash(PlayerCC controller)
         {
             isDashing = false;
@@ -155,6 +161,7 @@ namespace Skills
 
         // ===== 动画控制 =====
 
+        // 采样冲刺姿态曲线，输出 0 到 1 的动画/速度权重。
         protected float EvaluateDashPosture(float normalizedTime)
         {
             if (dashPostureCurve == null || dashPostureCurve.length == 0)
@@ -165,6 +172,7 @@ namespace Skills
             return Mathf.Clamp01(dashPostureCurve.Evaluate(Mathf.Clamp01(normalizedTime)));
         }
 
+        // 估算曲线面积，用来归一化冲刺总距离。
         private float CalculateCurveArea(AnimationCurve curve, int sampleCount)
         {
             if (curve == null || curve.length == 0)

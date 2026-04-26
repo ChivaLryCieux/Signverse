@@ -23,6 +23,7 @@ namespace Skills
         private float airForwardSpeed = 0f; 
         private Vector3 moveDirection = Vector3.zero; 
 
+        // 接地时进入蓄力跳远状态。
         public override void OnActivate(GameObject user, PlayerCC controller, PlayerCC.Posture posture)
         {
             if (posture == PlayerCC.Posture.Grounded)
@@ -34,6 +35,7 @@ namespace Skills
             }
         }
 
+        // 每帧处理蓄力、松开发射、空中推进和落地重置。
         public override void OnUpdate(GameObject user, PlayerCC controller, PlayerCC.Posture posture)
         {
             // 1. 蓄力逻辑
@@ -90,6 +92,7 @@ namespace Skills
             }
         }
 
+        // 根据蓄力时间计算跳跃高度和前进速度。
         private void Launch(PlayerCC controller)
         {
             float usableChargeRange = Mathf.Max(0.01f, maxChargeTime - minChargeTime);

@@ -15,8 +15,10 @@ namespace Skills
 
         private float currentSpeed;
 
+        // 溜冰是持续型移动技能，激活时不需要额外处理。
         public override void OnActivate(GameObject user, PlayerCC controller, PlayerCC.Posture posture) { }
 
+        // 每帧根据横向输入平滑加速或减速，形成滑行手感。
         public override void OnUpdate(GameObject user, PlayerCC controller, PlayerCC.Posture posture)
         {
             Vector2 input = controller.GetMoveInput();

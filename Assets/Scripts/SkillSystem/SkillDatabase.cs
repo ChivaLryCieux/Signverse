@@ -13,6 +13,7 @@ namespace Skills
         public List<SkillBase> allSkills; // 拖入所有的技能 .asset
 
         // 通过 ID 快速查找技能，用于解锁逻辑
+        // 根据 skillID 或资源名查找技能资产。
         public SkillBase GetSkillByID(string id)
         {
             if (allSkills == null || string.IsNullOrWhiteSpace(id))
@@ -26,6 +27,7 @@ namespace Skills
 
 #if UNITY_EDITOR
         [ContextMenu("自动收集所有 SkillBase 资产")]
+        // 编辑器菜单：自动扫描项目内所有 SkillBase 资产并填入数据库。
         private void AutoCollectSkillAssets()
         {
             string[] guids = AssetDatabase.FindAssets("t:ScriptableObject");

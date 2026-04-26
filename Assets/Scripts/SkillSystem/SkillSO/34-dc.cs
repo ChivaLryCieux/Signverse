@@ -10,6 +10,7 @@ namespace Skills
         [TextArea] public string designNote = "dash + cloak 组合技能预留。";
 
         // ===== 物理控制 =====
+        // 组合技能占位，当前激活时不执行效果。
         public override void OnActivate(GameObject user, PlayerCC controller, PlayerCC.Posture posture) { }
 
         // ===== 动画控制 =====

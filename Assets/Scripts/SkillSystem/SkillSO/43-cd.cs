@@ -16,8 +16,10 @@ namespace Skills
         private float invisibleTimer;
         private bool isInvisible;
 
+        // 潜行刺杀由隐藏键触发，激活入口暂不处理。
         public override void OnActivate(GameObject user, PlayerCC controller, PlayerCC.Posture posture) { }
 
+        // 每帧处理短暂隐身、范围击杀和隐身结束恢复。
         public override void OnUpdate(GameObject user, PlayerCC controller, PlayerCC.Posture posture)
         {
             if (!isInvisible && controller.WasHidePressed())
@@ -43,6 +45,7 @@ namespace Skills
             SetVisible(user, true);
         }
 
+        // 切换角色所有子 Renderer 的显示状态。
         private void SetVisible(GameObject user, bool visible)
         {
             Renderer[] renderers = user.GetComponentsInChildren<Renderer>(true);

@@ -12,8 +12,10 @@ namespace Skills
         public GameObject decoyPrefab;
         public float lifetime = 3f;
 
+        // 替身技能是按隐藏键触发，激活入口暂不处理。
         public override void OnActivate(GameObject user, PlayerCC controller, PlayerCC.Posture posture) { }
 
+        // 每帧监听隐藏键，生成替身并按生命周期销毁。
         public override void OnUpdate(GameObject user, PlayerCC controller, PlayerCC.Posture posture)
         {
             if (!controller.WasHidePressed()) return;

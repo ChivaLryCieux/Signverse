@@ -15,6 +15,7 @@ namespace Skills
         private float airForwardSpeed;
         private Vector3 moveDirection = Vector3.right;
 
+        // 激活立定跳远，设置竖直起跳速度和空中前进速度。
         public override void OnActivate(GameObject user, PlayerCC controller, PlayerCC.Posture posture)
         {
             float verticalVel = Mathf.Sqrt(jumpHeight * -2f * controller.gravity);
@@ -23,6 +24,7 @@ namespace Skills
             airForwardSpeed = forwardDistance;
         }
 
+        // 空中持续施加前进惯性，落地后清空速度。
         public override void OnUpdate(GameObject user, PlayerCC controller, PlayerCC.Posture posture)
         {
             if (posture == PlayerCC.Posture.Grounded)

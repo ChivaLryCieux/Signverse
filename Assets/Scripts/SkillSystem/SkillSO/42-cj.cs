@@ -16,8 +16,10 @@ namespace Skills
         private float invisibleTimer;
         private bool isInvisible;
 
+        // 自动隐身是循环型技能，激活时不需要额外处理。
         public override void OnActivate(GameObject user, PlayerCC controller, PlayerCC.Posture posture) { }
 
+        // 每帧推进隐身循环计时，并自动切换可见性。
         public override void OnUpdate(GameObject user, PlayerCC controller, PlayerCC.Posture posture)
         {
             timer += Time.deltaTime;
@@ -39,6 +41,7 @@ namespace Skills
             SetVisible(user, true);
         }
 
+        // 切换角色所有子 Renderer 的显示状态。
         private void SetVisible(GameObject user, bool visible)
         {
             Renderer[] renderers = user.GetComponentsInChildren<Renderer>(true);

@@ -14,6 +14,7 @@ namespace Skills
 
 
 
+        // 根据二维输入计算八方向冲刺方向，并对斜向做角度偏置。
         protected override bool TryGetDashDirection(PlayerCC controller, out Vector3 dashDirection)
         {
             Vector2 input = controller.GetMoveInput();

@@ -11,8 +11,10 @@ namespace Skills
         [Header("基础移动")]
         public float moveSpeed = 6f;
 
+        // 基础移动是持续型技能，激活时不需要额外处理。
         public override void OnActivate(GameObject user, PlayerCC controller, PlayerCC.Posture posture) { }
 
+        // 每帧读取横向输入，并通过 CharacterController 执行基础移动。
         public override void OnUpdate(GameObject user, PlayerCC controller, PlayerCC.Posture posture)
         {
             Vector2 input = controller.GetMoveInput();
