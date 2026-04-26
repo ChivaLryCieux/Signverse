@@ -1,7 +1,9 @@
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 public class AnimatorStateDebugger : MonoBehaviour
 {
+    
     [Header("Animator")]
     public Animator animator;
 
@@ -20,6 +22,7 @@ public class AnimatorStateDebugger : MonoBehaviour
     public bool isMidAir = false;
     public bool isClimbing = false;
 
+
     public enum Locomotion
     {
         isGrounded,
@@ -29,12 +32,21 @@ public class AnimatorStateDebugger : MonoBehaviour
 
     public Locomotion locomotion;
 
+    [Header("用于快速切换攀爬状态")]
+    public bool enterClimbing = false;
+
+    
     [Header("Jump Settings")]
     public float jumpChangeRate = 5f;
 
     float jumpHold = 0f;
     bool jumpRising = false;
     bool jumpFalling = false;
+
+    // [Header("动画补丁引用部分")]
+    // public CharacterController cc;
+    // public Transform player;
+    // public Transform targetPos;
 
     void Awake()
     {
@@ -53,6 +65,13 @@ public class AnimatorStateDebugger : MonoBehaviour
 
     void Update()
     {
+        //简单的攀爬Posture控制
+        if (Keyboard.current.cKey.wasPressedThisFrame)
+        {
+            enterClimbing = !enterClimbing;
+        }
+
+
         SwitchLocomotion();
   
 
@@ -70,9 +89,14 @@ public class AnimatorStateDebugger : MonoBehaviour
     locomotion = Locomotion.isGrounded;
 
     // 2️⃣ 如果有垂直输入（爬梯等）
-    if (Mathf.Abs(move.y) > 0.01f)
+    if (enterClimbing)
     {
         locomotion = Locomotion.isClimbing;
+        return;
+    }
+    if (!enterClimbing)
+    {
+         locomotion = Locomotion.isGrounded;
         return;
     }
 
@@ -158,35 +182,49 @@ public class AnimatorStateDebugger : MonoBehaviour
 {
     if (locomotion == Locomotion.isClimbing)
     {
+        float climbVelTarget = 0f;
+
         if (Mathf.Abs(move.y) > 0.01f)
         {
             animator.SetBool("Climb", true);
 
             if (move.y > 0.01f)
             {
-                // 向上爬：ClimbVel → 1
-                animator.SetFloat("ClimbVel", 1f, 0.2f, Time.deltaTime);
+                climbVelTarget = 1f;   // 向上
             }
             else if (move.y < -0.01f)
             {
-                // 向下或停止：ClimbVel → 0
-                animator.SetFloat("ClimbVel", 0f, 0.2f, Time.deltaTime);
+                climbVelTarget = -1f;   // 向下/停止
             }
         }
         else
         {
-            animator.SetBool("Climb", false);
-
-            // 没输入时缓慢归零
-            animator.SetFloat("ClimbVel", 0f);
+            climbVelTarget = 0f;
         }
+
+        // 平滑实现+阈值吸附
+        
+        animator.SetFloat("ClimbInput", climbVelTarget , 0.2f , Time.deltaTime * 6f);
+
+        float climbVelCurrent = animator.GetFloat("ClimbInput");
+        
+
+        // ⭐关键：硬归零
+
+        if (Mathf.Abs(climbVelCurrent - climbVelTarget) < 0.1f)
+        {
+            animator.SetFloat("ClimbInput", climbVelTarget);
+           
+        }
+        
     }
+
     else
     {
         animator.SetBool("Climb", false);
 
         // 不在攀爬状态时归零
-        animator.SetFloat("ClimbVel", 0f, 0.2f, Time.deltaTime);
+        animator.SetFloat("ClimbInput", 0f, 0.2f, Time.deltaTime);
     }
 }
 
@@ -264,4 +302,34 @@ public class AnimatorStateDebugger : MonoBehaviour
             animator.SetBool("Hide", false);
         }
     }
+
+    //用来暂时实现悬崖边上翻越的功能event
+    public void LockRootMotion()
+    {
+        animator.applyRootMotion = false;
+        Debug.Log("RM Locked!");
+    }
+    public void ApplyRootMotion()
+    {
+        animator.applyRootMotion = true;
+        Debug.Log("RM Applaied!");
+    }
+
+
+
+    // public void OnVaultEndSnap()
+    // {
+        
+        
+    //     // 2. 临时关闭 CharacterController 防止碰撞干扰
+    //     cc.enabled = false;
+
+    //     // 3. 直接移动角色根节点
+    //     player.transform.position = targetPos.position;
+
+    //     // 4. 重新启用 CharacterController
+    //     cc.enabled = true;
+
+    //     Debug.Log("Vault End Snap Executed");
+    // }
 }
