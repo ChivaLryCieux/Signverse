@@ -5,6 +5,9 @@ namespace Skills
     [CreateAssetMenu(fileName = "12-mj", menuName = "Game/Skills/12 MJ Climb")]
     public class Skill12MJClimb : Skill11MMCustomPortal
     {
+        // ===== 元数据 =====
+
+        // ===== 物理控制 =====
         [Header("攀爬设置")]
         public float climbSpeed = 4f;
         public float climbRayLength = 0.8f;
@@ -35,9 +38,9 @@ namespace Skills
         private float exitUpTimer;
         private Vector3 exitUpVelocity;
 
-        public override void OnActivate(GameObject user, PlayerCC controller) { }
+        public override void OnActivate(GameObject user, PlayerCC controller, PlayerCC.Posture posture) { }
 
-        public override void OnUpdate(GameObject user, PlayerCC controller)
+        public override void OnUpdate(GameObject user, PlayerCC controller, PlayerCC.Posture posture)
         {
             if (isExitingUp)
             {
@@ -50,24 +53,26 @@ namespace Skills
             bool canClimb = Physics.Raycast(rayOrigin, controller.GetFacing(), climbRayLength, climbableMask);
             DrawClimbRay(controller, rayOrigin, canClimb);
             float vertical = Mathf.Abs(input.y) > inputThreshold ? input.y : 0f;
-
-            if (!controller.isClimbing)
+            if (posture != PlayerCC.Posture.Climbing)
             {
                 TryEnterClimb(controller, canClimb, vertical);
+                posture = controller.CurrentPosture;
 
-                if (!controller.isClimbing)
+                if (posture != PlayerCC.Posture.Climbing)
                 {
-                    base.OnUpdate(user, controller);
+                    base.OnUpdate(user, controller, posture);
                 }
 
                 return;
             }
 
-            UpdateClimb(controller, canClimb, vertical);
+            UpdateClimb(controller, canClimb, vertical, posture);
 
-            if (!controller.isClimbing)
+            posture = controller.CurrentPosture;
+
+            if (posture != PlayerCC.Posture.Climbing)
             {
-                base.OnUpdate(user, controller);
+                base.OnUpdate(user, controller, posture);
             }
         }
 
@@ -92,10 +97,10 @@ namespace Skills
             MoveClimb(controller, vertical);
         }
 
-        private void UpdateClimb(PlayerCC controller, bool canClimb, float vertical)
+        private void UpdateClimb(PlayerCC controller, bool canClimb, float vertical, PlayerCC.Posture posture)
         {
             bool wantsToClimbDown = vertical < -inputThreshold;
-            bool canExitToGround = controller.isGrounded || IsGroundBelow(controller);
+            bool canExitToGround = posture == PlayerCC.Posture.Grounded || IsGroundBelow(controller);
 
             if (canExitToGround && wantsToClimbDown)
             {
@@ -186,6 +191,8 @@ namespace Skills
             Debug.DrawRay(origin + Vector3.back * radius, Vector3.down * distance, color);
         }
 
+        // ===== 动画控制 =====
+
         private void StartExitUp(PlayerCC controller)
         {
             Vector3 facing = controller.GetFacing().sqrMagnitude > 0.01f ? controller.GetFacing().normalized : Vector3.right;
@@ -203,7 +210,7 @@ namespace Skills
 
         private void UpdateExitUp(PlayerCC controller)
         {
-            if (controller.isGrounded)
+            if (controller.CurrentPosture == PlayerCC.Posture.Grounded)
             {
                 FinishExitUp(controller);
                 return;

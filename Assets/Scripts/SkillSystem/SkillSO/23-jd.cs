@@ -5,6 +5,9 @@ namespace Skills
     [CreateAssetMenu(fileName = "23-jd", menuName = "Game/Skills/23 JD Jetpack")]
     public class Skill23JDBlinkJump : SkillBase
     {
+        // ===== 元数据 =====
+
+        // ===== 物理控制 =====
         [Header("喷气背包")]
         public float startHeight = 1f;
         public float accumulateThrustSpeed = 1f;
@@ -16,12 +19,12 @@ namespace Skills
 
         private bool isCharging;
 
-        public override void OnActivate(GameObject user, PlayerCC controller)
+        public override void OnActivate(GameObject user, PlayerCC controller, PlayerCC.Posture posture)
         {
             BeginCharge();
         }
 
-        public override void OnUpdate(GameObject user, PlayerCC controller)
+        public override void OnUpdate(GameObject user, PlayerCC controller, PlayerCC.Posture posture)
         {
             if (controller.WasJumpPressed())
             {
@@ -60,5 +63,7 @@ namespace Skills
             controller.SetVerticalVelocity(verticalVelocity);
             controller.DisableMoveXFor(PureThrustTime);
         }
+
+        // ===== 动画控制 =====
     }
 }

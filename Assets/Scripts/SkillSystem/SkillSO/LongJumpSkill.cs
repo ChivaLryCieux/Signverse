@@ -5,6 +5,9 @@ namespace Skills
     [CreateAssetMenu(fileName = "LongJumpSkill", menuName = "Game/Skills/Long Jump")]
     public class LongJumpSkill : SkillBase
     {
+        // ===== 元数据 =====
+
+        // ===== 物理控制 =====
         [Header("蓄力与距离设置")]
         public float minChargeTime = 0.4f;
         public float minJumpDistance = 4f;   
@@ -20,9 +23,9 @@ namespace Skills
         private float airForwardSpeed = 0f; 
         private Vector3 moveDirection = Vector3.zero; 
 
-        public override void OnActivate(GameObject user, PlayerCC controller)
+        public override void OnActivate(GameObject user, PlayerCC controller, PlayerCC.Posture posture)
         {
-            if (controller.isGrounded)
+            if (posture == PlayerCC.Posture.Grounded)
             {
                 isCharging = true;
                 chargeTimer = 0f;
@@ -31,7 +34,7 @@ namespace Skills
             }
         }
 
-        public override void OnUpdate(GameObject user, PlayerCC controller)
+        public override void OnUpdate(GameObject user, PlayerCC controller, PlayerCC.Posture posture)
         {
             // 1. 蓄力逻辑
             if (isCharging)
@@ -58,7 +61,7 @@ namespace Skills
             }
 
             // 2. 核心修复：空中的水平位移 (X轴)
-            if (!controller.isGrounded && airForwardSpeed > 0.1f)
+            if (posture == PlayerCC.Posture.Airborne && airForwardSpeed > 0.1f)
             {
                 // 确保方向不是 Vector3.zero
                 if (moveDirection == Vector3.zero) moveDirection = controller.GetFacing();
@@ -73,14 +76,14 @@ namespace Skills
                 Debug.DrawRay(user.transform.position, moveDelta * 10f, Color.red);
                 
                 // 碰撞侧墙或进入攀爬状态时，只取消水平推进，不影响重力下落
-                if ((collisionFlags & CollisionFlags.Sides) != 0 || controller.isClimbing)
+                if ((collisionFlags & CollisionFlags.Sides) != 0 || posture == PlayerCC.Posture.Climbing)
                 {
                     airForwardSpeed = 0f;
                 }
             }
 
             // 3. 落地重置一切
-            if (controller.isGrounded)
+            if (posture == PlayerCC.Posture.Grounded)
             {
                 airForwardSpeed = 0;
                 moveDirection = Vector3.zero;
@@ -106,5 +109,7 @@ namespace Skills
 
             Debug.Log($"<color=cyan>发射成功！</color> 方向:{moveDirection} 速度:{airForwardSpeed} 蓄力:{chargeTimer:F2}s");
         }
+
+        // ===== 动画控制 =====
     }
 }

@@ -60,7 +60,7 @@ public class PlayerAnimatorController : MonoBehaviour
             Mathf.Abs(moveInput.x) > 0.1f ||
             Mathf.Abs(moveInput.y) > 0.1f;
 
-        if (controller != null && controller.isClimbing)
+        if (controller != null && controller.CurrentPosture == PlayerCC.Posture.Climbing)
         {
             isRunning = false;
         }
@@ -82,7 +82,7 @@ public class PlayerAnimatorController : MonoBehaviour
         SetFloatImmediateIfExists(hasVerticalVelocity, "VerticalVelocity", controller.VerticalVelocity);
         SetFloatImmediateIfExists(hasLegacyJumpVelocity, "Jump", controller.VerticalVelocity);
         SetIntIfExists(hasJumpType, "JumpType", controller.JumpType);
-        SetBoolIfExists(hasIsGrounded, "IsGrounded", controller.isGrounded);
+        SetBoolIfExists(hasIsGrounded, "IsGrounded", controller.CurrentPosture == PlayerCC.Posture.Grounded);
     }
 
     private void UpdateDashAnimator()
@@ -103,7 +103,7 @@ public class PlayerAnimatorController : MonoBehaviour
         }
 
         float climbInput = controller.ClimbInput;
-        bool climbing = controller.isClimbing;
+        bool climbing = controller.CurrentPosture == PlayerCC.Posture.Climbing;
 
         SetBoolIfExists(hasClimb, "Climb", climbing);
         SetFloatIfExists(hasClimbVel, "ClimbVel", climbInput);
