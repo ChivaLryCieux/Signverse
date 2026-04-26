@@ -5,10 +5,14 @@ namespace Skills
     [CreateAssetMenu(fileName = "33-dd", menuName = "Game/Skills/33 DD Dash")]
     public class Skill33DDUltraDash : SkillBase
     {
+        // ===== 元数据 =====
+
+        // ===== 物理控制 =====
         [Header("基础冲刺")]
         [SerializeField] protected float dashDistance = 9f;
         [SerializeField] protected float dashDuration = 0.12f;
         [SerializeField] protected float cooldown = 1.25f;
+
         [SerializeField] protected AnimationCurve dashPostureCurve = new AnimationCurve(
             new Keyframe(0f, 0f),
             new Keyframe(0.25f, 1f),
@@ -28,9 +32,9 @@ namespace Skills
         protected virtual float DashDuration => dashDuration;
         protected virtual float DashCooldown => cooldown;
 
-        public override void OnActivate(GameObject user, PlayerCC controller)
+        public override void OnActivate(GameObject user, PlayerCC controller, PlayerCC.Posture posture)
         {
-            if (controller.isClimbing)
+            if (posture == PlayerCC.Posture.Climbing)
             {
                 return;
             }
@@ -48,9 +52,9 @@ namespace Skills
             StartDash(controller, dashDirection);
         }
 
-        public override void OnUpdate(GameObject user, PlayerCC controller)
+        public override void OnUpdate(GameObject user, PlayerCC controller, PlayerCC.Posture posture)
         {
-            if (controller.isClimbing)
+            if (posture == PlayerCC.Posture.Climbing)
             {
                 if (isDashing)
                 {
@@ -73,7 +77,7 @@ namespace Skills
 
             if (controller.WasDashPressed())
             {
-                OnActivate(user, controller);
+                OnActivate(user, controller, posture);
             }
         }
 
@@ -148,6 +152,8 @@ namespace Skills
                 controller.SetDashPosture(0f);
             }
         }
+
+        // ===== 动画控制 =====
 
         protected float EvaluateDashPosture(float normalizedTime)
         {

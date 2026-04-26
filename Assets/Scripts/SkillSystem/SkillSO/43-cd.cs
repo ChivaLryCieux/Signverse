@@ -5,6 +5,9 @@ namespace Skills
     [CreateAssetMenu(fileName = "43-cd", menuName = "Game/Skills/43 CD Cloak Kill")]
     public class Skill43CDCloakKill : SkillBase
     {
+        // ===== 元数据 =====
+
+        // ===== 物理控制 =====
         [Header("潜行刺杀")]
         public float invisibleDuration = 0.75f;
         public float triggerRadius = 1f;
@@ -13,9 +16,9 @@ namespace Skills
         private float invisibleTimer;
         private bool isInvisible;
 
-        public override void OnActivate(GameObject user, PlayerCC controller) { }
+        public override void OnActivate(GameObject user, PlayerCC controller, PlayerCC.Posture posture) { }
 
-        public override void OnUpdate(GameObject user, PlayerCC controller)
+        public override void OnUpdate(GameObject user, PlayerCC controller, PlayerCC.Posture posture)
         {
             if (!isInvisible && controller.WasHidePressed())
             {
@@ -48,5 +51,7 @@ namespace Skills
                 renderer.enabled = visible;
             }
         }
+
+        // ===== 动画控制 =====
     }
 }

@@ -7,6 +7,13 @@ using System;
 [RequireComponent(typeof(CharacterController))]
 public class PlayerCC : MonoBehaviour
 {
+    public enum Posture
+    {
+        Grounded,
+        Airborne,
+        Climbing
+    }
+
     public event Action<SkillBase> SkillUnlocked;
 
     [Header("核心引用")]
@@ -25,6 +32,7 @@ public class PlayerCC : MonoBehaviour
     [Header("状态监控")]
     public bool isGrounded;
     public bool isClimbing; 
+    public Posture CurrentPosture { get; private set; }
     public float VerticalVelocity => verticalVelocity;
     public int JumpType { get; private set; }
     public float DashPosture { get; private set; }
@@ -78,20 +86,21 @@ public class PlayerCC : MonoBehaviour
     }
     
     // 供蓄力跳检测：空格是否正被按住
-    public bool IsJumpPressed() => !isClimbing && controls.Player.Jump.IsPressed();
-    public bool WasJumpPressed() => !isClimbing && controls.Player.Jump.WasPressedThisFrame();
+    public bool IsJumpPressed() => CurrentPosture != Posture.Climbing && controls.Player.Jump.IsPressed();
+    public bool WasJumpPressed() => CurrentPosture != Posture.Climbing && controls.Player.Jump.WasPressedThisFrame();
     
     // 供技能检测：空格是否在这一帧松开
-    public bool WasJumpReleased() => !isClimbing && controls.Player.Jump.WasReleasedThisFrame();
+    public bool WasJumpReleased() => CurrentPosture != Posture.Climbing && controls.Player.Jump.WasReleasedThisFrame();
 
-    public bool IsDashPressed() => !isClimbing && controls.Player.Dash.IsPressed();
-    public bool WasDashPressed() => !isClimbing && controls.Player.Dash.WasPressedThisFrame();
+    public bool IsDashPressed() => CurrentPosture != Posture.Climbing && controls.Player.Dash.IsPressed();
+    public bool WasDashPressed() => CurrentPosture != Posture.Climbing && controls.Player.Dash.WasPressedThisFrame();
 
     public bool IsHidePressed() => controls.Player.Hide.IsPressed();
     public bool WasHidePressed() => controls.Player.Hide.WasPressedThisFrame();
 
     public Vector3 GetFacing() => facingDirection;
     public bool IsDead => isDead;
+    public bool IsPosture(Posture posture) => CurrentPosture == posture;
     public void SetVerticalVelocity(float val) => verticalVelocity = val;
     public void SetJumpType(int type) => JumpType = Mathf.Max(0, type);
     public void SetDashPosture(float posture) => DashPosture = Mathf.Clamp01(posture);
@@ -104,6 +113,7 @@ public class PlayerCC : MonoBehaviour
     {
         isClimbing = climbing;
         ClimbInput = climbing ? Mathf.Clamp(input, -1f, 1f) : 0f;
+        RefreshPosture();
     }
 
     public void EnterClimbTransitionTrigger()
@@ -196,6 +206,7 @@ public class PlayerCC : MonoBehaviour
         cc = GetComponent<CharacterController>();
         controls = new PlayerControls();
         isGrounded = false;
+        CurrentPosture = Posture.Airborne;
         SetClimbState(false, 0f);
         isDead = false;
         currentCheckpoint = transform.position;
@@ -231,9 +242,9 @@ public class PlayerCC : MonoBehaviour
             moveXDisableTimer -= Time.deltaTime;
         }
 
-        HandleIntrinsicFacing();
+        RefreshPosture();
 
-        isGrounded = cc.isGrounded;
+        HandleIntrinsicFacing();
 
         for (int i = 0; i < unlockedSkills.Count; i++)
         {
@@ -243,7 +254,7 @@ public class PlayerCC : MonoBehaviour
                 continue;
             }
 
-            skill.OnUpdate(gameObject, this);
+            skill.OnUpdate(gameObject, this, CurrentPosture);
         }
 
         HandleGravity();
@@ -290,7 +301,7 @@ public class PlayerCC : MonoBehaviour
             verticalVelocity = -2f; 
         }
 
-        if (!isClimbing)
+        if (CurrentPosture != Posture.Climbing)
         {
             float gravityMultiplier = verticalVelocity < 0f ? fallMultiplier : 1f;
             verticalVelocity += gravity * gravityMultiplier * Time.deltaTime;
@@ -299,6 +310,19 @@ public class PlayerCC : MonoBehaviour
         {
             verticalVelocity = 0;
         }
+    }
+
+    private void RefreshPosture()
+    {
+        isGrounded = cc != null && cc.isGrounded;
+
+        if (isClimbing)
+        {
+            CurrentPosture = Posture.Climbing;
+            return;
+        }
+
+        CurrentPosture = isGrounded ? Posture.Grounded : Posture.Airborne;
     }
 
     void LateUpdate()
@@ -316,7 +340,7 @@ public class PlayerCC : MonoBehaviour
 
     private void HandleIntrinsicFacing()
     {
-        if (isClimbing)
+        if (CurrentPosture == Posture.Climbing)
         {
             return;
         }
