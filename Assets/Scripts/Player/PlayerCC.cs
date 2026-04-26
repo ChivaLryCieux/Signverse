@@ -7,6 +7,7 @@ using System;
 [RequireComponent(typeof(PlayerDeath))]
 public class PlayerCC : MonoBehaviour
 {
+
     public enum Posture
     {
         Grounded,
@@ -17,9 +18,12 @@ public class PlayerCC : MonoBehaviour
     public event Action<SkillBase> SkillUnlocked;
 
     [Header("核心引用")]
-    private CharacterController cc;
+    public CharacterController cc;
     private PlayerControls controls; 
     private PlayerDeath playerDeath;
+
+    [Header("动画引用")]
+    [SerializeField] private Animator animator;
 
     [Header("物理参数")]
     public float gravity = -25f;
@@ -33,7 +37,13 @@ public class PlayerCC : MonoBehaviour
     [Header("状态监控")]
     public bool isGrounded;
     public bool isClimbing; 
-    public Posture CurrentPosture { get; private set; }
+    [SerializeField]
+    private Posture currentPosture;
+    public Posture CurrentPosture 
+    { 
+        get => currentPosture; 
+        private set => currentPosture = value; 
+    }
     public float VerticalVelocity => verticalVelocity;
     public int JumpType { get; private set; }
     public float DashPosture { get; private set; }
@@ -213,6 +223,7 @@ public class PlayerCC : MonoBehaviour
     void Awake()
     {
         cc = GetComponent<CharacterController>();
+        animator = GetComponentInChildren<Animator>();
         playerDeath = GetComponent<PlayerDeath>();
         if (playerDeath == null)
         {

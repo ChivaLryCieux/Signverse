@@ -1,6 +1,7 @@
 using UnityEngine;
 
 namespace Skills
+
 {
     [CreateAssetMenu(fileName = "12-mj", menuName = "Game/Skills/12 MJ Climb")]
     public class Skill12MJClimb : Skill11MMCustomPortal
@@ -8,6 +9,8 @@ namespace Skills
         // ===== 元数据 =====
 
         // ===== 物理控制 =====
+
+
         [Header("攀爬设置")]
         public float climbSpeed = 4f;
         public float climbRayLength = 0.8f;
@@ -34,9 +37,15 @@ namespace Skills
         [Tooltip("顶部翻越位移持续时间，避免瞬移感。")]
         public float exitUpDuration = 0.25f;
 
+
+
+        
+
         private bool isExitingUp;
         private float exitUpTimer;
         private Vector3 exitUpVelocity;
+
+        
 
         // 攀爬是持续检测型技能，激活时不需要额外处理。
         public override void OnActivate(GameObject user, PlayerCC controller, PlayerCC.Posture posture) { }
@@ -44,6 +53,8 @@ namespace Skills
         // 每帧检测可攀爬面、输入和当前姿态，调度进入/维持/退出攀爬。
         public override void OnUpdate(GameObject user, PlayerCC controller, PlayerCC.Posture posture)
         {
+            
+
             if (isExitingUp)
             {
                 UpdateExitUp(controller);
@@ -132,6 +143,17 @@ namespace Skills
 
             controller.SetVerticalVelocity(0f);
             controller.SetClimbState(true, vertical);
+            animator.SetBool("Climb", true);
+
+            float climbVelTarget = 0f;
+
+            if (vertical > inputThreshold)
+                climbVelTarget = 1f;
+
+            else if (vertical < -inputThreshold)
+                climbVelTarget = -1f;
+
+            animator.SetFloat( "ClimbInput", climbVelTarget, 0.2f, Time.deltaTime * 6f );
 
             if (Mathf.Abs(vertical) > inputThreshold)
             {
