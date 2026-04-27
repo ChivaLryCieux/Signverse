@@ -511,6 +511,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   cc: {fileID: 0}
+  animator: {fileID: 0}
   gravity: -25
   fallMultiplier: 1.6
   turnInputThreshold: 0.1
@@ -519,6 +520,7 @@ MonoBehaviour:
   currentPosture: 0
   startingSkills: []
   unlockedSkills: []
+  equippedSkills: []
   masterDatabase: {fileID: 0}
   drawGroundedGizmo: 1
   groundedGizmoOffsetY: 0
@@ -796,12 +798,17 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 543879587}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 79b8e7ee609b69d4282534c87405ecc8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   animator: {fileID: 543879590}
+  controller: {fileID: 543879592}
+  equippedSkills: []
+  skillID: 
+  usePlayerCCState: 1
+  syncRunFromPlayerInput: 1
   groundDetect: 0.5
   isGrounded: 1
   isMidAir: 0
@@ -822,6 +829,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   cc: {fileID: 0}
+  animator: {fileID: 0}
   gravity: -25
   fallMultiplier: 1.6
   turnInputThreshold: 0.1
@@ -832,6 +840,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: af934611de5b7758d9d76ca33b9e00fd, type: 2}
   - {fileID: 11400000, guid: f8259b7fe85dd8e10917cf6a2f1e264d, type: 2}
   unlockedSkills: []
+  equippedSkills: []
   masterDatabase: {fileID: 11400000, guid: 6c7fa50fa25f9d569a8378dc6b3967b9, type: 2}
   drawGroundedGizmo: 1
   groundedGizmoOffsetY: 0

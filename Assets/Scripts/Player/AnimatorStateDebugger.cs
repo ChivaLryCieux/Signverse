@@ -17,7 +17,7 @@ public class AnimatorStateDebugger : MonoBehaviour
     // Lry的修改：用于让 AnimatorStateDebugger 能看到技能上下文；注意它不等于“当前正在触发的动作”。
     [Header("动画侧已装备技能视图")]
     public List<SkillBase> equippedSkills = new List<SkillBase>();
-
+    public string skillID;
     // Lry的修改：开启后，本脚本会使用 PlayerCC -> Animator 的正式同步链路；关闭后保留原有 AnimatorStateDebugger 的纯输入调试链路。
     public bool usePlayerCCState = true;
 
@@ -285,6 +285,7 @@ public class AnimatorStateDebugger : MonoBehaviour
     // Lry的修改：Climb/ClimbInput 由攀爬技能通过 PlayerCC.SetClimbState 写入，本层只做参数转发，不再自行判断射线或按键。
     void HandleClimbFromPlayerCC()
     {
+        
         bool climbing = controller.CurrentPosture == PlayerCC.Posture.Climbing;
         float climbInput = controller.ClimbInput;
 
