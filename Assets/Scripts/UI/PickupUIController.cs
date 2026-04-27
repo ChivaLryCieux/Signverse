@@ -50,6 +50,9 @@ public class PickupUIController : MonoBehaviour
     private PickupItemId selectedUnlockItem;
     private readonly List<SkillBase> appliedLinkedSkills = new List<SkillBase>();
 
+    // Lry的修改：装备槽组合后真正生效的 SkillBase 快照。它会同步到 PlayerCC.equippedSkills，供动画层读取当前 loadout。
+    private readonly List<SkillBase> equippedSkillSnapshot = new List<SkillBase>();
+
     public bool HasSelectedUnlockItem => hasSelectedUnlockItem;
 
     private void Awake()
@@ -338,6 +341,9 @@ public class PickupUIController : MonoBehaviour
             player.unlockedSkills = new List<SkillBase>();
         }
 
+        // Lry的修改：每次装备栏变化时重建装备技能快照，保证 PlayerCC.equippedSkills 与 UI 装备槽保持一致。
+        equippedSkillSnapshot.Clear();
+
         if (removePreviousLinkedSkills)
         {
             for (int i = 0; i < appliedLinkedSkills.Count; i++)
@@ -354,6 +360,9 @@ public class PickupUIController : MonoBehaviour
 
         AddLinkedSkillForPair(1, 2);
         AddLinkedSkillForPair(3, 4);
+
+        // Lry的修改：把装备槽推导出的技能同步到 PlayerCC。动画脚本不再需要读取 UI 私有状态，只读取 PlayerCC.equippedSkills。
+        player.SetEquippedSkills(equippedSkillSnapshot);
     }
 
     private void AddLinkedSkillForPair(int mainSlotNumber, int subSlotNumber)
@@ -383,6 +392,12 @@ public class PickupUIController : MonoBehaviour
         {
             player.unlockedSkills.Add(skill);
             appliedLinkedSkills.Add(skill);
+        }
+
+        // Lry的修改：无论该技能之前是否已在 unlockedSkills 中，都应该进入当前装备快照；unlocked 与 equipped 是两个不同生命周期的集合。
+        if (!equippedSkillSnapshot.Contains(skill))
+        {
+            equippedSkillSnapshot.Add(skill);
         }
     }
 

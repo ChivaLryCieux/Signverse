@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+using Skills;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -10,6 +12,11 @@ public class AnimatorStateDebugger : MonoBehaviour
     // Lry的修改：正式动画同步模式的数据源引用。PlayerCC 是技能系统与物理控制的状态聚合点，动画层应从这里读取权威状态，避免重复实现状态机判定。
     [Header("Lry的修改：PlayerCC 状态同步")]
     public PlayerCC controller;
+
+    // Lry的修改：直接查看/判断的“已装备技能数组”。数据源来自 PlayerCC.equippedSkills，是 UI 装备槽同步后的技能 loadout。
+    // Lry的修改：用于让 AnimatorStateDebugger 能看到技能上下文；注意它不等于“当前正在触发的动作”。
+    [Header("动画侧已装备技能视图")]
+    public List<SkillBase> equippedSkills = new List<SkillBase>();
 
     // Lry的修改：开启后，本脚本会使用 PlayerCC -> Animator 的正式同步链路；关闭后保留原有 AnimatorStateDebugger 的纯输入调试链路。
     public bool usePlayerCCState = true;
@@ -110,6 +117,9 @@ public class AnimatorStateDebugger : MonoBehaviour
         // Lry的修改：原逻辑通过 Keyboard/Input/Raycast 自行模拟 locomotion；正式逻辑必须读取 PlayerCC 的权威状态，避免动画状态与技能状态发生 state divergence。
         if (usePlayerCCState && controller != null)
         {
+            // Lry的修改：在正式动画同步前刷新技能视图，在 HandleJumpFromPlayerCC 里能读取到最新技能上下文。
+            SyncEquippedSkillViewFromPlayerCC();
+
             HandleAnimatorFromPlayerCC();
             return;
         }
@@ -216,6 +226,45 @@ public class AnimatorStateDebugger : MonoBehaviour
         HandleHideFromPlayerCC();
 
         HandleClimbExitTriggersFromPlayerCC();
+    }
+
+    // Lry的修改：同步动画侧技能视图。优先读取 PlayerCC.equippedSkills，也就是 UI 装备槽同步后的真实装备技能。
+    // Lry的修改：Inspector 可见的 List<SkillBase>，降低调试成本。
+    void SyncEquippedSkillViewFromPlayerCC()
+    {
+        equippedSkills.Clear();
+
+        if (controller.equippedSkills != null)
+        {
+            for (int i = 0; i < controller.equippedSkills.Count; i++)
+            {
+                SkillBase skill = controller.equippedSkills[i];
+                if (skill != null)
+                {
+                    equippedSkills.Add(skill);
+                }
+            }
+        }
+    }
+
+    // Lry的修改：可以用这个接口写类似 HasEquippedSkill("22-jj") 的分支，而不是直接遍历 List，减少字符串判断重复代码。
+    public bool HasEquippedSkill(string skillID)
+    {
+        if (string.IsNullOrEmpty(skillID) || equippedSkills == null)
+        {
+            return false;
+        }
+
+        for (int i = 0; i < equippedSkills.Count; i++)
+        {
+            SkillBase skill = equippedSkills[i];
+            if (skill != null && skill.skillID == skillID)
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     // Lry的修改：Run 参数仍然表示 locomotion 中的水平/移动意图，但攀爬态下强制关闭，避免与 Climb 状态并发竞争。

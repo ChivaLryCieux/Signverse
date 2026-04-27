@@ -58,6 +58,10 @@ public class PlayerCC : MonoBehaviour
     public List<SkillBase> startingSkills = new List<SkillBase>();
 
     public List<SkillBase> unlockedSkills = new List<SkillBase>();
+
+    // Lry的修改：当前装备槽最终生效的技能列表。unlockedSkills 表示“已拥有/可用能力集合”，equippedSkills 表示“当前装配 loadout”，动画脚本应优先读取这里。
+    public List<SkillBase> equippedSkills = new List<SkillBase>();
+
     public SkillDatabase masterDatabase; 
 
     [Header("地面检测调试")]
@@ -175,6 +179,65 @@ public class PlayerCC : MonoBehaviour
         }
 
         return false;
+    }
+
+    // Lry的修改：按 skillID 查询当前装备技能。给 AnimatorStateDebugger 等表现层使用，避免表现层直接理解 UI 装备槽内部结构。
+    public bool HasEquippedSkill(string id)
+    {
+        if (string.IsNullOrEmpty(id))
+        {
+            return false;
+        }
+
+        for (int i = 0; i < equippedSkills.Count; i++)
+        {
+            SkillBase skill = equippedSkills[i];
+            if (skill != null && skill.skillID == id)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    // Lry的修改：按具体 SkillBase 类型查询当前装备技能，方便动画或关卡逻辑写强类型判断。
+    public bool HasEquippedSkill<T>() where T : SkillBase
+    {
+        for (int i = 0; i < equippedSkills.Count; i++)
+        {
+            if (equippedSkills[i] is T)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    // Lry的修改：由 UI 装备系统统一提交当前装备技能快照。使用快照同步可以避免动画脚本读取 UI 私有数组，降低模块耦合。
+    public void SetEquippedSkills(IList<SkillBase> skills)
+    {
+        if (equippedSkills == null)
+        {
+            equippedSkills = new List<SkillBase>();
+        }
+
+        equippedSkills.Clear();
+
+        if (skills == null)
+        {
+            return;
+        }
+
+        for (int i = 0; i < skills.Count; i++)
+        {
+            SkillBase skill = skills[i];
+            if (skill != null && !equippedSkills.Contains(skill))
+            {
+                equippedSkills.Add(skill);
+            }
+        }
     }
 
     public void RequestClimbExitUpAnimation()
@@ -359,6 +422,12 @@ public class PlayerCC : MonoBehaviour
         if (unlockedSkills == null)
         {
             unlockedSkills = new List<SkillBase>();
+        }
+
+        // Lry的修改：保证 equippedSkills 在运行时不为空，方便动画侧直接读取。
+        if (equippedSkills == null)
+        {
+            equippedSkills = new List<SkillBase>();
         }
 
         if (startingSkills != null)
