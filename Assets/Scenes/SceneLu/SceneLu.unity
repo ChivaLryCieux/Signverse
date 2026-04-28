@@ -149,6 +149,7 @@ MonoBehaviour:
   animator: {fileID: 67316450}
   controller: {fileID: 0}
   equippedSkills: []
+  skillID: 
   usePlayerCCState: 1
   syncRunFromPlayerInput: 1
   groundDetect: 0.5
@@ -3549,21 +3550,6 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Name
       value: "\u6FC0\u5149\u5C04\u7EBF"
-      objectReference: {fileID: 0}
-    - target: {fileID: 5971181168641195297, guid: e07ccbe005b16924f9c3b811b501ab29,
-        type: 3}
-      propertyPath: m_Layer
-      value: 8
-      objectReference: {fileID: 0}
-    - target: {fileID: 5971181168641195297, guid: e07ccbe005b16924f9c3b811b501ab29,
-        type: 3}
-      propertyPath: m_TagString
-      value: Hazardous
-      objectReference: {fileID: 0}
-    - target: {fileID: 6972979716483199054, guid: e07ccbe005b16924f9c3b811b501ab29,
-        type: 3}
-      propertyPath: m_Convex
-      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

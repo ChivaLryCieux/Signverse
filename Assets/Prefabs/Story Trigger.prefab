@@ -1,0 +1,73 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &6346746108522173015
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 733085149280299623}
+  - component: {fileID: 5892299373230103370}
+  - component: {fileID: 4822971715394559312}
+  m_Layer: 0
+  m_Name: Story Trigger
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &733085149280299623
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6346746108522173015}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 1.46, y: 1.52, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!65 &5892299373230103370
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6346746108522173015}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 1, y: 1, z: 1}
+  m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &4822971715394559312
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6346746108522173015}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 98c57f5fd81f4f75ae3c8d3f4aa9a7d1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  background: {fileID: 21300000, guid: 6e737c034bb4dcc8c96fa5f4777bf801, type: 3}
+  bodyText: "    \u4EBA\u7C7B\u7684\u8FDB\u5316\uFF0C\u5C31\u662F\u5728\u4ECE\u5177\u8EAB\u6027\u4E0E\u52A8\u7269\u6027\u7684\u9650\u5236\u4E4B\u4E2D\uFF0C\u4E0D\u65AD\u5411\u5DE5\u5177\u4E0E\u975E\u4EBA\u7C7B\u7684\u65B9\u5411\u8FDB\u53D1\uFF0C\u4ECE\u733F\u7334\u4F7F\u7528\u5DE5\u5177\u5F00\u59CB\uFF0C\u4EBA\u7C7B\u4FBF\u4E0D\u518D\u662F\u7334\u5B50\uFF0C\u5F53\u4EBA\u7C7B\u8D70\u5165\u5DE5\u4E1A\u65F6\u4EE3\u65F6\uFF0C\u4EBA\u7C7B\u4FBF\u4E0D\u518D\u662F\u53E4\u4EBA\uFF0C\u5F53\u4EBA\u7C7B\u53D1\u660E\u4EBA\u5DE5\u667A\u80FD\u65F6\uFF0C\u4EBA\u7C7B\u4FBF\u4E0D\u518D\u662F\u611A\u6627\u7684\u4EBA\uFF0C\u5728\u8FD9\u4E2A\u6545\u4E8B\u91CC\uFF0C\u4EBA\u7C7B\u77E5\u8BC6\u5927\u53A6\u7684\u6784\u5EFA\u548C\u4F20\u9012\uFF0C\u90FD\u79BB\u4E0D\u5F00\u6700\u6DF1\u7684\u6839\u57FA\u2014\u2014\u7B26\u53F7\u3002\n  
+    \u201C\u5C31\u662F\u8FD9\u6837\uFF0C\u611A\u8005\uFF0C\u5C31\u662F\u8FD9\u6837\u201D\u4ED6\u8BF4\u3002"
+  panelController: {fileID: 0}
+  hidePanelOnExit: 1
