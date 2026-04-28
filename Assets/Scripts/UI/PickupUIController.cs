@@ -373,13 +373,11 @@ public class PickupUIController : MonoBehaviour
         }
 
         bool hasSubEntry = TryGetEquippedEntry(subSlotNumber, out PickupUiEntry subEntry);
-        if (!hasSubEntry)
-        {
-            subEntry = mainEntry;
-        }
+        int subIndex = hasSubEntry ? GetRightSideIndex(subEntry) : 0;
+        string subCode = hasSubEntry ? subEntry.comboCode : null;
 
-        string prefix = GetRightSideIndex(mainEntry).ToString() + GetRightSideIndex(subEntry) + "-";
-        string exactId = BuildLinkedSkillId(prefix, mainEntry.comboCode, subEntry.comboCode);
+        string prefix = GetRightSideIndex(mainEntry).ToString() + subIndex + "-";
+        string exactId = BuildLinkedSkillId(prefix, mainEntry.comboCode, subCode);
         SkillBase skill = FindSkill(exactId, prefix);
 
         if (skill == null)
