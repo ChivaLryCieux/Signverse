@@ -29,8 +29,9 @@ namespace Skills
                 timer = 0f;
                 invisibleTimer = invisibleDuration;
                 isInvisible = true;
-                SetVisible(user, false);
             }
+
+            RequestCloakEffect(user, isInvisible);
 
             if (!isInvisible) return;
 
@@ -38,19 +39,20 @@ namespace Skills
             if (invisibleTimer > 0f) return;
 
             isInvisible = false;
-            SetVisible(user, true);
-        }
-
-        // 切换角色所有子 Renderer 的显示状态。
-        private void SetVisible(GameObject user, bool visible)
-        {
-            Renderer[] renderers = user.GetComponentsInChildren<Renderer>(true);
-            foreach (Renderer renderer in renderers)
-            {
-                renderer.enabled = visible;
-            }
+            RequestCloakEffect(user, false);
         }
 
         // ===== 动画控制 =====
+
+        private void RequestCloakEffect(GameObject user, bool active)
+        {
+            CloakEffectController cloakEffect = user.GetComponent<CloakEffectController>();
+            if (cloakEffect == null)
+            {
+                cloakEffect = user.AddComponent<CloakEffectController>();
+            }
+
+            cloakEffect.RequestCloak(this, active);
+        }
     }
 }
