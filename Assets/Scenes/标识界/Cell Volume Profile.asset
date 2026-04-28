@@ -22,9 +22,21 @@ MonoBehaviour:
   stencilRef:
     m_OverrideState: 1
     m_Value: 1
-  kuwaharaRadius:
+  preFilterMode:
     m_OverrideState: 1
     m_Value: 0
+  kuwaharaRadius:
+    m_OverrideState: 1
+    m_Value: 1
+  bilateralColorSigma:
+    m_OverrideState: 1
+    m_Value: 0.1
+  bilateralSpatialSigma:
+    m_OverrideState: 1
+    m_Value: 2
+  enableColorMapping:
+    m_OverrideState: 1
+    m_Value: 1
   useRampMap:
     m_OverrideState: 1
     m_Value: 0
@@ -32,6 +44,12 @@ MonoBehaviour:
     m_OverrideState: 1
     m_Value: {fileID: 0}
     dimension: 1
+  celSteps:
+    m_OverrideState: 1
+    m_Value: 3
+  celStepSmoothness:
+    m_OverrideState: 1
+    m_Value: 0.02
   shadowThreshold:
     m_OverrideState: 1
     m_Value: 0.45
@@ -61,19 +79,22 @@ MonoBehaviour:
     m_Value: 1
   silhouetteShadowColor:
     m_OverrideState: 1
-    m_Value: {r: 1, g: 1, b: 1, a: 1}
+    m_Value: {r: 0.0037907113, g: 0.041293576, b: 0.14465404, a: 1}
   silhouetteMidColor:
     m_OverrideState: 1
-    m_Value: {r: 0.735849, g: 0.735849, b: 0.735849, a: 1}
+    m_Value: {r: 1, g: 0, b: 0, a: 1}
   silhouetteHighColor:
     m_OverrideState: 1
     m_Value: {r: 1, g: 1, b: 1, a: 1}
   silhouetteThreshold1:
     m_OverrideState: 1
-    m_Value: 0.166
+    m_Value: 0.209
   silhouetteThreshold2:
     m_OverrideState: 1
-    m_Value: 0.879
+    m_Value: 0.272
+  enableMangaLines:
+    m_OverrideState: 1
+    m_Value: 1
   lineIntensity:
     m_OverrideState: 1
     m_Value: 1
@@ -86,12 +107,15 @@ MonoBehaviour:
   normalThreshold:
     m_OverrideState: 1
     m_Value: 1.5
+  colorThreshold:
+    m_OverrideState: 1
+    m_Value: 0.01
   lineColor:
     m_OverrideState: 1
-    m_Value: {r: 0.1509434, g: 0.1509434, b: 0.1509434, a: 1}
+    m_Value: {r: 0.00784313, g: 0.29411766, b: 0.2208139, a: 1}
   depthFalloff:
     m_OverrideState: 1
-    m_Value: 200
+    m_Value: 40
   patternType:
     m_OverrideState: 1
     m_Value: 0
@@ -110,24 +134,21 @@ MonoBehaviour:
   patternLumaThreshold:
     m_OverrideState: 1
     m_Value: 0.5
+  enableColorGrading:
+    m_OverrideState: 1
+    m_Value: 1
   finalSaturation:
     m_OverrideState: 1
-    m_Value: 1.61
+    m_Value: 2.81
   finalContrast:
     m_OverrideState: 1
-    m_Value: 1.05
+    m_Value: 1.15
   shadowTint:
     m_OverrideState: 1
-    m_Value: {r: 0, g: 0, b: 0.04, a: 1}
-  highlightTint:
-    m_OverrideState: 1
-    m_Value: {r: 0.04, g: 0.02, b: 0, a: 1}
+    m_Value: {r: 0, g: 0, b: 0, a: 1}
   shadowInfluence:
     m_OverrideState: 1
     m_Value: 0.507
-  highlightInfluence:
-    m_OverrideState: 1
-    m_Value: 0.2
   enablePixelate:
     m_OverrideState: 1
     m_Value: 0
@@ -152,6 +173,25 @@ MonoBehaviour:
   vignetteIntensity:
     m_OverrideState: 1
     m_Value: 1.5
+  enableVaporwave:
+    m_OverrideState: 1
+    m_Value: 0
+  noiseTex:
+    m_OverrideState: 1
+    m_Value: {fileID: 0}
+    dimension: 1
+  glitchFrequency:
+    m_OverrideState: 1
+    m_Value: 0.5
+  glitchSpeed:
+    m_OverrideState: 1
+    m_Value: 1
+  glitchIntensity:
+    m_OverrideState: 1
+    m_Value: 0.02
+  filmGrainIntensity:
+    m_OverrideState: 1
+    m_Value: 0.05
 --- !u!114 &11400000
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -188,9 +228,21 @@ MonoBehaviour:
   stencilRef:
     m_OverrideState: 1
     m_Value: 1
+  preFilterMode:
+    m_OverrideState: 0
+    m_Value: 0
   kuwaharaRadius:
     m_OverrideState: 1
     m_Value: 0
+  bilateralColorSigma:
+    m_OverrideState: 0
+    m_Value: 0.1
+  bilateralSpatialSigma:
+    m_OverrideState: 0
+    m_Value: 2
+  enableColorMapping:
+    m_OverrideState: 0
+    m_Value: 1
   useRampMap:
     m_OverrideState: 1
     m_Value: 0
@@ -198,6 +250,12 @@ MonoBehaviour:
     m_OverrideState: 1
     m_Value: {fileID: 0}
     dimension: 1
+  celSteps:
+    m_OverrideState: 0
+    m_Value: 3
+  celStepSmoothness:
+    m_OverrideState: 0
+    m_Value: 0.02
   shadowThreshold:
     m_OverrideState: 1
     m_Value: 0.45
@@ -240,6 +298,9 @@ MonoBehaviour:
   silhouetteThreshold2:
     m_OverrideState: 1
     m_Value: 0.272
+  enableMangaLines:
+    m_OverrideState: 0
+    m_Value: 1
   lineIntensity:
     m_OverrideState: 1
     m_Value: 1
@@ -252,6 +313,9 @@ MonoBehaviour:
   normalThreshold:
     m_OverrideState: 1
     m_Value: 1.5
+  colorThreshold:
+    m_OverrideState: 0
+    m_Value: 0.2
   lineColor:
     m_OverrideState: 1
     m_Value: {r: 0.011627091, g: 0.29979026, b: 0.23787032, a: 1}
@@ -276,6 +340,9 @@ MonoBehaviour:
   patternLumaThreshold:
     m_OverrideState: 1
     m_Value: 0.5
+  enableColorGrading:
+    m_OverrideState: 0
+    m_Value: 1
   finalSaturation:
     m_OverrideState: 1
     m_Value: 2.8
@@ -285,15 +352,9 @@ MonoBehaviour:
   shadowTint:
     m_OverrideState: 1
     m_Value: {r: 0, g: 0, b: 0, a: 1}
-  highlightTint:
-    m_OverrideState: 0
-    m_Value: {r: 0.05, g: 0.03, b: 0, a: 1}
   shadowInfluence:
     m_OverrideState: 1
     m_Value: 0.445
-  highlightInfluence:
-    m_OverrideState: 0
-    m_Value: 0.3
   enablePixelate:
     m_OverrideState: 1
     m_Value: 0
@@ -318,3 +379,22 @@ MonoBehaviour:
   vignetteIntensity:
     m_OverrideState: 1
     m_Value: 0.97
+  enableVaporwave:
+    m_OverrideState: 0
+    m_Value: 0
+  noiseTex:
+    m_OverrideState: 0
+    m_Value: {fileID: 0}
+    dimension: 1
+  glitchFrequency:
+    m_OverrideState: 0
+    m_Value: 0.5
+  glitchSpeed:
+    m_OverrideState: 0
+    m_Value: 1
+  glitchIntensity:
+    m_OverrideState: 0
+    m_Value: 0.02
+  filmGrainIntensity:
+    m_OverrideState: 0
+    m_Value: 0.05
