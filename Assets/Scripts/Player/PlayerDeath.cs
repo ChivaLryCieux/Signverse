@@ -21,8 +21,14 @@ public class PlayerDeath : MonoBehaviour
     private CharacterController characterController;
     private float airStartY;
     private bool wasGrounded;
+    private float invincibleUntil;
+    private int deathBlockRequestFrame = -1;
+    private bool deathBlockedThisFrame;
 
     public bool IsDead => isDead;
+    public bool IsInvincible => Time.time < invincibleUntil ||
+                                (deathBlockRequestFrame >= 0 && Time.frameCount - deathBlockRequestFrame <= 1);
+    public bool WasDeathBlockedThisFrame => deathBlockedThisFrame;
 
     private void Awake()
     {
@@ -33,6 +39,8 @@ public class PlayerDeath : MonoBehaviour
 
     private void LateUpdate()
     {
+        deathBlockedThisFrame = false;
+
         if (isDead)
         {
             return;
@@ -50,8 +58,24 @@ public class PlayerDeath : MonoBehaviour
 
     public void Die()
     {
+        Die(false);
+    }
+
+    public void ForceDie()
+    {
+        Die(true);
+    }
+
+    private void Die(bool ignoreInvincibility)
+    {
         if (isDead)
         {
+            return;
+        }
+
+        if (!ignoreInvincibility && IsInvincible)
+        {
+            deathBlockedThisFrame = true;
             return;
         }
 
@@ -70,6 +94,27 @@ public class PlayerDeath : MonoBehaviour
     public void Kill()
     {
         Die();
+    }
+
+    public void RequestDeathBlock()
+    {
+        deathBlockRequestFrame = Time.frameCount;
+    }
+
+    public void GrantInvincibility(float duration)
+    {
+        invincibleUntil = Mathf.Max(invincibleUntil, Time.time + Mathf.Max(0f, duration));
+    }
+
+    public bool ConsumeDeathBlockedThisFrame()
+    {
+        if (!deathBlockedThisFrame)
+        {
+            return false;
+        }
+
+        deathBlockedThisFrame = false;
+        return true;
     }
 
     private void CheckElectricFloor()
@@ -128,6 +173,9 @@ public class PlayerDeath : MonoBehaviour
         airStartY = respawnPosition.y;
         wasGrounded = false;
         isDead = false;
+        invincibleUntil = 0f;
+        deathBlockRequestFrame = -1;
+        deathBlockedThisFrame = false;
 
         characterController.enabled = true;
         controller.SetInputEnabled(true);

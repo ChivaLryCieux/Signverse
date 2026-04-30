@@ -30,6 +30,15 @@ namespace Skills
             }
 
             cloakEffect.RequestCloak(this, isCloaking);
+
+            if (isCloaking)
+            {
+                PlayerDeath death = user.GetComponent<PlayerDeath>();
+                if (death != null)
+                {
+                    death.RequestDeathBlock();
+                }
+            }
         }
 
         // ===== 动画控制 =====

@@ -15,9 +15,6 @@ MonoBehaviour:
   skillID: 43-cd
   skillName: 
   type: 0
-  invisibleDuration: 0.75
-  triggerRadius: 1
-  enemyMask:
-    serializedVersion: 2
-    m_Bits: 0
-  cloakKey: 118
+  invisibleDuration: 1
+  invincibleDuration: 2
+  cooldown: 3.5
