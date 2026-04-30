@@ -37,6 +37,7 @@ public class PlayerCC : MonoBehaviour
     private float verticalVelocity;
     private Vector3 facingDirection = Vector3.right;
     private float moveXDisableTimer;
+    private int gravitySuppressedFrame = -1;
 
     [Header("状态监控")]
     public bool isGrounded;
@@ -108,6 +109,11 @@ public class PlayerCC : MonoBehaviour
     public bool IsDead => playerDeath != null && playerDeath.IsDead;
     public bool IsPosture(Posture posture) => CurrentPosture == posture;
     public void SetVerticalVelocity(float val) => verticalVelocity = val;
+    public void RequestGravitySuppressed()
+    {
+        gravitySuppressedFrame = Time.frameCount;
+        verticalVelocity = 0f;
+    }
     public void SetJumpType(int type) => JumpType = Mathf.Max(0, type);
     public void SetDashPosture(float posture) => DashPosture = Mathf.Clamp01(posture);
     public void DisableMoveXFor(float duration)
@@ -448,6 +454,12 @@ public class PlayerCC : MonoBehaviour
     }
     private void HandleGravity()
     {
+        if (gravitySuppressedFrame == Time.frameCount)
+        {
+            verticalVelocity = 0f;
+            return;
+        }
+
         if (isGrounded && verticalVelocity < 0)
         {
             verticalVelocity = -2f; 

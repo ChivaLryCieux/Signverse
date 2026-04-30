@@ -10,16 +10,28 @@ namespace Skills
         // ===== 物理控制 =====
         [Header("基础跳跃")]
         public float jumpHeight = 3f;
+        [Min(1)] public int maxJumpCount = 3;
         [Tooltip("起跳瞬间横向输入超过该值时，JumpType 记为跑动跳。0=静立跳，1=跑动跳。")]
         public float runJumpInputThreshold = 0.1f;
 
-        // 在接地时执行普通跳跃，并记录跳跃类型给动画使用。
+        private int jumpsUsed;
+        private bool wasGroundedLastFrame;
+
+        // 第一段跳必须在地面，之后可在空中继续跳到 maxJumpCount。
         public override void OnActivate(GameObject user, PlayerCC controller, PlayerCC.Posture posture)
         {
-            if (posture != PlayerCC.Posture.Grounded)
+            bool isGrounded = posture == PlayerCC.Posture.Grounded;
+            if (!isGrounded && (jumpsUsed <= 0 || jumpsUsed >= maxJumpCount))
             {
                 return;
             }
+
+            if (isGrounded)
+            {
+                jumpsUsed = 0;
+            }
+
+            jumpsUsed++;
 
             float horizontalInput = Mathf.Abs(controller.GetMoveInput().x);
             controller.SetJumpType(horizontalInput > runJumpInputThreshold ? 1 : 0);
@@ -28,9 +40,17 @@ namespace Skills
             controller.SetVerticalVelocity(verticalVel);
         }
 
-        // 每帧监听跳跃按下事件，满足条件时触发 OnActivate。
+        // 每帧重置落地状态，并监听跳跃按下事件。
         public override void OnUpdate(GameObject user, PlayerCC controller, PlayerCC.Posture posture)
         {
+            bool isGrounded = posture == PlayerCC.Posture.Grounded;
+            if (isGrounded && !wasGroundedLastFrame)
+            {
+                jumpsUsed = 0;
+            }
+
+            wasGroundedLastFrame = isGrounded;
+
             if (controller.WasJumpPressed())
             {
                 OnActivate(user, controller, posture);
