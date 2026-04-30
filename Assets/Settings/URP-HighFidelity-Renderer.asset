@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_Active: 1
   renderPassEvent: 550
+  shader: {fileID: 4800000, guid: a6dd93567ab55204dbb4c97a1ccb59cd, type: 3}
 --- !u!114 &-2936670992951232217
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -29,9 +30,9 @@ MonoBehaviour:
   m_Active: 1
   settings:
     passTag: writestencilformask
-    Event: 300
+    Event: 500
     filterSettings:
-      RenderQueueType: 0
+      RenderQueueType: 1
       LayerMask:
         serializedVersion: 2
         m_Bits: 512

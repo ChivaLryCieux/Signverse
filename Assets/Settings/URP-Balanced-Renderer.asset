@@ -13,7 +13,8 @@ MonoBehaviour:
   m_Name: Cel LookRenderFeatureture
   m_EditorClassIdentifier: 
   m_Active: 1
-  renderPassEvent: 1000
+  renderPassEvent: 500
+  shader: {fileID: 4800000, guid: a6dd93567ab55204dbb4c97a1ccb59cd, type: 3}
 --- !u!114 &-1878332245247344467
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -133,7 +134,7 @@ MonoBehaviour:
   m_Active: 1
   settings:
     passTag: RenderObjects
-    Event: 300
+    Event: 1000
     filterSettings:
       RenderQueueType: 0
       LayerMask:
