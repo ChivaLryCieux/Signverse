@@ -8,7 +8,7 @@ namespace Skills
         // ===== 元数据 =====
 
         // ===== 物理控制 =====
-        protected override float DashDistance => 7f;
+        protected override float DashSpeed => 24f;
 
         // ===== 动画控制 =====
     }
