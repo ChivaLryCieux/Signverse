@@ -21,6 +21,10 @@ public class PlayerCC : MonoBehaviour
     public CharacterController cc;
     private PlayerControls controls; 
     private PlayerDeath playerDeath;
+    private CharacterController controlProxy;
+    private Transform controlProxyTransform;
+    private readonly List<Collider> disabledOwnerCollidersForProxy = new List<Collider>();
+    private bool ownerControllerEnabledBeforeProxy;
 
     [Header("动画引用")]
     [SerializeField] private Animator animator;
@@ -69,7 +73,8 @@ public class PlayerCC : MonoBehaviour
     [SerializeField] private float groundedGizmoOffsetY;
 
     // --- 给技能脚本提供的“遥控器”接口 ---
-    public CharacterController GetCharacterController() => cc;
+    public CharacterController GetCharacterController() => controlProxy != null ? controlProxy : cc;
+    public Transform GetControlTransform() => controlProxyTransform != null ? controlProxyTransform : transform;
     public Vector2 GetRawMoveInput()
     {
         return controls.Player.Move.ReadValue<Vector2>();
@@ -280,7 +285,101 @@ public class PlayerCC : MonoBehaviour
         }
 
         facingDirection = dir;
-        transform.forward = dir.normalized;
+        GetControlTransform().forward = dir.normalized;
+    }
+
+    public void BeginControlProxy(CharacterController proxy)
+    {
+        if (proxy == null)
+        {
+            return;
+        }
+
+        ownerControllerEnabledBeforeProxy = cc != null && cc.enabled;
+        if (cc != null)
+        {
+            cc.enabled = false;
+        }
+
+        DisableOwnerCollidersForProxy(proxy.transform);
+        controlProxy = proxy;
+        controlProxyTransform = proxy.transform;
+        controlProxy.enabled = true;
+        controlProxyTransform.forward = facingDirection;
+    }
+
+    public void EndControlProxy(bool teleportPlayerToProxy)
+    {
+        if (controlProxy == null)
+        {
+            return;
+        }
+
+        Vector3 proxyPosition = controlProxy.transform.position;
+        Vector3 proxyForward = controlProxy.transform.forward;
+
+        controlProxy = null;
+        controlProxyTransform = null;
+
+        if (teleportPlayerToProxy)
+        {
+            if (cc != null)
+            {
+                cc.enabled = false;
+            }
+
+            transform.position = new Vector3(proxyPosition.x, proxyPosition.y, 0f);
+            transform.forward = proxyForward.sqrMagnitude > 0.01f ? proxyForward.normalized : facingDirection;
+        }
+
+        if (cc != null)
+        {
+            cc.enabled = ownerControllerEnabledBeforeProxy;
+        }
+
+        RestoreOwnerCollidersForProxy();
+
+        if (proxyForward.sqrMagnitude > 0.01f)
+        {
+            facingDirection = proxyForward.normalized;
+        }
+    }
+
+    private void DisableOwnerCollidersForProxy(Transform proxyRoot)
+    {
+        RestoreOwnerCollidersForProxy();
+
+        Collider[] colliders = GetComponentsInChildren<Collider>(true);
+        for (int i = 0; i < colliders.Length; i++)
+        {
+            Collider targetCollider = colliders[i];
+            if (targetCollider == null || !targetCollider.enabled)
+            {
+                continue;
+            }
+
+            if (proxyRoot != null && targetCollider.transform.IsChildOf(proxyRoot))
+            {
+                continue;
+            }
+
+            targetCollider.enabled = false;
+            disabledOwnerCollidersForProxy.Add(targetCollider);
+        }
+    }
+
+    private void RestoreOwnerCollidersForProxy()
+    {
+        for (int i = 0; i < disabledOwnerCollidersForProxy.Count; i++)
+        {
+            Collider targetCollider = disabledOwnerCollidersForProxy[i];
+            if (targetCollider != null)
+            {
+                targetCollider.enabled = true;
+            }
+        }
+
+        disabledOwnerCollidersForProxy.Clear();
     }
 
     void Awake()
@@ -345,7 +444,7 @@ public class PlayerCC : MonoBehaviour
 
         HandleGravity();
 
-        cc.Move(new Vector3(0, verticalVelocity, 0) * Time.deltaTime);
+        GetCharacterController().Move(new Vector3(0, verticalVelocity, 0) * Time.deltaTime);
     }
     private void HandleGravity()
     {
@@ -367,7 +466,8 @@ public class PlayerCC : MonoBehaviour
 
     private void RefreshPosture()
     {
-        isGrounded = cc != null && cc.isGrounded;
+        CharacterController activeController = GetCharacterController();
+        isGrounded = activeController != null && activeController.isGrounded;
 
         if (isClimbing)
         {
@@ -381,7 +481,8 @@ public class PlayerCC : MonoBehaviour
     void LateUpdate()
     {
         // 2.5D 锁定 Z 轴
-        transform.position = new Vector3(transform.position.x, transform.position.y, 0);
+        Transform activeTransform = GetControlTransform();
+        activeTransform.position = new Vector3(activeTransform.position.x, activeTransform.position.y, 0);
     }
 
     public void UnlockNewSkill(string id)
