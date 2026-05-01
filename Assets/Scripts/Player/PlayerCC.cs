@@ -42,6 +42,7 @@ public class PlayerCC : MonoBehaviour
     [Header("状态监控")]
     public bool isGrounded;
     public bool isClimbing; 
+    [SerializeField] private bool isCloaked;
     [SerializeField]
     private Posture currentPosture;
     public Posture CurrentPosture 
@@ -53,6 +54,7 @@ public class PlayerCC : MonoBehaviour
     public int JumpType { get; private set; }
     public float DashPosture { get; private set; }
     public float ClimbInput { get; private set; }
+    public bool IsCloaked => isCloaked;
     public bool IsInClimbTransitionTrigger => climbTransitionTriggerCount > 0;
     private int climbTransitionTriggerCount;
     private bool climbExitUpRequested;
@@ -434,6 +436,7 @@ public class PlayerCC : MonoBehaviour
         }
 
         RefreshPosture();
+        RefreshCloakState();
 
         HandleIntrinsicFacing();
 
@@ -448,9 +451,17 @@ public class PlayerCC : MonoBehaviour
             skill.OnUpdate(gameObject, this, CurrentPosture);
         }
 
+        RefreshCloakState();
+
         HandleGravity();
 
         GetCharacterController().Move(new Vector3(0, verticalVelocity, 0) * Time.deltaTime);
+    }
+
+    private void RefreshCloakState()
+    {
+        CloakEffectController cloakEffect = GetComponent<CloakEffectController>();
+        isCloaked = cloakEffect != null && cloakEffect.IsCloaked;
     }
     private void HandleGravity()
     {

@@ -12,7 +12,6 @@ namespace Skills
         [SerializeField] private Volume cloakVolume;
         [SerializeField] private string fallbackVolumeName = "隐身";
         [SerializeField, Range(0f, 1f)] private float invisibleWeight = 1f;
-        [SerializeField, Min(0.01f)] private float weightChangeSpeed = 4f;
         [SerializeField, Min(0.02f)] private float requestTimeout = 0.15f;
 
         [Header("角色显示")]
@@ -25,11 +24,14 @@ namespace Skills
         private readonly Dictionary<object, float> activeRequests = new Dictionary<object, float>();
         private Renderer[] cachedRenderers;
         private AudioSource audioSource;
+        private PlayerDeath playerDeath;
         private bool isCloaked;
+        public bool IsCloaked => isCloaked;
 
         private void Awake()
         {
             audioSource = GetComponent<AudioSource>();
+            playerDeath = GetComponent<PlayerDeath>();
             cachedRenderers = GetComponentsInChildren<Renderer>(true);
             ResolveCloakVolume();
 
@@ -54,7 +56,7 @@ namespace Skills
         {
             ClearExpiredRequests();
             SetCloaked(activeRequests.Count > 0);
-            UpdateVolumeWeight();
+            UpdateDeathImmunity();
         }
 
         public void RequestCloak(object source, bool active)
@@ -72,6 +74,9 @@ namespace Skills
             {
                 activeRequests.Remove(source);
             }
+
+            SetCloaked(activeRequests.Count > 0);
+            UpdateDeathImmunity();
         }
 
         private void SetCloaked(bool cloaked)
@@ -83,6 +88,7 @@ namespace Skills
 
             isCloaked = cloaked;
             ApplyRendererVisibility(!isCloaked);
+            ApplyVolumeWeightInstant();
 
             if (isCloaked && audioSource != null)
             {
@@ -94,19 +100,32 @@ namespace Skills
             }
         }
 
-        private void UpdateVolumeWeight()
+        private void ApplyVolumeWeightInstant()
         {
             if (cloakVolume == null)
             {
                 return;
             }
 
-            float targetWeight = isCloaked ? invisibleWeight : 0f;
-            cloakVolume.weight = Mathf.MoveTowards(
-                cloakVolume.weight,
-                targetWeight,
-                weightChangeSpeed * Time.deltaTime
-            );
+            cloakVolume.weight = isCloaked ? invisibleWeight : 0f;
+        }
+
+        private void UpdateDeathImmunity()
+        {
+            if (!isCloaked)
+            {
+                return;
+            }
+
+            if (playerDeath == null)
+            {
+                playerDeath = GetComponent<PlayerDeath>();
+            }
+
+            if (playerDeath != null)
+            {
+                playerDeath.RequestDeathBlock();
+            }
         }
 
         private void ApplyRendererVisibility(bool visible)
