@@ -1,11 +1,17 @@
 using System.Collections.Generic;
 using Skills;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using static PlayerCC;
 
 public class AnimatorStateDebugger : MonoBehaviour
 {
-    
+    // 临时缓存 PlayerCC 原始重力，避免恢复时写死数值。
+    private float cachedGravity;
+
+    // 标记是否已经缓存过重力，防止重复调用时把 0 当成原始重力。
+    private bool hasCachedGravity;
     [Header("Animator")]
     public Animator animator;
 
@@ -13,11 +19,17 @@ public class AnimatorStateDebugger : MonoBehaviour
     [Header("Lry的修改：PlayerCC 状态同步")]
     public PlayerCC controller;
 
+
+
+
+
     // Lry的修改：直接查看/判断的“已装备技能数组”。数据源来自 PlayerCC.equippedSkills，是 UI 装备槽同步后的技能 loadout。
     // Lry的修改：用于让 AnimatorStateDebugger 能看到技能上下文；注意它不等于“当前正在触发的动作”。
     [Header("动画侧已装备技能视图")]
     public List<SkillBase> equippedSkills = new List<SkillBase>();
-    public string skillID;
+
+    public Posture currentPosture;
+   
     // Lry的修改：开启后，本脚本会使用 PlayerCC -> Animator 的正式同步链路；关闭后保留原有 AnimatorStateDebugger 的纯输入调试链路。
     public bool usePlayerCCState = true;
 
@@ -50,10 +62,11 @@ public class AnimatorStateDebugger : MonoBehaviour
     [Header("环境检测")]
     public float groundDetect = 0.5f;
 
-    [Header("状态检测判断")]
-    public bool isGrounded = true;
-    public bool isMidAir = false;
-    public bool isClimbing = false;
+    // [Header("状态检测判断")]
+
+    // public bool isGrounded = true;
+    // public bool isMidAir = false;
+    // public bool isClimbing = false;
 
 
     public enum Locomotion
@@ -65,8 +78,8 @@ public class AnimatorStateDebugger : MonoBehaviour
 
     public Locomotion locomotion;
 
-    [Header("用于快速切换攀爬状态")]
-    public bool enterClimbing = false;
+    // [Header("用于快速切换攀爬状态")]
+    // public bool enterClimbing = false;
 
     
     [Header("Jump Settings")]
@@ -80,6 +93,7 @@ public class AnimatorStateDebugger : MonoBehaviour
     // public CharacterController cc;
     // public Transform player;
     // public Transform targetPos;
+    public TestClimb testClimb;
 
     void Awake()
     {
@@ -98,7 +112,7 @@ public class AnimatorStateDebugger : MonoBehaviour
         }
 
         // Lry的修改：启动时缓存参数表，后续 SetParameter 走存在性检查，避免 Animator Controller 参数名未统一时直接抛异常。
-        CacheAnimatorParameters();
+        // CacheAnimatorParameters();
     }
 
     void OnEnable()
@@ -111,73 +125,26 @@ public class AnimatorStateDebugger : MonoBehaviour
         inputActions.Disable();
     }
 
+
     void Update()
     {
-        // Lry的修改：正式运行模式。这里与下方原 Debugger 逻辑存在职责冲突：
-        // Lry的修改：原逻辑通过 Keyboard/Input/Raycast 自行模拟 locomotion；正式逻辑必须读取 PlayerCC 的权威状态，避免动画状态与技能状态发生 state divergence。
-        if (usePlayerCCState && controller != null)
-        {
-            // Lry的修改：在正式动画同步前刷新技能视图，在 HandleJumpFromPlayerCC 里能读取到最新技能上下文。
-            SyncEquippedSkillViewFromPlayerCC();
-
-            HandleAnimatorFromPlayerCC();
-            return;
-        }
-
-        // Lry的修改：如果 usePlayerCCState 开启但 controller 没有绑定，会自动回退到原调试链路；这保证旧动画测试场景不被破坏。
-
-        //简单的攀爬Posture控制
-        if (Keyboard.current.cKey.wasPressedThisFrame)
-        {
-            enterClimbing = !enterClimbing;
-        }
-
-
-        SwitchLocomotion();
-  
+        
+        currentPosture = controller.CurrentPosture;
 
         HandleInput();
 
-        HandleAnimator();
+        //     // Lry的修改：在正式动画同步前刷新技能视图，在 HandleJumpFromPlayerCC 里能读取到最新技能上下文。
+        SyncEquippedSkillViewFromPlayerCC();
+
+        HandleAnimatorFromPlayerCC();
+        StimulateIK();
+
+        
+        // Lry的修改：如果 usePlayerCCState 开启但 controller 没有绑定，会自动回退到原调试链路；这保证旧动画测试场景不被破坏。
+  
+        // HandleAnimator();
     }
 
-    //========================
-    // Locomotion选择
-    //========================
-    void SwitchLocomotion()
-{
-    // 1️⃣ 默认状态：Ground
-    locomotion = Locomotion.isGrounded;
-
-    // 2️⃣ 如果有垂直输入（爬梯等）
-    if (enterClimbing)
-    {
-        locomotion = Locomotion.isClimbing;
-        return;
-    }
-    if (!enterClimbing)
-    {
-         locomotion = Locomotion.isGrounded;
-        return;
-    }
-
-    // 3️⃣ 向下发射射线检测地面
-    RaycastHit hit;
-
-    if (Physics.Raycast(transform.position , Vector3.down, out hit, groundDetect))
-    {
-        // 检测到地面，且没有垂直输入
-        if (Mathf.Abs(move.y) <= 0.01f)
-        {
-            locomotion = Locomotion.isGrounded;
-        }
-    }
-    else
-    {
-        // 没检测到地面 → 在空中
-        locomotion = Locomotion.isMidAir;
-    }
-}
   
 
     //========================
@@ -199,18 +166,18 @@ public class AnimatorStateDebugger : MonoBehaviour
     // Animator处理
     //========================
 
-    void HandleAnimator()
-    {
-        HandleRun();
+    // void HandleAnimator()
+    // {
+    //     HandleRun();
 
-        HandleClimb();
+    //     HandleClimb();
 
-        HandleJump();
+    //     HandleJump();
 
-        HandleDash();
+    //     HandleDash();
 
-        HandleHide();
-    }
+    //     HandleHide();
+    // }
 
     // Lry的修改：正式动画同步入口。该方法把 PlayerCC 的领域状态映射为 Animator 参数，是典型的 presentation adapter / synchronization layer。
     void HandleAnimatorFromPlayerCC()
@@ -223,9 +190,9 @@ public class AnimatorStateDebugger : MonoBehaviour
 
         HandleDashFromPlayerCC();
 
-        HandleHideFromPlayerCC();
+        // HandleHideFromPlayerCC();
 
-        HandleClimbExitTriggersFromPlayerCC();
+        // HandleClimbExitTriggersFromPlayerCC();
     }
 
     // Lry的修改：同步动画侧技能视图。优先读取 PlayerCC.equippedSkills，也就是 UI 装备槽同步后的真实装备技能。
@@ -270,46 +237,144 @@ public class AnimatorStateDebugger : MonoBehaviour
     // Lry的修改：Run 参数仍然表示 locomotion 中的水平/移动意图，但攀爬态下强制关闭，避免与 Climb 状态并发竞争。
     void HandleRunFromPlayerCC()
     {
-        if (!syncRunFromPlayerInput)
+
+        // Vector2 playerMove = controller.GetMoveInput();
+        // bool running = controller.CurrentPosture != PlayerCC.Posture.Climbing &&
+        //                (Mathf.Abs(playerMove.x) > 0.1f );
+
+        // SetBoolIfExists(hasRun, "Run", running);
+        if (HasEquippedSkill("10-StdMove") || HasEquippedSkill("12-mj") || HasEquippedSkill("13-md") || HasEquippedSkill("14-mh"))
         {
-            return;
+            if(currentPosture == Posture.Grounded)
+            {
+                
+                if (Mathf.Abs(move.x) > 0.01f)
+                {
+                    animator.SetBool("Run", true);
+                }
+                else
+                {
+                    animator.SetBool("Run", false);
+                }
+            }
+            else
+            {
+                animator.SetBool("Run", false);
+            }
+        
         }
-
-        Vector2 playerMove = controller.GetMoveInput();
-        bool running = controller.CurrentPosture != PlayerCC.Posture.Climbing &&
-                       (Mathf.Abs(playerMove.x) > 0.1f || Mathf.Abs(playerMove.y) > 0.1f);
-
-        SetBoolIfExists(hasRun, "Run", running);
+        else
+        {
+            animator.SetBool("Run", false);
+        }
+        
     }
+
+
+
 
     // Lry的修改：Climb/ClimbInput 由攀爬技能通过 PlayerCC.SetClimbState 写入，本层只做参数转发，不再自行判断射线或按键。
     void HandleClimbFromPlayerCC()
     {
+        if(currentPosture == Posture.Climbing)
+        {
+            
         
-        bool climbing = controller.CurrentPosture == PlayerCC.Posture.Climbing;
-        float climbInput = controller.ClimbInput;
+        if (HasEquippedSkill("12-mj") )
+        {
+            float climbVelTarget = 0f;
 
-        SetBoolIfExists(hasClimb, "Climb", climbing);
-        SetFloatIfExists(hasClimbVel, "ClimbVel", climbInput, 0.1f);
-        SetFloatIfExists(hasClimbInput, "ClimbInput", climbInput, 0.1f);
+            if (Mathf.Abs(move.y) > 0.01f)
+            {
+                animator.SetBool("Climb", true);
+
+                if (move.y > 0.01f)
+                {
+                    climbVelTarget = 1f;   // 向上
+                }
+                else if (move.y < -0.01f)
+                {
+                    climbVelTarget = -1f;   // 向下/停止
+                }
+            }
+            else
+            {
+                climbVelTarget = 0f;
+            }
+        
+        // 平滑实现+阈值吸附
+        
+            animator.SetFloat("ClimbInput", climbVelTarget , 0.2f , Time.deltaTime * 6f);
+
+            float climbVelCurrent = animator.GetFloat("ClimbInput");
+            
+
+            // ⭐关键：硬归零
+
+            if (Mathf.Abs(climbVelCurrent - climbVelTarget) < 0.1f)
+            {
+                animator.SetFloat("ClimbInput", climbVelTarget);
+            
+            }
+            }
+        }
+        else
+        {
+            animator.SetBool("Climb" , false);
+        }
+        // bool climbing = controller.CurrentPosture == PlayerCC.Posture.Climbing;
+        // float climbInput = controller.ClimbInput;
+
+        // SetBoolIfExists(hasClimb, "Climb", climbing);
+        // SetFloatIfExists(hasClimbVel, "ClimbVel", climbInput, 0.1f);
+        // SetFloatIfExists(hasClimbInput, "ClimbInput", climbInput, 0.1f);
     }
 
     // Lry的修改：Jump/VerticalVelocity 由物理层真实速度驱动。这里与原 jumpHold 曲线冲突：原曲线是测试用 procedural animation parameter，不代表 CharacterController 的真实起落速度。
     void HandleJumpFromPlayerCC()
     {
-        SetFloatImmediateIfExists(hasVerticalVelocity, "VerticalVelocity", controller.VerticalVelocity);
-        SetFloatImmediateIfExists(hasJump, "Jump", controller.VerticalVelocity);
-        SetIntIfExists(hasJumpType, "JumpType", controller.JumpType);
-        SetBoolIfExists(hasIsGrounded, "IsGrounded", controller.CurrentPosture == PlayerCC.Posture.Grounded);
+        // 1️⃣ 判断是否在空中 → 控制 Jump Bool
+
+        if(currentPosture == Posture.Airborne)
+        {
+            animator.SetBool("Jump", true);
+            animator.SetFloat("VerticalVelocity", controller.VerticalVelocity);
+
+            // todo:还需要大小跳，得在CC中实现它
+        }
+        else
+        {
+            animator.SetBool("Jump", false);
+        }
+
+
+
+
+        // SetFloatImmediateIfExists(hasVerticalVelocity, "VerticalVelocity", controller.VerticalVelocity);
+        // SetFloatImmediateIfExists(hasJump, "Jump", controller.VerticalVelocity);
+        // SetIntIfExists(hasJumpType, "JumpType", controller.JumpType);
+        // SetBoolIfExists(hasIsGrounded, "IsGrounded", controller.CurrentPosture == PlayerCC.Posture.Grounded);
     }
 
     // Lry的修改：DashPosture 是技能层输出的 0-1 姿态权重，适合驱动 BlendTree 或过渡条件；Dash Bool 同步为兼容旧状态机参数。
     void HandleDashFromPlayerCC()
     {
         float dashPosture = controller.DashPosture;
-
-        SetFloatImmediateIfExists(hasDashPosture, "DashPosture", dashPosture);
-        SetBoolIfExists(hasDash, "Dash", dashPosture > 0.01f);
+        if(HasEquippedSkill("30-xx") || HasEquippedSkill("31-dm") || HasEquippedSkill("32-dj") || HasEquippedSkill("34-dc"))
+        {
+            
+            if (dashPressed)
+            {
+                animator.SetBool("Dash" , true);
+            }
+            else
+            {
+                animator.SetBool("Dash" , false);
+            }
+        }
+        // animator.SetFloat("DashVel" , dashPosture);
+        // SetFloatImmediateIfExists(hasDashPosture, "DashPosture", dashPosture);
+        // SetBoolIfExists(hasDash, "Dash", dashPosture > 0.01f);
     }
 
     // Lry的修改：当前 PlayerCC 只有 Hide 输入接口，没有独立隐身状态字段；这里同步输入态是兼容旧 AnimatorStateDebugger 的 Hide Bool，后续若有隐身技能状态，应改为读取领域状态。
@@ -332,125 +397,6 @@ public class AnimatorStateDebugger : MonoBehaviour
         }
     }
 
-    //========================
-    // Run
-    //========================
-
-    void HandleRun()
-    {
-        if (locomotion == Locomotion.isGrounded)
-        {
-            if (Mathf.Abs(move.x) > 0.01f)
-            {
-                animator.SetBool("Run", true);
-            }
-            else
-            {
-                animator.SetBool("Run", false);
-            }
-        }
-        else
-        {
-            animator.SetBool("Run", false);
-        }
-    }
-
-    //========================
-    // Climb
-    //========================
-
-  void HandleClimb()
-{
-    if (locomotion == Locomotion.isClimbing)
-    {
-        float climbVelTarget = 0f;
-
-        if (Mathf.Abs(move.y) > 0.01f)
-        {
-            animator.SetBool("Climb", true);
-
-            if (move.y > 0.01f)
-            {
-                climbVelTarget = 1f;   // 向上
-            }
-            else if (move.y < -0.01f)
-            {
-                climbVelTarget = -1f;   // 向下/停止
-            }
-        }
-        else
-        {
-            climbVelTarget = 0f;
-        }
-
-        // 平滑实现+阈值吸附
-        
-        animator.SetFloat("ClimbInput", climbVelTarget , 0.2f , Time.deltaTime * 6f);
-
-        float climbVelCurrent = animator.GetFloat("ClimbInput");
-        
-
-        // ⭐关键：硬归零
-
-        if (Mathf.Abs(climbVelCurrent - climbVelTarget) < 0.1f)
-        {
-            animator.SetFloat("ClimbInput", climbVelTarget);
-           
-        }
-        
-    }
-
-    else
-    {
-        animator.SetBool("Climb", false);
-
-        // 不在攀爬状态时归零
-        animator.SetFloat("ClimbInput", 0f, 0.2f, Time.deltaTime);
-    }
-}
-
-    //========================
-    // Jump（核心部分）
-    //========================
-
-    void HandleJump()
-{
-    // 按下Jump，开始上升
-    if (jumpAxis > 0f  && !jumpRising && !jumpFalling)
-    {
-        jumpRising = true;
-    }
-
-    // 上升阶段：0 → 1
-    if (jumpRising)
-    {
-        jumpHold += jumpChangeRate * Time.deltaTime;
-
-        if (jumpHold >= 1f)
-        {
-            jumpHold = 1f;
-
-            jumpRising = false;
-            jumpFalling = true;
-        }
-    }
-
-    // 下降阶段：1 → 0
-    if (jumpFalling)
-    {
-        jumpHold -= jumpChangeRate * Time.deltaTime;
-
-        if (jumpHold <= 0f)
-        {
-            jumpHold = 0f;
-
-            jumpFalling = false;
-        }
-    }
-
-    // 持续更新 Animator
-    animator.SetFloat("Jump", jumpHold);
-}
 
     //========================
     // Dash
@@ -484,17 +430,7 @@ public class AnimatorStateDebugger : MonoBehaviour
         }
     }
 
-    //用来暂时实现悬崖边上翻越的功能event
-    public void LockRootMotion()
-    {
-        animator.applyRootMotion = false;
-        Debug.Log("RM Locked!");
-    }
-    public void ApplyRootMotion()
-    {
-        animator.applyRootMotion = true;
-        Debug.Log("RM Applaied!");
-    }
+
 
     // Lry的修改：读取 Animator Controller 参数表，确认当前 Controller 支持哪些参数，避免正式同步器和动画状态机参数命名不同步时直接崩溃。
     void CacheAnimatorParameters()
@@ -571,21 +507,67 @@ public class AnimatorStateDebugger : MonoBehaviour
         }
     }
 
+    //用来暂时实现悬崖边上翻越的功能event
+    public void LockRootMotion()
+    {
+        animator.applyRootMotion = false;
+        Debug.Log("RM Locked!");
+    }
+    public void ApplyRootMotion()
+    {
+        animator.applyRootMotion = true;
+
+        Debug.Log("RM Applaied!");
+    }
 
 
-    // public void OnVaultEndSnap()
-    // {
+    public void DisablePlayerGravity()
+    {
+        if (controller == null)
+        {
+            controller = GetComponentInParent<PlayerCC>();
+        }
+
+        if (controller == null)
+        {
+            return;
+        }
+
+        if (!hasCachedGravity)
+        {
+            cachedGravity = controller.gravity;
+            hasCachedGravity = true;
+        }
+
+        controller.gravity = 0f;
+        controller.SetVerticalVelocity(0f);
+    }
+
+    // 动画事件调用，用于动画结束时恢复 PlayerCC 原始重力。
+    public void RestorePlayerGravity()
+    {
+        if (controller == null)
+        {
+            controller = GetComponentInParent<PlayerCC>();
+        }
+
+        if (controller == null || !hasCachedGravity)
+        {
+            return;
+        }
+
+        controller.gravity = cachedGravity;
+        hasCachedGravity = false;
+    }
+
+    public void StimulateIK()
+    {
+        AnimatorStateInfo info = animator.GetCurrentAnimatorStateInfo(0);
         
-        
-    //     // 2. 临时关闭 CharacterController 防止碰撞干扰
-    //     cc.enabled = false;
-
-    //     // 3. 直接移动角色根节点
-    //     player.transform.position = targetPos.position;
-
-    //     // 4. 重新启用 CharacterController
-    //     cc.enabled = true;
-
-    //     Debug.Log("Vault End Snap Executed");
-    // }
+        if (info.IsName("ClimbUp"))
+        {
+            Debug.Log("IKUsed");
+            testClimb.MatchTarget();
+        }
+    }
 }
