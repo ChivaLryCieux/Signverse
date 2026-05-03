@@ -93,6 +93,7 @@ public class AnimatorStateDebugger : MonoBehaviour
     // public CharacterController cc;
     // public Transform player;
     // public Transform targetPos;
+    public TestClimb testClimb;
 
     void Awake()
     {
@@ -136,6 +137,7 @@ public class AnimatorStateDebugger : MonoBehaviour
         SyncEquippedSkillViewFromPlayerCC();
 
         HandleAnimatorFromPlayerCC();
+        StimulateIK();
 
         
         // Lry的修改：如果 usePlayerCCState 开启但 controller 没有绑定，会自动回退到原调试链路；这保证旧动画测试场景不被破坏。
@@ -428,17 +430,7 @@ public class AnimatorStateDebugger : MonoBehaviour
         }
     }
 
-    //用来暂时实现悬崖边上翻越的功能event
-    public void LockRootMotion()
-    {
-        animator.applyRootMotion = false;
-        Debug.Log("RM Locked!");
-    }
-    public void ApplyRootMotion()
-    {
-        animator.applyRootMotion = true;
-        Debug.Log("RM Applaied!");
-    }
+
 
     // Lry的修改：读取 Animator Controller 参数表，确认当前 Controller 支持哪些参数，避免正式同步器和动画状态机参数命名不同步时直接崩溃。
     void CacheAnimatorParameters()
@@ -515,6 +507,18 @@ public class AnimatorStateDebugger : MonoBehaviour
         }
     }
 
+    //用来暂时实现悬崖边上翻越的功能event
+    public void LockRootMotion()
+    {
+        animator.applyRootMotion = false;
+        Debug.Log("RM Locked!");
+    }
+    public void ApplyRootMotion()
+    {
+        animator.applyRootMotion = true;
+
+        Debug.Log("RM Applaied!");
+    }
 
 
     public void DisablePlayerGravity()
@@ -554,5 +558,16 @@ public class AnimatorStateDebugger : MonoBehaviour
 
         controller.gravity = cachedGravity;
         hasCachedGravity = false;
+    }
+
+    public void StimulateIK()
+    {
+        AnimatorStateInfo info = animator.GetCurrentAnimatorStateInfo(0);
+        
+        if (info.IsName("ClimbUp"))
+        {
+            Debug.Log("IKUsed");
+            testClimb.MatchTarget();
+        }
     }
 }
