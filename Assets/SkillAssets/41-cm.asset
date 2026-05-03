@@ -15,6 +15,8 @@ MonoBehaviour:
   skillID: 41-cm
   skillName: 
   type: 0
-  summonKey: 99
-  decoyPrefab: {fileID: 0}
-  lifetime: 3
+  standChildName: Stand
+  duration: 10
+  autoEquippedSkillIDs:
+  - 10-xx
+  - 20-xx

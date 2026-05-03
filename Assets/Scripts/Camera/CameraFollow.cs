@@ -18,13 +18,21 @@ public class CameraFollow25D : MonoBehaviour
     public Vector2 maxBounds;           // 关卡右上角坐标
 
     private Vector3 targetPosition;
+    private PlayerCC targetController;
 
     void LateUpdate()
     {
         if (target == null) return;
 
+        if (targetController == null)
+        {
+            targetController = target.GetComponent<PlayerCC>();
+        }
+
+        Transform followTarget = targetController != null ? targetController.GetControlTransform() : target;
+
         // 1. 计算目标位置
-        targetPosition = target.position + offset;
+        targetPosition = followTarget.position + offset;
 
         // 2. 应用死区逻辑 (可选)
         // 如果当前相机位置与目标位置的差距在死区内，则保持部分坐标不变

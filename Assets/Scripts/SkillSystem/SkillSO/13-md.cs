@@ -8,27 +8,25 @@ namespace Skills
         // ===== 元数据 =====
 
         // ===== 物理控制 =====
-        [Header("溜冰参数")]
-        public float slideSpeed = 8f;
-        public float acceleration = 12f;
-        public float deceleration = 2f;
+        [Header("高速移动")]
+        public float moveSpeed = 9f;
 
-        private float currentSpeed;
-
-        // 溜冰是持续型移动技能，激活时不需要额外处理。
+        // 高速移动是持续型技能，激活时不需要额外处理。
         public override void OnActivate(GameObject user, PlayerCC controller, PlayerCC.Posture posture) { }
 
-        // 每帧根据横向输入平滑加速或减速，形成滑行手感。
+        // 每帧读取横向输入，并以更高速度移动。
         public override void OnUpdate(GameObject user, PlayerCC controller, PlayerCC.Posture posture)
         {
             Vector2 input = controller.GetMoveInput();
-            float targetSpeed = Mathf.Abs(input.x) > 0.1f ? input.x * slideSpeed : 0f;
-            float rate = Mathf.Abs(targetSpeed) > 0.01f ? acceleration : deceleration;
-            currentSpeed = Mathf.MoveTowards(currentSpeed, targetSpeed, rate * Time.deltaTime);
+            float horizontal = input.x;
 
-            if (Mathf.Abs(currentSpeed) < 0.01f) return;
+            if (Mathf.Abs(horizontal) <= 0.01f)
+            {
+                return;
+            }
 
-            controller.GetCharacterController().Move(new Vector3(currentSpeed, 0f, 0f) * Time.deltaTime);
+            Vector3 moveDelta = new Vector3(horizontal * moveSpeed, 0f, 0f) * Time.deltaTime;
+            controller.GetCharacterController().Move(moveDelta);
         }
 
         // ===== 动画控制 =====
