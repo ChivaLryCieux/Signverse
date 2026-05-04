@@ -8,24 +8,27 @@ namespace Skills
         // ===== 元数据 =====
 
         // ===== 物理控制 =====
-        [Header("基础移动")]
-        public float moveSpeed = 6f;
+        [Header("超移动")]
+        [Tooltip("装备 11 后的整体移动速度，横向和竖向都会使用这个速度。")]
+        public float moveSpeed = 3f;
 
         // 基础移动是持续型技能，激活时不需要额外处理。
         public override void OnActivate(GameObject user, PlayerCC controller, PlayerCC.Posture posture) { }
 
-        // 每帧读取横向输入，并通过 CharacterController 执行基础移动。
+        // 每帧取消重力，读取横向/竖向输入，并通过 CharacterController 执行慢速自由移动。
         public override void OnUpdate(GameObject user, PlayerCC controller, PlayerCC.Posture posture)
         {
-            Vector2 input = controller.GetMoveInput();
-            float horizontal = input.x;
+            controller.RequestGravitySuppressed();
 
-            if (Mathf.Abs(horizontal) <= 0.01f)
+            Vector2 input = controller.GetMoveInput();
+
+            if (input.sqrMagnitude <= 0.0001f)
             {
                 return;
             }
 
-            Vector3 moveDelta = new Vector3(horizontal * moveSpeed, 0f, 0f) * Time.deltaTime;
+            Vector2 clampedInput = Vector2.ClampMagnitude(input, 1f);
+            Vector3 moveDelta = new Vector3(clampedInput.x, clampedInput.y, 0f) * moveSpeed * Time.deltaTime;
             controller.GetCharacterController().Move(moveDelta);
         }
 
