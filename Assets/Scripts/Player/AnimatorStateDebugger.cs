@@ -95,6 +95,8 @@ public class AnimatorStateDebugger : MonoBehaviour
     // public Transform targetPos;
     public TestClimb testClimb;
 
+    public CharacterController characterController;
+
     void Awake()
     {
         inputActions = new PlayerControls();
@@ -570,4 +572,13 @@ public class AnimatorStateDebugger : MonoBehaviour
             testClimb.MatchTarget();
         }
     }
+    void OnAnimatorMove()
+    {
+        if (animator.applyRootMotion)
+        {
+            Vector3 delta = animator.deltaPosition;
+            characterController.Move(delta);
+        }
+    }
+
 }
