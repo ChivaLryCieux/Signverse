@@ -55,6 +55,7 @@ public class PlayerCC : MonoBehaviour
     public float DashPosture { get; private set; }
     public float ClimbInput { get; private set; }
     public bool IsCloaked => isCloaked;
+    public bool UsesEquippedSkillLoadout => hasExplicitEquippedSkills || (equippedSkills != null && equippedSkills.Count > 0);
     public bool IsInClimbTransitionTrigger => climbTransitionTriggerCount > 0;
     private int climbTransitionTriggerCount;
     private bool climbExitUpRequested;
@@ -70,6 +71,8 @@ public class PlayerCC : MonoBehaviour
     public List<SkillBase> equippedSkills = new List<SkillBase>();
 
     public SkillDatabase masterDatabase; 
+    private readonly List<SkillBase> skillUpdateBuffer = new List<SkillBase>();
+    private bool hasExplicitEquippedSkills;
 
     [Header("地面检测调试")]
     [SerializeField] private bool drawGroundedGizmo = true;
@@ -231,6 +234,8 @@ public class PlayerCC : MonoBehaviour
     // Lry的修改：由 UI 装备系统统一提交当前装备技能快照。使用快照同步可以避免动画脚本读取 UI 私有数组，降低模块耦合。
     public void SetEquippedSkills(IList<SkillBase> skills)
     {
+        hasExplicitEquippedSkills = true;
+
         if (equippedSkills == null)
         {
             equippedSkills = new List<SkillBase>();
@@ -440,9 +445,24 @@ public class PlayerCC : MonoBehaviour
 
         HandleIntrinsicFacing();
 
-        for (int i = 0; i < unlockedSkills.Count; i++)
+        IList<SkillBase> activeSkills = GetActiveSkillsForUpdate();
+        skillUpdateBuffer.Clear();
+
+        if (activeSkills != null)
         {
-            SkillBase skill = unlockedSkills[i];
+            for (int i = 0; i < activeSkills.Count; i++)
+            {
+                SkillBase skill = activeSkills[i];
+                if (skill != null && !skillUpdateBuffer.Contains(skill))
+                {
+                    skillUpdateBuffer.Add(skill);
+                }
+            }
+        }
+
+        for (int i = 0; i < skillUpdateBuffer.Count; i++)
+        {
+            SkillBase skill = skillUpdateBuffer[i];
             if (skill == null)
             {
                 continue;
@@ -462,6 +482,16 @@ public class PlayerCC : MonoBehaviour
     {
         CloakEffectController cloakEffect = GetComponent<CloakEffectController>();
         isCloaked = cloakEffect != null && cloakEffect.IsCloaked;
+    }
+
+    private IList<SkillBase> GetActiveSkillsForUpdate()
+    {
+        if (UsesEquippedSkillLoadout)
+        {
+            return equippedSkills;
+        }
+
+        return unlockedSkills;
     }
     private void HandleGravity()
     {

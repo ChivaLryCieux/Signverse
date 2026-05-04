@@ -58,6 +58,7 @@ public class AnimatorStateDebugger : MonoBehaviour
     bool hasDashPosture;
     bool hasDash;
     bool hasHide;
+    bool hasUltraMove;
 
     [Header("环境检测")]
     public float groundDetect = 0.5f;
@@ -191,6 +192,8 @@ public class AnimatorStateDebugger : MonoBehaviour
         HandleJumpFromPlayerCC();
 
         HandleDashFromPlayerCC();
+
+        HandleUltraMoveFromPlayerCC();
 
         // HandleHideFromPlayerCC();
 
@@ -379,6 +382,17 @@ public class AnimatorStateDebugger : MonoBehaviour
         // SetBoolIfExists(hasDash, "Dash", dashPosture > 0.01f);
     }
 
+    void HandleUltraMoveFromPlayerCC()
+    {
+        bool ultraMove = controller != null && controller.HasEquippedSkill("11-mm");
+
+        if (hasUltraMove || HasBoolParameter("ultraMove"))
+        {
+            animator.SetBool("ultraMove", ultraMove);
+            hasUltraMove = true;
+        }
+    }
+
     // Lry的修改：当前 PlayerCC 只有 Hide 输入接口，没有独立隐身状态字段；这里同步输入态是兼容旧 AnimatorStateDebugger 的 Hide Bool，后续若有隐身技能状态，应改为读取领域状态。
     void HandleHideFromPlayerCC()
     {
@@ -461,6 +475,7 @@ public class AnimatorStateDebugger : MonoBehaviour
             else if (parameterName == "DashPosture" && parameterType == AnimatorControllerParameterType.Float) hasDashPosture = true;
             else if (parameterName == "Dash" && parameterType == AnimatorControllerParameterType.Bool) hasDash = true;
             else if (parameterName == "Hide" && parameterType == AnimatorControllerParameterType.Bool) hasHide = true;
+            else if (parameterName == "ultraMove" && parameterType == AnimatorControllerParameterType.Bool) hasUltraMove = true;
         }
     }
 
@@ -471,6 +486,26 @@ public class AnimatorStateDebugger : MonoBehaviour
         {
             animator.SetBool(parameterName, value);
         }
+    }
+
+    bool HasBoolParameter(string parameterName)
+    {
+        if (animator == null || string.IsNullOrEmpty(parameterName))
+        {
+            return false;
+        }
+
+        AnimatorControllerParameter[] parameters = animator.parameters;
+        for (int i = 0; i < parameters.Length; i++)
+        {
+            if (parameters[i].name == parameterName &&
+                parameters[i].type == AnimatorControllerParameterType.Bool)
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     // Lry的修改：带 damping 的 Float 写入用于平滑 BlendTree 参数，尤其是攀爬输入的 -1/0/1 切换。
