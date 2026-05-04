@@ -1870,7 +1870,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   animator: {fileID: 907446310}
+  audioSource: {fileID: 0}
   controller: {fileID: 907446306}
+  dashSFX: {fileID: 0}
+  jumpSFX: {fileID: 0}
   equippedSkills: []
   currentPosture: 0
   usePlayerCCState: 1
@@ -1879,6 +1882,7 @@ MonoBehaviour:
   locomotion: 0
   jumpChangeRate: 5
   testClimb: {fileID: 0}
+  characterController: {fileID: 0}
 --- !u!114 &907446309
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4356,6 +4360,30 @@ MonoBehaviour:
   hideRenderersWhileCloaked: 1
   cloakSfx: {fileID: 8300000, guid: 1f0333472cdd96143a78d409c2f3481f, type: 3}
   cloakSfxVolume: 1
+--- !u!143 &4037352738551801918 stripped
+CharacterController:
+  m_CorrespondingSourceObject: {fileID: 8672346852895499661, guid: 3d3abe984d450e349a3c0535efd2c7fb,
+    type: 3}
+  m_PrefabInstance: {fileID: 7607969654371130138}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &4037352738551801921
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 511650395}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 74cd9ab74f031794d893dda61d6d7a0a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  footstepClips:
+  - {fileID: 8300000, guid: 5db89d63cba49d142844ef2aef31efbf, type: 3}
+  - {fileID: 8300000, guid: aff36c7059e34d64a9984fb1f935c3ba, type: 3}
+  audioSource: {fileID: 0}
+  minPitch: 0.95
+  maxPitch: 1.05
 --- !u!1001 &4254874248377436203
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -4591,6 +4619,21 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 9114328982574220657, guid: 3d3abe984d450e349a3c0535efd2c7fb,
+        type: 3}
+      propertyPath: dashSFX
+      value: 
+      objectReference: {fileID: 8300000, guid: 9a23e08bb5862104898a1a36bcab64fb, type: 3}
+    - target: {fileID: 9114328982574220657, guid: 3d3abe984d450e349a3c0535efd2c7fb,
+        type: 3}
+      propertyPath: jumpSFX
+      value: 
+      objectReference: {fileID: 8300000, guid: 9a23e08bb5862104898a1a36bcab64fb, type: 3}
+    - target: {fileID: 9114328982574220657, guid: 3d3abe984d450e349a3c0535efd2c7fb,
+        type: 3}
+      propertyPath: characterController
+      value: 
+      objectReference: {fileID: 4037352738551801918}
     m_RemovedComponents:
     - {fileID: 1486755042518684335, guid: 3d3abe984d450e349a3c0535efd2c7fb, type: 3}
     m_RemovedGameObjects: []
@@ -4604,6 +4647,10 @@ PrefabInstance:
         type: 3}
       insertIndex: 2
       addedObject: {fileID: 4037352738551801916}
+    - targetCorrespondingSourceObject: {fileID: 7854750620454331124, guid: 3d3abe984d450e349a3c0535efd2c7fb,
+        type: 3}
+      insertIndex: 3
+      addedObject: {fileID: 4037352738551801921}
     - targetCorrespondingSourceObject: {fileID: 7854750620454331124, guid: 3d3abe984d450e349a3c0535efd2c7fb,
         type: 3}
       insertIndex: -1

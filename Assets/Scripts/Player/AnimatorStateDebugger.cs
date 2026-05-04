@@ -12,14 +12,15 @@ public class AnimatorStateDebugger : MonoBehaviour
 
     // 标记是否已经缓存过重力，防止重复调用时把 0 当成原始重力。
     private bool hasCachedGravity;
-    [Header("Animator")]
+    [Header("核心引用")]
     public Animator animator;
-
-    // Lry的修改：正式动画同步模式的数据源引用。PlayerCC 是技能系统与物理控制的状态聚合点，动画层应从这里读取权威状态，避免重复实现状态机判定。
-    [Header("Lry的修改：PlayerCC 状态同步")]
+    public AudioSource audioSource;
     public PlayerCC controller;
 
-
+    [Header("音效")]
+    public AudioClip dashSFX;
+    public AudioClip jumpSFX;
+    public AudioClip groundedSFX;
 
 
 
@@ -29,6 +30,8 @@ public class AnimatorStateDebugger : MonoBehaviour
     public List<SkillBase> equippedSkills = new List<SkillBase>();
 
     public Posture currentPosture;
+    // 用于检测状态变化
+    private PlayerCC.Posture lastPosture;
    
     // Lry的修改：开启后，本脚本会使用 PlayerCC -> Animator 的正式同步链路；关闭后保留原有 AnimatorStateDebugger 的纯输入调试链路。
     public bool usePlayerCCState = true;
@@ -114,6 +117,15 @@ public class AnimatorStateDebugger : MonoBehaviour
             controller = GetComponentInParent<PlayerCC>();
         }
 
+        if (audioSource == null)
+        {
+            audioSource = GetComponentInParent<AudioSource>();
+        }
+            // 初始化状态缓存
+        if (controller != null)
+        {
+            lastPosture = controller.CurrentPosture;
+        }
         // Lry的修改：启动时缓存参数表，后续 SetParameter 走存在性检查，避免 Animator Controller 参数名未统一时直接抛异常。
         // CacheAnimatorParameters();
     }
@@ -133,6 +145,7 @@ public class AnimatorStateDebugger : MonoBehaviour
     {
         
         currentPosture = controller.CurrentPosture;
+        HandleLandingSFX();
 
         HandleInput();
 
@@ -153,7 +166,27 @@ public class AnimatorStateDebugger : MonoBehaviour
     //========================
     // 输入获取
     //========================
+    void HandleLandingSFX()
+    {
+        if (controller == null || audioSource == null)
+        {
+            return;
+        }
 
+        PlayerCC.Posture current = controller.CurrentPosture;
+
+        // 只在这一帧触发：Airborne -> Grounded
+        if (lastPosture == PlayerCC.Posture.Airborne &&
+            current == PlayerCC.Posture.Grounded)
+        {
+            if (groundedSFX != null)
+            {
+                audioSource.PlayOneShot(groundedSFX);
+            }
+        }
+
+        lastPosture = current;
+    }
     void HandleInput()
     {
         move = inputActions.Player.Move.ReadValue<Vector2>();
@@ -339,27 +372,49 @@ public class AnimatorStateDebugger : MonoBehaviour
     void HandleJumpFromPlayerCC()
     {
         // 1️⃣ 判断是否在空中 → 控制 Jump Bool
-
         if(currentPosture == Posture.Airborne)
         {
             animator.SetBool("Jump", true);
             animator.SetFloat("VerticalVelocity", controller.VerticalVelocity);
 
-            // todo:还需要大小跳，得在CC中实现它
+            if (HasEquippedSkill("22-jj") && jumpAxis > 0f)
+            {
+                audioSource.Stop();
+                audioSource.PlayOneShot(jumpSFX);
+                
+            }
         }
         else
         {
             animator.SetBool("Jump", false);
         }
-
-
-
-
+        if(currentPosture == Posture.Grounded)
+        {
+            
+            if (HasEquippedSkill("20-StdJump") || HasEquippedSkill("21-jm")  || HasEquippedSkill("22-jj") || HasEquippedSkill("23-jd"))
+            {
+                if(currentPosture == Posture.Grounded && jumpAxis > 0f)
+                {
+                    audioSource.Stop();
+                    audioSource.PlayOneShot(jumpSFX);
+                    
+                }
+            }
+            
+        }
+            // todo:还需要大小跳，得在CC中实现它
         // SetFloatImmediateIfExists(hasVerticalVelocity, "VerticalVelocity", controller.VerticalVelocity);
         // SetFloatImmediateIfExists(hasJump, "Jump", controller.VerticalVelocity);
         // SetIntIfExists(hasJumpType, "JumpType", controller.JumpType);
         // SetBoolIfExists(hasIsGrounded, "IsGrounded", controller.CurrentPosture == PlayerCC.Posture.Grounded);
     }
+
+        
+
+
+
+
+
 
     // Lry的修改：DashPosture 是技能层输出的 0-1 姿态权重，适合驱动 BlendTree 或过渡条件；Dash Bool 同步为兼容旧状态机参数。
     void HandleDashFromPlayerCC()
@@ -371,6 +426,7 @@ public class AnimatorStateDebugger : MonoBehaviour
             if (dashPressed)
             {
                 animator.SetBool("Dash" , true);
+                audioSource.PlayOneShot(dashSFX);
             }
             else
             {
@@ -615,5 +671,8 @@ public class AnimatorStateDebugger : MonoBehaviour
             characterController.Move(delta);
         }
     }
+
+
+
 
 }
