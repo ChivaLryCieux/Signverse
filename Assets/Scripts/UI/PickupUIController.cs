@@ -24,6 +24,14 @@ public class PickupUIController : MonoBehaviour
     [Header("5 种拾取物 UI")]
     [SerializeField] private PickupUiEntry[] entries = new PickupUiEntry[5];
 
+    [Header("模仿者 UI")]
+    [Tooltip("5 号模仿者选中后，右上角 1/2/3/4 变成的黑色版本；模仿成功后 5 号也会显示对应黑色版本。数组下标 0=1，1=2，2=3，3=4。")]
+    [SerializeField] private Sprite[] mimicTargetDarkIcons = new Sprite[4];
+    [SerializeField] private AudioClip mimicSuccessSfx;
+    [SerializeField] private AudioClip mimicExitSfx;
+    [SerializeField, Range(0f, 1f)] private float mimicSfxVolume = 1f;
+    [SerializeField] private AudioSource fallbackAudioSource;
+
     [Header("左上角装备栏")]
     [Tooltip("按界面位置顺序拖入左上角 5 个装备槽。装备不会自动补位，槽位允许空缺。")]
     [SerializeField] private PickupUISlotView[] equippedSlots = new PickupUISlotView[5];
@@ -48,6 +56,10 @@ public class PickupUIController : MonoBehaviour
     private bool[] equippedSlotOccupied = Array.Empty<bool>();
     private bool hasSelectedUnlockItem;
     private PickupItemId selectedUnlockItem;
+    private bool selectingMimicTarget;
+    private bool hasMimicTarget;
+    private int mimicTargetRightSideIndex;
+    private string mimicTargetComboCode;
     private readonly List<SkillBase> appliedLinkedSkills = new List<SkillBase>();
 
     // Lry的修改：装备槽组合后真正生效的 SkillBase 快照。它会同步到 PlayerCC.equippedSkills，供动画层读取当前 loadout。
@@ -100,6 +112,47 @@ public class PickupUIController : MonoBehaviour
         ItemUnlocked?.Invoke(id);
     }
 
+    public void OnUnlockSlotClicked(PickupItemId id, int clickCount)
+    {
+        if (!unlockedItems.Contains(id) || IsEquipped(id))
+        {
+            return;
+        }
+
+        if (!entryById.TryGetValue(id, out PickupUiEntry entry))
+        {
+            return;
+        }
+
+        int rightSideIndex = GetRightSideIndex(entry);
+        if (IsMimicIndex(rightSideIndex))
+        {
+            if (clickCount >= 2 && hasMimicTarget)
+            {
+                ClearMimicTarget();
+                PlayMimicSfx(mimicExitSfx);
+                return;
+            }
+
+            if (!hasMimicTarget)
+            {
+                BeginMimicTargetSelection();
+                return;
+            }
+
+            SelectForEquip(id);
+            return;
+        }
+
+        if (selectingMimicTarget)
+        {
+            CompleteMimicTargetSelection(entry);
+            return;
+        }
+
+        SelectForEquip(id);
+    }
+
     public void SelectForEquip(PickupItemId id)
     {
         if (!unlockedItems.Contains(id) || IsEquipped(id))
@@ -112,6 +165,12 @@ public class PickupUIController : MonoBehaviour
             return;
         }
 
+        if (entryById.TryGetValue(id, out PickupUiEntry entry) && IsMimicIndex(GetRightSideIndex(entry)) && !hasMimicTarget)
+        {
+            BeginMimicTargetSelection();
+            return;
+        }
+
         if (hasSelectedUnlockItem && selectedUnlockItem.Equals(id))
         {
             ClearSelectedUnlockItem();
@@ -120,13 +179,21 @@ public class PickupUIController : MonoBehaviour
 
         hasSelectedUnlockItem = true;
         selectedUnlockItem = id;
+        selectingMimicTarget = false;
         RefreshUnlockedSlots();
     }
 
-    public void OnEquippedSlotClicked(int equippedIndex)
+    public void OnEquippedSlotClicked(int equippedIndex, int clickCount = 1)
     {
         if (!IsValidEquippedIndex(equippedIndex))
         {
+            return;
+        }
+
+        if (clickCount >= 2 && equippedSlotOccupied[equippedIndex] && IsMimicItem(equippedSlotItems[equippedIndex]) && hasMimicTarget)
+        {
+            ClearMimicTarget();
+            PlayMimicSfx(mimicExitSfx);
             return;
         }
 
@@ -280,8 +347,14 @@ public class PickupUIController : MonoBehaviour
             entry.unlockSlot.gameObject.SetActive(visible);
             if (visible)
             {
-                entry.unlockSlot.InitializeUnlockSlot(this, entry.id, entry.icon);
-                entry.unlockSlot.SetSelected(hasSelectedUnlockItem && selectedUnlockItem.Equals(entry.id));
+                entry.unlockSlot.InitializeUnlockSlot(this, entry.id, GetUnlockIcon(entry));
+                bool selected = hasSelectedUnlockItem && selectedUnlockItem.Equals(entry.id);
+                if (selectingMimicTarget && IsMimicIndex(GetRightSideIndex(entry)))
+                {
+                    selected = true;
+                }
+
+                entry.unlockSlot.SetSelected(selected);
             }
         }
     }
@@ -313,7 +386,7 @@ public class PickupUIController : MonoBehaviour
             PickupItemId itemId = equippedSlotItems[i];
             if (entryById.TryGetValue(itemId, out PickupUiEntry entry))
             {
-                slot.SetItem(itemId, entry.icon);
+                slot.SetItem(itemId, GetEquippedIcon(i, entry));
             }
             else
             {
@@ -373,11 +446,11 @@ public class PickupUIController : MonoBehaviour
         }
 
         bool hasSubEntry = TryGetEquippedEntry(subSlotNumber, out PickupUiEntry subEntry);
-        int subIndex = hasSubEntry ? GetRightSideIndex(subEntry) : 0;
-        string subCode = hasSubEntry ? subEntry.comboCode : null;
+        if (!TryBuildLinkedSkillLookup(mainEntry, hasSubEntry ? subEntry : null, out string exactId, out string prefix))
+        {
+            return;
+        }
 
-        string prefix = GetRightSideIndex(mainEntry).ToString() + subIndex + "-";
-        string exactId = BuildLinkedSkillId(prefix, mainEntry.comboCode, subCode);
         SkillBase skill = FindSkill(exactId, prefix);
 
         if (skill == null)
@@ -397,6 +470,57 @@ public class PickupUIController : MonoBehaviour
         {
             equippedSkillSnapshot.Add(skill);
         }
+    }
+
+    private bool TryBuildLinkedSkillLookup(PickupUiEntry mainEntry, PickupUiEntry subEntry, out string exactId, out string prefix)
+    {
+        exactId = null;
+        prefix = null;
+
+        if (mainEntry == null)
+        {
+            return false;
+        }
+
+        int mainIndex = GetEffectiveRightSideIndex(mainEntry);
+        int subIndex = subEntry != null ? GetEffectiveRightSideIndex(subEntry) : 0;
+        string mainCode = GetEffectiveComboCode(mainEntry);
+        string subCode = subEntry != null ? GetEffectiveComboCode(subEntry) : null;
+
+        if (IsMimicIndex(mainIndex))
+        {
+            return false;
+        }
+
+        if (IsMimicIndex(subIndex))
+        {
+            return false;
+        }
+
+        prefix = mainIndex.ToString() + subIndex + "-";
+        exactId = BuildLinkedSkillId(prefix, mainCode, subCode);
+        return true;
+    }
+
+    private Sprite GetEquippedIcon(int equippedIndex, PickupUiEntry entry)
+    {
+        if (entry == null || !IsMimicIndex(GetRightSideIndex(entry)))
+        {
+            return entry != null ? entry.icon : null;
+        }
+
+        if (!hasMimicTarget)
+        {
+            return entry.icon;
+        }
+
+        Sprite mimicIcon = GetMimicResultIcon(mimicTargetRightSideIndex);
+        return mimicIcon != null ? mimicIcon : entry.icon;
+    }
+
+    private static bool IsMimicIndex(int rightSideIndex)
+    {
+        return rightSideIndex == 5;
     }
 
     private bool TryGetEquippedEntry(int slotNumber, out PickupUiEntry entry)
@@ -471,6 +595,152 @@ public class PickupUIController : MonoBehaviour
     {
         hasSelectedUnlockItem = false;
         RefreshUnlockedSlots();
+    }
+
+    private void BeginMimicTargetSelection()
+    {
+        hasSelectedUnlockItem = false;
+        selectingMimicTarget = true;
+        RefreshUnlockedSlots();
+    }
+
+    private void CompleteMimicTargetSelection(PickupUiEntry targetEntry)
+    {
+        if (targetEntry == null)
+        {
+            return;
+        }
+
+        int targetIndex = GetRightSideIndex(targetEntry);
+        if (IsMimicIndex(targetIndex))
+        {
+            return;
+        }
+
+        mimicTargetRightSideIndex = targetIndex;
+        mimicTargetComboCode = targetEntry.comboCode;
+        hasMimicTarget = true;
+        selectingMimicTarget = false;
+        hasSelectedUnlockItem = false;
+
+        PlayMimicSfx(mimicSuccessSfx);
+        RefreshUnlockedSlots();
+        RefreshEquippedSlots();
+        SyncLinkedSkills();
+    }
+
+    private void ClearMimicTarget()
+    {
+        hasMimicTarget = false;
+        mimicTargetRightSideIndex = 0;
+        mimicTargetComboCode = null;
+        selectingMimicTarget = false;
+        hasSelectedUnlockItem = false;
+
+        RefreshUnlockedSlots();
+        RefreshEquippedSlots();
+        SyncLinkedSkills();
+    }
+
+    private Sprite GetUnlockIcon(PickupUiEntry entry)
+    {
+        if (entry == null)
+        {
+            return null;
+        }
+
+        int rightSideIndex = GetRightSideIndex(entry);
+        if (IsMimicIndex(rightSideIndex))
+        {
+            if (hasMimicTarget)
+            {
+                Sprite mimicIcon = GetMimicResultIcon(mimicTargetRightSideIndex);
+                return mimicIcon != null ? mimicIcon : entry.icon;
+            }
+
+            return entry.icon;
+        }
+
+        if (selectingMimicTarget)
+        {
+            Sprite darkIcon = GetMimicTargetDarkIcon(rightSideIndex);
+            return darkIcon != null ? darkIcon : entry.icon;
+        }
+
+        return entry.icon;
+    }
+
+    private int GetEffectiveRightSideIndex(PickupUiEntry entry)
+    {
+        int rightSideIndex = GetRightSideIndex(entry);
+        if (IsMimicIndex(rightSideIndex) && hasMimicTarget)
+        {
+            return mimicTargetRightSideIndex;
+        }
+
+        return rightSideIndex;
+    }
+
+    private string GetEffectiveComboCode(PickupUiEntry entry)
+    {
+        if (entry == null)
+        {
+            return null;
+        }
+
+        if (IsMimicIndex(GetRightSideIndex(entry)) && hasMimicTarget)
+        {
+            return mimicTargetComboCode;
+        }
+
+        return entry.comboCode;
+    }
+
+    private bool IsMimicItem(PickupItemId id)
+    {
+        return entryById.TryGetValue(id, out PickupUiEntry entry) &&
+               entry != null &&
+               IsMimicIndex(GetRightSideIndex(entry));
+    }
+
+    private Sprite GetMimicTargetDarkIcon(int rightSideIndex)
+    {
+        int iconIndex = rightSideIndex - 1;
+        if (mimicTargetDarkIcons == null || iconIndex < 0 || iconIndex >= mimicTargetDarkIcons.Length)
+        {
+            return null;
+        }
+
+        return mimicTargetDarkIcons[iconIndex];
+    }
+
+    private Sprite GetMimicResultIcon(int rightSideIndex)
+    {
+        return GetMimicTargetDarkIcon(rightSideIndex);
+    }
+
+    private void PlayMimicSfx(AudioClip clip)
+    {
+        if (clip == null)
+        {
+            return;
+        }
+
+        if (AudioManager.Instance != null)
+        {
+            AudioManager.Instance.PlaySFX(clip, mimicSfxVolume);
+            return;
+        }
+
+        if (fallbackAudioSource == null)
+        {
+            fallbackAudioSource = GetComponent<AudioSource>();
+        }
+
+        if (fallbackAudioSource != null)
+        {
+            fallbackAudioSource.PlayOneShot(clip, mimicSfxVolume);
+        }
     }
 
     private SkillBase FindSkill(string exactId, string prefix)

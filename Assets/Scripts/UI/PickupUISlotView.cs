@@ -114,13 +114,13 @@ public class PickupUISlotView : MonoBehaviour, IPointerClickHandler, IPointerEnt
         {
             if (hasItem)
             {
-                owner.SelectForEquip(itemId);
+                owner.OnUnlockSlotClicked(itemId, eventData.clickCount);
             }
 
             return;
         }
 
-        owner.OnEquippedSlotClicked(equippedIndex);
+        owner.OnEquippedSlotClicked(equippedIndex, eventData.clickCount);
     }
 
     public void OnPointerEnter(PointerEventData eventData)
