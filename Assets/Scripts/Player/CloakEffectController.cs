@@ -21,11 +21,26 @@ namespace Skills
         [SerializeField] private AudioClip cloakSfx;
         [SerializeField, Range(0f, 1f)] private float cloakSfxVolume = 1f;
 
-        private readonly Dictionary<object, float> activeRequests = new Dictionary<object, float>();
+        private const float InstantVolumeSpeed = 100000f;
+
+        private class CloakRequest
+        {
+            public float expiresAt;
+            public float volumeWeight;
+            public float enterVolumeSpeed;
+            public float exitVolumeSpeed;
+        }
+
+        private readonly Dictionary<object, CloakRequest> activeRequests = new Dictionary<object, CloakRequest>();
+        private readonly Dictionary<Renderer, bool> rendererVisibilityBeforeCloak = new Dictionary<Renderer, bool>();
         private Renderer[] cachedRenderers;
         private AudioSource audioSource;
         private PlayerDeath playerDeath;
         private bool isCloaked;
+        private float currentVolumeTargetWeight;
+        private float currentEnterVolumeSpeed = InstantVolumeSpeed;
+        private float currentExitVolumeSpeed = InstantVolumeSpeed;
+        private float lastVolumeUpdateTime = -1f;
         public bool IsCloaked => isCloaked;
 
         private void Awake()
@@ -55,11 +70,22 @@ namespace Skills
         private void Update()
         {
             ClearExpiredRequests();
-            SetCloaked(activeRequests.Count > 0);
+            RefreshCloakStateFromRequests();
+            UpdateVolumeWeight();
             UpdateDeathImmunity();
         }
 
         public void RequestCloak(object source, bool active)
+        {
+            RequestCloak(source, active, invisibleWeight, InstantVolumeSpeed, InstantVolumeSpeed);
+        }
+
+        public void RequestCloak(
+            object source,
+            bool active,
+            float volumeWeight,
+            float enterVolumeSpeed,
+            float exitVolumeSpeed)
         {
             if (source == null)
             {
@@ -68,15 +94,55 @@ namespace Skills
 
             if (active)
             {
-                activeRequests[source] = Time.time + requestTimeout;
+                if (!activeRequests.TryGetValue(source, out CloakRequest request))
+                {
+                    request = new CloakRequest();
+                    activeRequests[source] = request;
+                }
+
+                request.expiresAt = Time.time + requestTimeout;
+                request.volumeWeight = Mathf.Clamp01(volumeWeight);
+                request.enterVolumeSpeed = Mathf.Max(0f, enterVolumeSpeed);
+                request.exitVolumeSpeed = Mathf.Max(0f, exitVolumeSpeed);
             }
             else
             {
-                activeRequests.Remove(source);
+                if (activeRequests.TryGetValue(source, out CloakRequest request))
+                {
+                    currentExitVolumeSpeed = Mathf.Max(0f, request.exitVolumeSpeed);
+                    activeRequests.Remove(source);
+                }
             }
 
-            SetCloaked(activeRequests.Count > 0);
+            RefreshCloakStateFromRequests();
+            UpdateVolumeWeight();
             UpdateDeathImmunity();
+        }
+
+        private void RefreshCloakStateFromRequests()
+        {
+            bool hasActiveRequest = activeRequests.Count > 0;
+
+            if (hasActiveRequest)
+            {
+                currentVolumeTargetWeight = 0f;
+                currentEnterVolumeSpeed = InstantVolumeSpeed;
+
+                foreach (CloakRequest request in activeRequests.Values)
+                {
+                    if (request.volumeWeight >= currentVolumeTargetWeight)
+                    {
+                        currentVolumeTargetWeight = request.volumeWeight;
+                        currentEnterVolumeSpeed = request.enterVolumeSpeed;
+                    }
+                }
+            }
+            else
+            {
+                currentVolumeTargetWeight = 0f;
+            }
+
+            SetCloaked(hasActiveRequest);
         }
 
         private void SetCloaked(bool cloaked)
@@ -87,8 +153,14 @@ namespace Skills
             }
 
             isCloaked = cloaked;
-            ApplyRendererVisibility(!isCloaked);
-            ApplyVolumeWeightInstant();
+            if (isCloaked)
+            {
+                HideCloakedRenderers();
+            }
+            else
+            {
+                RestoreRendererVisibility();
+            }
 
             if (isCloaked && audioSource != null)
             {
@@ -100,14 +172,18 @@ namespace Skills
             }
         }
 
-        private void ApplyVolumeWeightInstant()
+        private void UpdateVolumeWeight()
         {
             if (cloakVolume == null)
             {
                 return;
             }
 
-            cloakVolume.weight = isCloaked ? invisibleWeight : 0f;
+            float speed = isCloaked ? currentEnterVolumeSpeed : currentExitVolumeSpeed;
+            float targetWeight = isCloaked ? currentVolumeTargetWeight : 0f;
+            float deltaTime = lastVolumeUpdateTime < 0f ? Time.deltaTime : Mathf.Max(0f, Time.time - lastVolumeUpdateTime);
+            lastVolumeUpdateTime = Time.time;
+            cloakVolume.weight = Mathf.MoveTowards(cloakVolume.weight, targetWeight, speed * deltaTime);
         }
 
         private void UpdateDeathImmunity()
@@ -128,7 +204,7 @@ namespace Skills
             }
         }
 
-        private void ApplyRendererVisibility(bool visible)
+        private void HideCloakedRenderers()
         {
             if (!hideRenderersWhileCloaked)
             {
@@ -142,11 +218,37 @@ namespace Skills
 
             for (int i = 0; i < cachedRenderers.Length; i++)
             {
-                if (cachedRenderers[i] != null)
+                Renderer targetRenderer = cachedRenderers[i];
+                if (targetRenderer == null)
                 {
-                    cachedRenderers[i].enabled = visible;
+                    continue;
+                }
+
+                if (!rendererVisibilityBeforeCloak.ContainsKey(targetRenderer))
+                {
+                    rendererVisibilityBeforeCloak.Add(targetRenderer, targetRenderer.enabled);
+                }
+
+                targetRenderer.enabled = false;
+            }
+        }
+
+        private void RestoreRendererVisibility()
+        {
+            if (!hideRenderersWhileCloaked)
+            {
+                return;
+            }
+
+            foreach (KeyValuePair<Renderer, bool> entry in rendererVisibilityBeforeCloak)
+            {
+                if (entry.Key != null)
+                {
+                    entry.Key.enabled = entry.Value;
                 }
             }
+
+            rendererVisibilityBeforeCloak.Clear();
         }
 
         private void ClearExpiredRequests()
@@ -157,9 +259,9 @@ namespace Skills
             }
 
             List<object> expiredSources = null;
-            foreach (KeyValuePair<object, float> request in activeRequests)
+            foreach (KeyValuePair<object, CloakRequest> request in activeRequests)
             {
-                if (request.Value >= Time.time)
+                if (request.Value.expiresAt >= Time.time)
                 {
                     continue;
                 }
@@ -175,7 +277,12 @@ namespace Skills
 
             for (int i = 0; i < expiredSources.Count; i++)
             {
-                activeRequests.Remove(expiredSources[i]);
+                object source = expiredSources[i];
+                if (activeRequests.TryGetValue(source, out CloakRequest request))
+                {
+                    currentExitVolumeSpeed = Mathf.Max(0f, request.exitVolumeSpeed);
+                    activeRequests.Remove(source);
+                }
             }
         }
 

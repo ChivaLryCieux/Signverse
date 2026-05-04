@@ -29,6 +29,16 @@ namespace Skills
         // 第一次按隐藏键接管 Stand，持续期间再次按隐藏键会把玩家本体瞬移到 Stand 位置。
         public override void OnUpdate(GameObject user, PlayerCC controller, PlayerCC.Posture posture)
         {
+            if (!IsEquippedByController(controller))
+            {
+                if (isControllingStand)
+                {
+                    StopStandControl(user, controller, false);
+                }
+
+                return;
+            }
+
             if (!isControllingStand)
             {
                 if (controller.WasHidePressed())
@@ -54,6 +64,34 @@ namespace Skills
         }
 
         // ===== 动画控制 =====
+
+        private bool IsEquippedByController(PlayerCC controller)
+        {
+            if (controller == null)
+            {
+                return false;
+            }
+
+            if (!controller.UsesEquippedSkillLoadout)
+            {
+                return true;
+            }
+
+            if (controller.equippedSkills == null)
+            {
+                return false;
+            }
+
+            for (int i = 0; i < controller.equippedSkills.Count; i++)
+            {
+                if (controller.equippedSkills[i] == this)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
 
         private void StartStandControl(GameObject user, PlayerCC controller)
         {
