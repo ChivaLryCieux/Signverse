@@ -3,7 +3,7 @@ using UnityEngine;
 namespace Skills
 {
     [CreateAssetMenu(fileName = "42-cj", menuName = "Game/Skills/42 CJ Auto Cloak")]
-    public class Skill42CJAutoCloak : SkillBase
+    public class Skill42CJAutoCloak : Skill4CloakBase
     {
         // ===== 元数据 =====
 
@@ -35,18 +35,6 @@ namespace Skills
             isInvisible = !isInvisible;
             RequestCloakEffect(user, isInvisible);
         }
-
         // ===== 动画控制 =====
-
-        private void RequestCloakEffect(GameObject user, bool active)
-        {
-            CloakEffectController cloakEffect = user.GetComponent<CloakEffectController>();
-            if (cloakEffect == null)
-            {
-                cloakEffect = user.AddComponent<CloakEffectController>();
-            }
-
-            cloakEffect.RequestCloak(this, active);
-        }
     }
 }

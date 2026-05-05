@@ -3,7 +3,7 @@ using UnityEngine;
 namespace Skills
 {
     [CreateAssetMenu(fileName = "44-cc", menuName = "Game/Skills/44 CC Placeholder")]
-    public class Skill44CCPlaceholder : SkillBase
+    public class Skill44CCPlaceholder : Skill4CloakBase
     {
         // ===== 元数据 =====
         [Header("隐身")]
@@ -23,13 +23,7 @@ namespace Skills
                 isCloaking = !isCloaking;
             }
 
-            CloakEffectController cloakEffect = user.GetComponent<CloakEffectController>();
-            if (cloakEffect == null)
-            {
-                cloakEffect = user.AddComponent<CloakEffectController>();
-            }
-
-            cloakEffect.RequestCloak(this, isCloaking);
+            RequestCloakEffect(user, isCloaking);
 
             if (isCloaking)
             {

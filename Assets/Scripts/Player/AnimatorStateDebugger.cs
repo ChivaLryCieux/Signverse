@@ -46,6 +46,7 @@ public class AnimatorStateDebugger : MonoBehaviour
     float jumpAxis;
     bool dashPressed;
     bool hidePressed;
+    bool wasDashAnimating;
 
     // Lry的修改：缓存 Animator 参数是否存在。专业术语上这是 parameter capability detection，用于降低 Animator Controller 迭代时的运行时耦合。
     bool hasRun;
@@ -420,19 +421,29 @@ public class AnimatorStateDebugger : MonoBehaviour
     void HandleDashFromPlayerCC()
     {
         float dashPosture = controller.DashPosture;
-        if(HasEquippedSkill("30-xx") || HasEquippedSkill("31-dm") || HasEquippedSkill("32-dj") || HasEquippedSkill("34-dc"))
+        bool hasDashSkill = HasEquippedSkill("30-xx") ||
+                            HasEquippedSkill("31-dm") ||
+                            HasEquippedSkill("32-dj") ||
+                            HasEquippedSkill("33-dd") ||
+                            HasEquippedSkill("34-dc");
+        bool dashAnimating = hasDashSkill && dashPosture > 0.01f;
+
+        if (hasDashSkill)
         {
-            
-            if (dashPressed)
+            animator.SetBool("Dash", dashAnimating);
+
+            if (dashAnimating && !wasDashAnimating && audioSource != null && dashSFX != null)
             {
-                animator.SetBool("Dash" , true);
                 audioSource.PlayOneShot(dashSFX);
             }
-            else
-            {
-                animator.SetBool("Dash" , false);
-            }
         }
+        else
+        {
+            animator.SetBool("Dash", false);
+        }
+
+        wasDashAnimating = dashAnimating;
+
         // animator.SetFloat("DashVel" , dashPosture);
         // SetFloatImmediateIfExists(hasDashPosture, "DashPosture", dashPosture);
         // SetBoolIfExists(hasDash, "Dash", dashPosture > 0.01f);

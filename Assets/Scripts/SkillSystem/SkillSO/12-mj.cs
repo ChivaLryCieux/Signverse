@@ -4,12 +4,14 @@ namespace Skills
 
 {
     [CreateAssetMenu(fileName = "12-mj", menuName = "Game/Skills/12 MJ Climb")]
-    public class Skill12MJClimb : Skill11MMCustomPortal
+    public class Skill12MJClimb : SkillBase
     {
         // ===== 元数据 =====
 
         // ===== 物理控制 =====
 
+        [Header("基础移动")]
+        public float moveSpeed = 6f;
 
         [Header("攀爬设置")]
         public float climbSpeed = 4f;
@@ -73,7 +75,7 @@ namespace Skills
 
                 if (posture != PlayerCC.Posture.Climbing)
                 {
-                    base.OnUpdate(user, controller, posture);
+                    MoveHorizontal(controller);
                 }
 
                 return;
@@ -85,8 +87,22 @@ namespace Skills
 
             if (posture != PlayerCC.Posture.Climbing)
             {
-                base.OnUpdate(user, controller, posture);
+                MoveHorizontal(controller);
             }
+        }
+
+        private void MoveHorizontal(PlayerCC controller)
+        {
+            Vector2 input = controller.GetMoveInput();
+            float horizontal = input.x;
+
+            if (Mathf.Abs(horizontal) <= 0.01f)
+            {
+                return;
+            }
+
+            Vector3 moveDelta = new Vector3(horizontal * moveSpeed, 0f, 0f) * Time.deltaTime;
+            controller.GetCharacterController().Move(moveDelta);
         }
 
         // 判断是否满足从地面或边缘进入攀爬的条件。
