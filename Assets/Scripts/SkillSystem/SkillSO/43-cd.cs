@@ -3,7 +3,7 @@ using UnityEngine;
 namespace Skills
 {
     [CreateAssetMenu(fileName = "43-cd", menuName = "Game/Skills/43 CD Cloak Kill")]
-    public class Skill43CDCloakKill : SkillBase
+    public class Skill43CDCloakKill : Skill4CloakBase
     {
         // ===== 元数据 =====
 
@@ -66,18 +66,6 @@ namespace Skills
                 death.ForceDie();
             }
         }
-
         // ===== 动画控制 =====
-
-        private void RequestCloakEffect(GameObject user, bool active)
-        {
-            CloakEffectController cloakEffect = user.GetComponent<CloakEffectController>();
-            if (cloakEffect == null)
-            {
-                cloakEffect = user.AddComponent<CloakEffectController>();
-            }
-
-            cloakEffect.RequestCloak(this, active);
-        }
     }
 }
