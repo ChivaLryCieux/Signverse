@@ -18,7 +18,9 @@ public class PlayerAnimatorController : MonoBehaviour
     private bool hasClimbVel;
     private bool hasClimbInput;
     private bool hasClimbExitUp;
+    private bool climbExitUpIsBool;
     private bool hasClimbExitDown;
+    private bool climbExitDownIsBool;
     private bool hasVerticalVelocity;
     private bool hasLegacyJumpVelocity;
     private bool hasJumpType;
@@ -113,14 +115,20 @@ public class PlayerAnimatorController : MonoBehaviour
         SetFloatIfExists(hasClimbVel, "ClimbVel", climbInput);
         SetFloatIfExists(hasClimbInput, "ClimbInput", climbInput);
 
+        if (!climbing)
+        {
+            SetBoolOneShotOffIfNeeded(hasClimbExitUp, climbExitUpIsBool, "Climb_Exit_Up");
+            SetBoolOneShotOffIfNeeded(hasClimbExitDown, climbExitDownIsBool, "Climb_Exit_Down");
+        }
+
         if (controller.ConsumeClimbExitUpAnimationRequest())
         {
-            SetTriggerIfExists(hasClimbExitUp, "Climb_Exit_Up");
+            SetOneShotIfExists(hasClimbExitUp, climbExitUpIsBool, "Climb_Exit_Up");
         }
 
         if (controller.ConsumeClimbExitDownAnimationRequest())
         {
-            SetTriggerIfExists(hasClimbExitDown, "Climb_Exit_Down");
+            SetOneShotIfExists(hasClimbExitDown, climbExitDownIsBool, "Climb_Exit_Down");
         }
     }
 
@@ -152,8 +160,16 @@ public class PlayerAnimatorController : MonoBehaviour
             else if (parameterName == "Climb" && parameterType == AnimatorControllerParameterType.Bool) hasClimb = true;
             else if (parameterName == "ClimbVel" && parameterType == AnimatorControllerParameterType.Float) hasClimbVel = true;
             else if (parameterName == "ClimbInput" && parameterType == AnimatorControllerParameterType.Float) hasClimbInput = true;
-            else if (parameterName == "Climb_Exit_Up" && parameterType == AnimatorControllerParameterType.Trigger) hasClimbExitUp = true;
-            else if (parameterName == "Climb_Exit_Down" && parameterType == AnimatorControllerParameterType.Trigger) hasClimbExitDown = true;
+            else if (parameterName == "Climb_Exit_Up")
+            {
+                hasClimbExitUp = parameterType == AnimatorControllerParameterType.Trigger || parameterType == AnimatorControllerParameterType.Bool;
+                climbExitUpIsBool = parameterType == AnimatorControllerParameterType.Bool;
+            }
+            else if (parameterName == "Climb_Exit_Down")
+            {
+                hasClimbExitDown = parameterType == AnimatorControllerParameterType.Trigger || parameterType == AnimatorControllerParameterType.Bool;
+                climbExitDownIsBool = parameterType == AnimatorControllerParameterType.Bool;
+            }
             else if (parameterName == "VerticalVelocity" && parameterType == AnimatorControllerParameterType.Float) hasVerticalVelocity = true;
             else if (parameterName == "Jump" && parameterType == AnimatorControllerParameterType.Float) hasLegacyJumpVelocity = true;
             else if (parameterName == "JumpType" && parameterType == AnimatorControllerParameterType.Int) hasJumpType = true;
@@ -201,6 +217,30 @@ public class PlayerAnimatorController : MonoBehaviour
         if (exists)
         {
             animator.SetTrigger(parameterName);
+        }
+    }
+
+    private void SetOneShotIfExists(bool exists, bool isBool, string parameterName)
+    {
+        if (!exists)
+        {
+            return;
+        }
+
+        if (isBool)
+        {
+            animator.SetBool(parameterName, true);
+            return;
+        }
+
+        animator.SetTrigger(parameterName);
+    }
+
+    private void SetBoolOneShotOffIfNeeded(bool exists, bool isBool, string parameterName)
+    {
+        if (exists && isBool)
+        {
+            animator.SetBool(parameterName, false);
         }
     }
 }

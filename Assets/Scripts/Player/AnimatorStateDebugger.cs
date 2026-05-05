@@ -54,7 +54,9 @@ public class AnimatorStateDebugger : MonoBehaviour
     bool hasClimbVel;
     bool hasClimbInput;
     bool hasClimbExitUp;
+    bool climbExitUpIsBool;
     bool hasClimbExitDown;
+    bool climbExitDownIsBool;
     bool hasVerticalVelocity;
     bool hasJump;
     bool hasJumpType;
@@ -128,7 +130,7 @@ public class AnimatorStateDebugger : MonoBehaviour
             lastPosture = controller.CurrentPosture;
         }
         // Lry的修改：启动时缓存参数表，后续 SetParameter 走存在性检查，避免 Animator Controller 参数名未统一时直接抛异常。
-        // CacheAnimatorParameters();
+        CacheAnimatorParameters();
     }
 
     void OnEnable()
@@ -231,7 +233,7 @@ public class AnimatorStateDebugger : MonoBehaviour
 
         // HandleHideFromPlayerCC();
 
-        // HandleClimbExitTriggersFromPlayerCC();
+        HandleClimbExitTriggersFromPlayerCC();
     }
 
     // Lry的修改：同步动画侧技能视图。优先读取 PlayerCC.equippedSkills，也就是 UI 装备槽同步后的真实装备技能。
@@ -360,6 +362,8 @@ public class AnimatorStateDebugger : MonoBehaviour
         else
         {
             animator.SetBool("Climb" , false);
+            SetBoolOneShotOffIfNeeded(hasClimbExitUp, climbExitUpIsBool, "Climb_Exit_Up");
+            SetBoolOneShotOffIfNeeded(hasClimbExitDown, climbExitDownIsBool, "Climb_Exit_Down");
         }
         // bool climbing = controller.CurrentPosture == PlayerCC.Posture.Climbing;
         // float climbInput = controller.ClimbInput;
@@ -471,12 +475,12 @@ public class AnimatorStateDebugger : MonoBehaviour
     {
         if (controller.ConsumeClimbExitUpAnimationRequest())
         {
-            SetTriggerIfExists(hasClimbExitUp, "Climb_Exit_Up");
+            SetOneShotIfExists(hasClimbExitUp, climbExitUpIsBool, "Climb_Exit_Up");
         }
 
         if (controller.ConsumeClimbExitDownAnimationRequest())
         {
-            SetTriggerIfExists(hasClimbExitDown, "Climb_Exit_Down");
+            SetOneShotIfExists(hasClimbExitDown, climbExitDownIsBool, "Climb_Exit_Down");
         }
     }
 
@@ -533,8 +537,16 @@ public class AnimatorStateDebugger : MonoBehaviour
             else if (parameterName == "Climb" && parameterType == AnimatorControllerParameterType.Bool) hasClimb = true;
             else if (parameterName == "ClimbVel" && parameterType == AnimatorControllerParameterType.Float) hasClimbVel = true;
             else if (parameterName == "ClimbInput" && parameterType == AnimatorControllerParameterType.Float) hasClimbInput = true;
-            else if (parameterName == "Climb_Exit_Up" && parameterType == AnimatorControllerParameterType.Trigger) hasClimbExitUp = true;
-            else if (parameterName == "Climb_Exit_Down" && parameterType == AnimatorControllerParameterType.Trigger) hasClimbExitDown = true;
+            else if (parameterName == "Climb_Exit_Up")
+            {
+                hasClimbExitUp = parameterType == AnimatorControllerParameterType.Trigger || parameterType == AnimatorControllerParameterType.Bool;
+                climbExitUpIsBool = parameterType == AnimatorControllerParameterType.Bool;
+            }
+            else if (parameterName == "Climb_Exit_Down")
+            {
+                hasClimbExitDown = parameterType == AnimatorControllerParameterType.Trigger || parameterType == AnimatorControllerParameterType.Bool;
+                climbExitDownIsBool = parameterType == AnimatorControllerParameterType.Bool;
+            }
             else if (parameterName == "VerticalVelocity" && parameterType == AnimatorControllerParameterType.Float) hasVerticalVelocity = true;
             else if (parameterName == "Jump" && parameterType == AnimatorControllerParameterType.Float) hasJump = true;
             else if (parameterName == "JumpType" && parameterType == AnimatorControllerParameterType.Int) hasJumpType = true;
@@ -611,6 +623,30 @@ public class AnimatorStateDebugger : MonoBehaviour
         }
     }
 
+    void SetOneShotIfExists(bool exists, bool isBool, string parameterName)
+    {
+        if (!exists)
+        {
+            return;
+        }
+
+        if (isBool)
+        {
+            animator.SetBool(parameterName, true);
+            return;
+        }
+
+        animator.SetTrigger(parameterName);
+    }
+
+    void SetBoolOneShotOffIfNeeded(bool exists, bool isBool, string parameterName)
+    {
+        if (exists && isBool)
+        {
+            animator.SetBool(parameterName, false);
+        }
+    }
+
     //用来暂时实现悬崖边上翻越的功能event
     public void LockRootMotion()
     {
@@ -678,7 +714,23 @@ public class AnimatorStateDebugger : MonoBehaviour
     {
         if (animator.applyRootMotion)
         {
+            if (controller != null && controller.IsClimbExitMoveActive)
+            {
+                return;
+            }
+
+            if (characterController == null && controller != null)
+            {
+                characterController = controller.GetCharacterController();
+            }
+
+            if (characterController == null)
+            {
+                return;
+            }
+
             Vector3 delta = animator.deltaPosition;
+            delta.z = 0f;
             characterController.Move(delta);
         }
     }
