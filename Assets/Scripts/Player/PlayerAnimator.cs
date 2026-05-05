@@ -24,6 +24,7 @@ public class PlayerAnimatorController : MonoBehaviour
     private bool hasJumpType;
     private bool hasIsGrounded;
     private bool hasDashPosture;
+    private bool hasDash;
     private bool hasUltraMove;
 
     public float jumpTime = 0.3f;
@@ -95,6 +96,7 @@ public class PlayerAnimatorController : MonoBehaviour
         }
 
         SetFloatImmediateIfExists(hasDashPosture, "DashPosture", controller.DashPosture);
+        SetBoolIfExists(hasDash, "Dash", controller.DashPosture > 0.01f);
     }
 
     private void UpdateClimbAnimator()
@@ -157,6 +159,7 @@ public class PlayerAnimatorController : MonoBehaviour
             else if (parameterName == "JumpType" && parameterType == AnimatorControllerParameterType.Int) hasJumpType = true;
             else if (parameterName == "IsGrounded" && parameterType == AnimatorControllerParameterType.Bool) hasIsGrounded = true;
             else if (parameterName == "DashPosture" && parameterType == AnimatorControllerParameterType.Float) hasDashPosture = true;
+            else if (parameterName == "Dash" && parameterType == AnimatorControllerParameterType.Bool) hasDash = true;
             else if (parameterName == "ultraMove" && parameterType == AnimatorControllerParameterType.Bool) hasUltraMove = true;
         }
     }
