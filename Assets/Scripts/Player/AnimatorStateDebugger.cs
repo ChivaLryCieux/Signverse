@@ -22,6 +22,11 @@ public class AnimatorStateDebugger : MonoBehaviour
     public AudioClip jumpSFX;
     public AudioClip groundedSFX;
 
+    
+    // [Header("落地音效冷却（秒）")]
+    // public float landingCooldown = 0.15f;
+
+    // private float lastPlayTime = -999f;
 
 
     // Lry的修改：直接查看/判断的“已装备技能数组”。数据源来自 PlayerCC.equippedSkills，是 UI 装备槽同步后的技能 loadout。
@@ -146,7 +151,7 @@ public class AnimatorStateDebugger : MonoBehaviour
     {
         
         currentPosture = controller.CurrentPosture;
-        HandleLandingSFX();
+        // HandleLandingSFX();
 
         HandleInput();
 
@@ -167,27 +172,32 @@ public class AnimatorStateDebugger : MonoBehaviour
     //========================
     // 输入获取
     //========================
-    void HandleLandingSFX()
-    {
-        if (controller == null || audioSource == null)
-        {
-            return;
-        }
+    // void HandleLandingSFX()
+    // {
+    //     if (controller == null || audioSource == null)
+    //     {
+    //         return;
+    //     }
 
-        PlayerCC.Posture current = controller.CurrentPosture;
+    //     PlayerCC.Posture current = controller.CurrentPosture;
 
-        // 只在这一帧触发：Airborne -> Grounded
-        if (lastPosture == PlayerCC.Posture.Airborne &&
-            current == PlayerCC.Posture.Grounded)
-        {
-            if (groundedSFX != null)
-            {
-                audioSource.PlayOneShot(groundedSFX);
-            }
-        }
+    //     // 只在这一帧触发：Airborne -> Grounded
+    //     if (lastPosture == PlayerCC.Posture.Airborne &&
+    //         current == PlayerCC.Posture.Grounded)
+    //     {
+    //         if (Time.time - lastPlayTime >= landingCooldown)
+    //         {
+    //             if (groundedSFX != null)
+    //             {
+    //                 audioSource.PlayOneShot(groundedSFX);
+    //             }
 
-        lastPosture = current;
-    }
+    //             lastPlayTime = Time.time;
+    //         }
+    //     }
+
+    //     lastPosture = current;
+    // }
     void HandleInput()
     {
         move = inputActions.Player.Move.ReadValue<Vector2>();

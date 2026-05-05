@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
+using System.Collections.Generic;
 
 public class PickupUISlotView : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler, IPointerExitHandler
 {
@@ -16,6 +17,9 @@ public class PickupUISlotView : MonoBehaviour, IPointerClickHandler, IPointerEnt
     [SerializeField] private GameObject highlight;
     [SerializeField] private float hoverScale = 1.08f;
 
+    [Header("点击音效")]
+    [SerializeField] private AudioSource audioSource;
+    [SerializeField] private List<AudioClip> clickSFXList = new List<AudioClip>();
     private PickupUIController owner;
     private SlotRole role;
     private PickupItemId itemId;
@@ -31,6 +35,10 @@ public class PickupUISlotView : MonoBehaviour, IPointerClickHandler, IPointerEnt
         if (iconImage == null)
         {
             iconImage = GetComponent<Image>();
+        }
+        if (audioSource == null)
+        {
+            audioSource = GetComponent<AudioSource>();
         }
 
         CacheBaseScale();
@@ -108,6 +116,14 @@ public class PickupUISlotView : MonoBehaviour, IPointerClickHandler, IPointerEnt
         if (!initialized || owner == null || eventData.button != PointerEventData.InputButton.Left)
         {
             return;
+        }
+        int index = Random.Range(0, clickSFXList.Count);
+        AudioClip clip = clickSFXList[index];
+
+        if (clip != null)
+        {
+            
+            audioSource.PlayOneShot(clip);
         }
 
         if (role == SlotRole.Unlock)
