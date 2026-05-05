@@ -63,6 +63,7 @@ public class AnimatorStateDebugger : MonoBehaviour
     bool hasIsGrounded;
     bool hasDashPosture;
     bool hasDash;
+    bool hasUltraDash;
     bool hasHide;
     bool hasUltraMove;
 
@@ -435,6 +436,7 @@ public class AnimatorStateDebugger : MonoBehaviour
         if (hasDashSkill)
         {
             animator.SetBool("Dash", dashAnimating);
+            SetBoolIfExists(hasUltraDash, "UltraDash", controller.UltraDashActive);
 
             if (dashAnimating && !wasDashAnimating && audioSource != null && dashSFX != null)
             {
@@ -444,6 +446,7 @@ public class AnimatorStateDebugger : MonoBehaviour
         else
         {
             animator.SetBool("Dash", false);
+            SetBoolIfExists(hasUltraDash, "UltraDash", false);
         }
 
         wasDashAnimating = dashAnimating;
@@ -553,6 +556,7 @@ public class AnimatorStateDebugger : MonoBehaviour
             else if (parameterName == "IsGrounded" && parameterType == AnimatorControllerParameterType.Bool) hasIsGrounded = true;
             else if (parameterName == "DashPosture" && parameterType == AnimatorControllerParameterType.Float) hasDashPosture = true;
             else if (parameterName == "Dash" && parameterType == AnimatorControllerParameterType.Bool) hasDash = true;
+            else if (parameterName == "UltraDash" && parameterType == AnimatorControllerParameterType.Bool) hasUltraDash = true;
             else if (parameterName == "Hide" && parameterType == AnimatorControllerParameterType.Bool) hasHide = true;
             else if (parameterName == "ultraMove" && parameterType == AnimatorControllerParameterType.Bool) hasUltraMove = true;
         }

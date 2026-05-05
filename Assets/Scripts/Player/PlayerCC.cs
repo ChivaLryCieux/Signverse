@@ -58,6 +58,7 @@ public class PlayerCC : MonoBehaviour
     public float VerticalVelocity => verticalVelocity;
     public int JumpType { get; private set; }
     public float DashPosture { get; private set; }
+    public bool UltraDashActive { get; private set; }
     public float ClimbInput { get; private set; }
     public bool IsCloaked => isCloaked;
     public bool IsClimbExitMoveActive => climbExitMoveActive;
@@ -128,7 +129,15 @@ public class PlayerCC : MonoBehaviour
         verticalVelocity = 0f;
     }
     public void SetJumpType(int type) => JumpType = Mathf.Max(0, type);
-    public void SetDashPosture(float posture) => DashPosture = Mathf.Clamp01(posture);
+    public void SetDashPosture(float posture)
+    {
+        DashPosture = Mathf.Clamp01(posture);
+        if (DashPosture <= 0.01f)
+        {
+            UltraDashActive = false;
+        }
+    }
+    public void SetUltraDashActive(bool active) => UltraDashActive = active;
     public void DisableMoveXFor(float duration)
     {
         moveXDisableTimer = Mathf.Max(moveXDisableTimer, duration);
