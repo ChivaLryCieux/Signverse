@@ -9,6 +9,7 @@ namespace Skills
 
         // ===== 物理控制 =====
         protected override float DashSpeed => 24f;
+        protected override bool UsesUltraDashAnimation => false;
 
         // ===== 动画控制 =====
     }

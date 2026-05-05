@@ -8,6 +8,7 @@ namespace Skills
         // ===== 元数据 =====
 
         // ===== 物理控制 =====
+        protected override bool UsesUltraDashAnimation => false;
 
         // ===== 动画控制 =====
     }

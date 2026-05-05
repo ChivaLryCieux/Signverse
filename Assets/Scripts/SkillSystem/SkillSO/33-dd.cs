@@ -18,6 +18,7 @@ namespace Skills
 
         protected virtual float DashSpeed => dashSpeed;
         protected virtual float DashCooldown => cooldown;
+        protected virtual bool UsesUltraDashAnimation => true;
 
         // 满足姿态和冷却条件时开始持续冲刺。
         public override void OnActivate(GameObject user, PlayerCC controller, PlayerCC.Posture posture)
@@ -93,6 +94,7 @@ namespace Skills
             controller.SetVerticalVelocity(0f);
             controller.RequestGravitySuppressed();
             controller.SetDashPosture(1f);
+            controller.SetUltraDashActive(UsesUltraDashAnimation);
 
             if (Mathf.Abs(normalizedDirection.x) > 0.01f)
             {
@@ -106,6 +108,7 @@ namespace Skills
             controller.SetVerticalVelocity(0f);
             controller.RequestGravitySuppressed();
             controller.SetDashPosture(1f);
+            controller.SetUltraDashActive(UsesUltraDashAnimation);
 
             Vector3 dashDelta = dashDirection * DashSpeed * Time.deltaTime;
             CollisionFlags flags = controller.GetCharacterController().Move(dashDelta);
@@ -126,6 +129,7 @@ namespace Skills
             if (controller != null)
             {
                 controller.SetDashPosture(0f);
+                controller.SetUltraDashActive(false);
             }
         }
     }

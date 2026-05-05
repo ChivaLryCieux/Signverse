@@ -34,10 +34,15 @@ namespace Skills
         public Color groundExitMissColor = Color.yellow;
 
         [Header("边缘翻越")]
-        [Tooltip("攀爬到顶部时，向面朝方向和上方移动的距离，用于把角色送上平台。")]
+        [Tooltip("翻越结束时的前移距离。y 已不使用，胶囊底部会直接放到 Trigger 顶部。")]
         public Vector2 exitUpOffset = new Vector2(0.6f, 1.0f);
-        [Tooltip("顶部翻越位移持续时间，避免瞬移感。")]
-        public float exitUpDuration = 0.25f;
+        [Tooltip("顶部翻越动画播放多久后，把玩家胶囊放到 Trigger 顶部。")]
+        public float exitUpDuration = 3.1f;
+        [Tooltip("顶部翻越触发冷却，避免落到平台后仍在 Trigger 内导致重复播放翻越动画。")]
+        public float exitUpCooldown = 5f;
+        [Tooltip("翻越结束后向下贴地的距离，防止脚本位移或动画位移让胶囊略微悬空。")]
+        public float exitUpGroundSnapDistance = 1.2f;
+        public bool debugClimbLogs = false;
 
 
 
@@ -45,7 +50,8 @@ namespace Skills
 
         private bool isExitingUp;
         private float exitUpTimer;
-        private Vector3 exitUpVelocity;
+        private float nextExitUpAllowedTime;
+        private Vector3 exitUpTopPosition;
 
         
 
@@ -65,9 +71,12 @@ namespace Skills
 
             Vector2 input = controller.GetMoveInput();
             Vector3 rayOrigin = user.transform.position + Vector3.up * rayOffsetY;
-            bool canClimb = Physics.Raycast(rayOrigin, controller.GetFacing(), climbRayLength, climbableMask);
-            DrawClimbRay(controller, rayOrigin, canClimb);
+            bool canClimbByRay = climbableMask.value != 0 && Physics.Raycast(rayOrigin, controller.GetFacing(), climbRayLength, climbableMask);
+            bool canClimb = canClimbByRay || controller.IsInClimbVolume;
             float vertical = Mathf.Abs(input.y) > inputThreshold ? input.y : 0f;
+
+            DebugClimb(controller, $"Update posture={posture}, vertical={vertical:F2}, canClimbByRay={canClimbByRay}, isInClimbVolume={controller.IsInClimbVolume}, canClimb={canClimb}, activeTrigger={(controller.ActiveClimbTransitionTrigger != null ? controller.ActiveClimbTransitionTrigger.name : "null")}");
+            DrawClimbRay(controller, rayOrigin, canClimb);
             if (posture != PlayerCC.Posture.Climbing)
             {
                 TryEnterClimb(controller, canClimb, vertical);
@@ -110,6 +119,7 @@ namespace Skills
         {
             bool enteringFromGround = canClimb && vertical > inputThreshold;
             bool enteringFromLedge = controller.IsInClimbTransitionTrigger && vertical < -inputThreshold;
+            DebugClimb(controller, $"TryEnterClimb canClimb={canClimb}, vertical={vertical:F2}, enteringFromGround={enteringFromGround}, enteringFromLedge={enteringFromLedge}");
 
             if (!enteringFromGround && !enteringFromLedge)
             {
@@ -135,24 +145,20 @@ namespace Skills
 
             if (canExitToGround && wantsToClimbDown)
             {
+                DebugClimb(controller, "StopClimb: wants down and ground below.");
                 StopClimb(controller);
                 return;
             }
 
-            if (controller.IsInClimbTransitionTrigger && vertical > inputThreshold)
+            if (controller.CanAutoExitUpFromActiveClimbTrigger())
             {
-                StartExitUp(controller);
-                return;
-            }
-
-            if (!canClimb && vertical > inputThreshold)
-            {
-                StartExitUp(controller);
+                TryStartExitUp(controller, "near climb trigger top");
                 return;
             }
 
             if (!canClimb && !controller.IsInClimbTransitionTrigger)
             {
+                DebugClimb(controller, "StopClimb: no climb surface and not in trigger.");
                 StopClimb(controller);
                 return;
             }
@@ -231,35 +237,44 @@ namespace Skills
         // ===== 动画控制 =====
 
         // 开始顶部翻越流程，并请求对应动画。
+        private void TryStartExitUp(PlayerCC controller, string reason)
+        {
+            if (Time.time < nextExitUpAllowedTime)
+            {
+                DebugClimb(controller, $"Skip StartExitUp: cooldown active. reason={reason}, remaining={nextExitUpAllowedTime - Time.time:F2}s");
+                return;
+            }
+
+            DebugClimb(controller, $"StartExitUp: {reason}.");
+            StartExitUp(controller);
+        }
+
         private void StartExitUp(PlayerCC controller)
         {
+            nextExitUpAllowedTime = Time.time + Mathf.Max(0f, exitUpCooldown);
             Vector3 facing = controller.GetFacing().sqrMagnitude > 0.01f ? controller.GetFacing().normalized : Vector3.right;
-            Vector3 exitDelta = new Vector3(facing.x * exitUpOffset.x, exitUpOffset.y, 0f);
             float duration = Mathf.Max(0.01f, exitUpDuration);
 
             controller.RequestClimbExitUpAnimation();
             controller.SetVerticalVelocity(0f);
             controller.SetClimbState(true, 0f);
+            ClimbTransitionTrigger activeTrigger = controller.ActiveClimbTransitionTrigger;
+            exitUpTopPosition = activeTrigger != null
+                ? activeTrigger.GetExitTopPosition(controller, exitUpOffset.x)
+                : controller.transform.position + new Vector3(facing.x * exitUpOffset.x, exitUpOffset.y, 0f);
 
             isExitingUp = true;
             exitUpTimer = duration;
-            exitUpVelocity = exitDelta / duration;
+            DebugClimb(controller, $"ExitUp started. duration={duration:F2}, topPosition={exitUpTopPosition}");
         }
 
-        // 顶部翻越期间逐帧推动角色到平台上。
+        // 顶部翻越期间只等待动画播放，胶囊在结束时一次性放到 Trigger 顶部。
         private void UpdateExitUp(PlayerCC controller)
         {
-            if (controller.CurrentPosture == PlayerCC.Posture.Grounded)
-            {
-                FinishExitUp(controller);
-                return;
-            }
-
             float step = Mathf.Min(Time.deltaTime, exitUpTimer);
 
             controller.SetVerticalVelocity(0f);
             controller.SetClimbState(true, 0f);
-            controller.GetCharacterController().Move(exitUpVelocity * step);
 
             exitUpTimer -= step;
 
@@ -268,16 +283,29 @@ namespace Skills
                 return;
             }
 
+            DebugClimb(controller, "FinishExitUp: timer completed.");
             FinishExitUp(controller);
         }
 
         // 结束顶部翻越，清理翻越状态并退出攀爬。
         private void FinishExitUp(PlayerCC controller)
         {
+            controller.PlaceCapsuleBottomAt(exitUpTopPosition);
             isExitingUp = false;
             exitUpTimer = 0f;
-            exitUpVelocity = Vector3.zero;
+            exitUpTopPosition = Vector3.zero;
+            controller.RequestGravitySuppressed();
             StopClimb(controller);
+        }
+
+        private void DebugClimb(PlayerCC controller, string message)
+        {
+            if (!debugClimbLogs)
+            {
+                return;
+            }
+
+            Debug.Log($"[Skill12MJClimb] {message}", controller);
         }
 
         // 统一关闭 PlayerCC 的攀爬状态。

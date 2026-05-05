@@ -38,6 +38,11 @@ public class PlayerCC : MonoBehaviour
     private Vector3 facingDirection = Vector3.right;
     private float moveXDisableTimer;
     private int gravitySuppressedFrame = -1;
+    private bool climbExitMoveActive;
+    private float climbExitMoveTimer;
+    private Vector3 climbExitMoveVelocity;
+    private LayerMask climbExitGroundMask;
+    private float climbExitGroundSnapDistance;
 
     [Header("状态监控")]
     public bool isGrounded;
@@ -53,10 +58,14 @@ public class PlayerCC : MonoBehaviour
     public float VerticalVelocity => verticalVelocity;
     public int JumpType { get; private set; }
     public float DashPosture { get; private set; }
+    public bool UltraDashActive { get; private set; }
     public float ClimbInput { get; private set; }
     public bool IsCloaked => isCloaked;
+    public bool IsClimbExitMoveActive => climbExitMoveActive;
     public bool UsesEquippedSkillLoadout => hasExplicitEquippedSkills || (equippedSkills != null && equippedSkills.Count > 0);
     public bool IsInClimbTransitionTrigger => climbTransitionTriggerCount > 0;
+    public ClimbTransitionTrigger ActiveClimbTransitionTrigger { get; private set; }
+    public bool IsInClimbVolume => ActiveClimbTransitionTrigger != null && ActiveClimbTransitionTrigger.ActsAsClimbVolume;
     private int climbTransitionTriggerCount;
     private bool climbExitUpRequested;
     private bool climbExitDownRequested;
@@ -120,7 +129,15 @@ public class PlayerCC : MonoBehaviour
         verticalVelocity = 0f;
     }
     public void SetJumpType(int type) => JumpType = Mathf.Max(0, type);
-    public void SetDashPosture(float posture) => DashPosture = Mathf.Clamp01(posture);
+    public void SetDashPosture(float posture)
+    {
+        DashPosture = Mathf.Clamp01(posture);
+        if (DashPosture <= 0.01f)
+        {
+            UltraDashActive = false;
+        }
+    }
+    public void SetUltraDashActive(bool active) => UltraDashActive = active;
     public void DisableMoveXFor(float duration)
     {
         moveXDisableTimer = Mathf.Max(moveXDisableTimer, duration);
@@ -157,12 +174,40 @@ public class PlayerCC : MonoBehaviour
 
     public void EnterClimbTransitionTrigger()
     {
+        EnterClimbTransitionTrigger(null);
+    }
+
+    public void EnterClimbTransitionTrigger(ClimbTransitionTrigger trigger)
+    {
         climbTransitionTriggerCount++;
+        if (trigger != null)
+        {
+            ActiveClimbTransitionTrigger = trigger;
+        }
+
+        if (trigger != null && trigger.DebugLogs)
+        {
+            Debug.Log($"[PlayerCC] EnterClimbTransitionTrigger count={climbTransitionTriggerCount}, active={trigger.name}", this);
+        }
     }
 
     public void ExitClimbTransitionTrigger()
     {
+        ExitClimbTransitionTrigger(null);
+    }
+
+    public void ExitClimbTransitionTrigger(ClimbTransitionTrigger trigger)
+    {
         climbTransitionTriggerCount = Mathf.Max(0, climbTransitionTriggerCount - 1);
+        if (trigger == null || ActiveClimbTransitionTrigger == trigger)
+        {
+            ActiveClimbTransitionTrigger = climbTransitionTriggerCount > 0 ? ActiveClimbTransitionTrigger : null;
+        }
+
+        if (trigger != null && trigger.DebugLogs)
+        {
+            Debug.Log($"[PlayerCC] ExitClimbTransitionTrigger count={climbTransitionTriggerCount}, active={(ActiveClimbTransitionTrigger != null ? ActiveClimbTransitionTrigger.name : "null")}", this);
+        }
     }
 
     public bool HasUnlockedSkill(string id)
@@ -299,6 +344,53 @@ public class PlayerCC : MonoBehaviour
 
         facingDirection = dir;
         GetControlTransform().forward = dir.normalized;
+    }
+
+    public void BeginClimbExitMove(Vector2 offset, float duration)
+    {
+        BeginClimbExitMove(offset, duration, default, 0f);
+    }
+
+    public void BeginClimbExitMove(Vector2 offset, float duration, LayerMask groundMask, float groundSnapDistance)
+    {
+        if (climbExitMoveActive)
+        {
+            return;
+        }
+
+        Vector3 facing = GetFacing().sqrMagnitude > 0.01f ? GetFacing().normalized : Vector3.right;
+        Vector3 totalDelta = new Vector3(facing.x * offset.x, offset.y, 0f);
+        float safeDuration = Mathf.Max(0.01f, duration);
+
+        climbExitMoveActive = true;
+        climbExitMoveTimer = safeDuration;
+        climbExitMoveVelocity = totalDelta / safeDuration;
+        climbExitGroundMask = groundMask;
+        climbExitGroundSnapDistance = Mathf.Max(0f, groundSnapDistance);
+        SetVerticalVelocity(0f);
+        SetClimbState(true, 0f);
+    }
+
+    public void PlaceCapsuleBottomAt(Vector3 bottomPosition)
+    {
+        if (cc == null)
+        {
+            transform.position = new Vector3(bottomPosition.x, bottomPosition.y, 0f);
+            return;
+        }
+
+        Vector3 targetPosition = bottomPosition;
+        targetPosition.y = bottomPosition.y - cc.center.y + cc.height * 0.5f;
+
+        bool wasEnabled = cc.enabled;
+        cc.enabled = false;
+        transform.position = new Vector3(targetPosition.x, targetPosition.y, 0f);
+        cc.enabled = wasEnabled;
+    }
+
+    public bool CanAutoExitUpFromActiveClimbTrigger()
+    {
+        return ActiveClimbTransitionTrigger != null && ActiveClimbTransitionTrigger.CanAutoExitUp(this);
     }
 
     public void BeginControlProxy(CharacterController proxy)
@@ -471,11 +563,65 @@ public class PlayerCC : MonoBehaviour
             skill.OnUpdate(gameObject, this, CurrentPosture);
         }
 
+        UpdateClimbExitMove();
+
         RefreshCloakState();
 
         HandleGravity();
 
         GetCharacterController().Move(new Vector3(0, verticalVelocity, 0) * Time.deltaTime);
+    }
+
+    private void UpdateClimbExitMove()
+    {
+        if (!climbExitMoveActive)
+        {
+            return;
+        }
+
+        float step = Mathf.Min(Time.deltaTime, climbExitMoveTimer);
+        SetVerticalVelocity(0f);
+        SetClimbState(true, 0f);
+        GetCharacterController().Move(climbExitMoveVelocity * step);
+
+        climbExitMoveTimer -= step;
+        if (climbExitMoveTimer > 0f)
+        {
+            return;
+        }
+
+        climbExitMoveActive = false;
+        climbExitMoveTimer = 0f;
+        climbExitMoveVelocity = Vector3.zero;
+        SnapClimbExitMoveToGround();
+        RequestGravitySuppressed();
+        SetClimbState(false, 0f);
+    }
+
+    private void SnapClimbExitMoveToGround()
+    {
+        if (cc == null || climbExitGroundMask.value == 0 || climbExitGroundSnapDistance <= 0f)
+        {
+            return;
+        }
+
+        Vector3 worldCenter = transform.TransformPoint(cc.center);
+        float bottomOffset = Mathf.Max(0f, cc.height * 0.5f - cc.radius);
+        float centerToBottom = bottomOffset + cc.radius;
+        Vector3 rayOrigin = worldCenter + Vector3.up * 0.25f;
+
+        if (!Physics.Raycast(rayOrigin, Vector3.down, out RaycastHit hit, climbExitGroundSnapDistance, climbExitGroundMask))
+        {
+            return;
+        }
+
+        Vector3 snappedPosition = transform.position;
+        snappedPosition.y = hit.point.y - cc.center.y + centerToBottom;
+
+        bool wasEnabled = cc.enabled;
+        cc.enabled = false;
+        transform.position = new Vector3(snappedPosition.x, snappedPosition.y, 0f);
+        cc.enabled = wasEnabled;
     }
 
     private void RefreshCloakState()

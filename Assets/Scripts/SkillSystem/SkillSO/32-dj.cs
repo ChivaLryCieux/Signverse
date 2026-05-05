@@ -9,6 +9,7 @@ namespace Skills
 
         // ===== 物理控制 =====
         protected override float DashCooldown => 0.8f;
+        protected override bool UsesUltraDashAnimation => false;
         [SerializeField] [Range(0.1f, 2f)]
         private float diagonalBias = 0.7f; // 控制斜前方角度
 
