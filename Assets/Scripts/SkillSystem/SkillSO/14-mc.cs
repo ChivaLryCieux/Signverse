@@ -29,7 +29,7 @@ namespace Skills
             }
 
             Vector3 moveDelta = new Vector3(horizontal * moveSpeed, 0f, 0f) * Time.deltaTime;
-            controller.GetCharacterController().Move(moveDelta);
+            controller.MoveWithGroundProtection(moveDelta);
         }
 
         // ===== 动画控制 =====

@@ -34,6 +34,14 @@ public class PlayerCC : MonoBehaviour
     [Tooltip("下落时的额外重力倍率，用于让 VerticalVelocity 更快进入下落段。")]
     public float fallMultiplier = 1.6f;
     [SerializeField] private float turnInputThreshold = 0.1f;
+
+    [Header("防挤出平台")]
+    [SerializeField] private bool preventSideCollisionPushOffGround = true;
+    [SerializeField] private LayerMask groundSafetyMask = ~0;
+    [SerializeField] private float groundSafetyCheckDistance = 0.35f;
+    [SerializeField] private float groundSafetyRadiusPadding = 0.03f;
+    [SerializeField] private bool drawGroundSafetyCheck;
+
     private float verticalVelocity;
     private Vector3 facingDirection = Vector3.right;
     private float moveXDisableTimer;
@@ -354,6 +362,38 @@ public class PlayerCC : MonoBehaviour
         GetControlTransform().forward = dir.normalized;
     }
 
+    public CollisionFlags MoveWithGroundProtection(Vector3 delta)
+    {
+        CharacterController activeController = GetCharacterController();
+        if (activeController == null)
+        {
+            return CollisionFlags.None;
+        }
+
+        if (!ShouldProtectGroundedSideMove(delta, activeController))
+        {
+            return activeController.Move(delta);
+        }
+
+        Transform activeTransform = GetControlTransform();
+        Vector3 positionBeforeMove = activeTransform.position;
+        bool hadGroundSupport = HasGroundSupport(activeController);
+        CollisionFlags flags = activeController.Move(delta);
+
+        if (!hadGroundSupport || (flags & CollisionFlags.Sides) == 0 || HasGroundSupport(activeController))
+        {
+            return flags;
+        }
+
+        bool wasEnabled = activeController.enabled;
+        activeController.enabled = false;
+        activeTransform.position = positionBeforeMove;
+        activeController.enabled = wasEnabled;
+        verticalVelocity = Mathf.Min(verticalVelocity, 0f);
+
+        return flags;
+    }
+
     public void BeginClimbExitMove(Vector2 offset, float duration)
     {
         BeginClimbExitMove(offset, duration, default, 0f);
@@ -630,6 +670,56 @@ public class PlayerCC : MonoBehaviour
         cc.enabled = false;
         transform.position = new Vector3(snappedPosition.x, snappedPosition.y, 0f);
         cc.enabled = wasEnabled;
+    }
+
+    private bool ShouldProtectGroundedSideMove(Vector3 delta, CharacterController activeController)
+    {
+        if (!preventSideCollisionPushOffGround || activeController == null)
+        {
+            return false;
+        }
+
+        if (CurrentPosture != Posture.Grounded)
+        {
+            return false;
+        }
+
+        return Mathf.Abs(delta.x) > 0.0001f && Mathf.Abs(delta.y) <= 0.0001f;
+    }
+
+    private bool HasGroundSupport(CharacterController activeController)
+    {
+        if (activeController == null || groundSafetyMask.value == 0)
+        {
+            return false;
+        }
+
+        Vector3 worldCenter = activeController.transform.TransformPoint(activeController.center);
+        float bottomOffset = Mathf.Max(0f, activeController.height * 0.5f - activeController.radius);
+        Vector3 origin = worldCenter + Vector3.down * bottomOffset + Vector3.up * 0.05f;
+        float radius = Mathf.Max(0.01f, activeController.radius - Mathf.Max(0f, groundSafetyRadiusPadding));
+        float distance = Mathf.Max(0.01f, groundSafetyCheckDistance);
+        bool hitGround = Physics.SphereCast(
+            origin,
+            radius,
+            Vector3.down,
+            out _,
+            distance,
+            groundSafetyMask,
+            QueryTriggerInteraction.Ignore
+        );
+
+        if (drawGroundSafetyCheck)
+        {
+            Color color = hitGround ? Color.green : Color.red;
+            Debug.DrawRay(origin, Vector3.down * distance, color);
+            Debug.DrawRay(origin + Vector3.right * radius, Vector3.down * distance, color);
+            Debug.DrawRay(origin + Vector3.left * radius, Vector3.down * distance, color);
+            Debug.DrawRay(origin + Vector3.forward * radius, Vector3.down * distance, color);
+            Debug.DrawRay(origin + Vector3.back * radius, Vector3.down * distance, color);
+        }
+
+        return hitGround;
     }
 
     private void RefreshCloakState()

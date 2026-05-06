@@ -29,7 +29,7 @@ namespace Skills
 
             Vector2 clampedInput = Vector2.ClampMagnitude(input, 1f);
             Vector3 moveDelta = new Vector3(clampedInput.x, clampedInput.y, 0f) * moveSpeed * Time.deltaTime;
-            controller.GetCharacterController().Move(moveDelta);
+            controller.MoveWithGroundProtection(moveDelta);
         }
 
         // ===== 动画控制 =====

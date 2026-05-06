@@ -757,6 +757,13 @@ public class AnimatorStateDebugger : MonoBehaviour
 
             Vector3 delta = animator.deltaPosition;
             delta.z = 0f;
+            if (controller != null)
+            {
+                // Codex: Root Motion 也走 PlayerCC 的移动保护，避免动画横向位移把角色从平台边缘挤下去。
+                controller.MoveWithGroundProtection(delta);
+                return;
+            }
+
             characterController.Move(delta);
         }
     }
