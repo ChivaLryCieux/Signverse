@@ -701,6 +701,11 @@ public class PlayerCC : MonoBehaviour
 
     private void HandleIntrinsicFacing()
     {
+        if (PausePanelController.IsPaused)
+        {
+            return;
+        }
+
         if (CurrentPosture == Posture.Climbing)
         {
             return;
