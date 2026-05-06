@@ -5,7 +5,7 @@ using UnityEngine;
 
 public class CanvasAudio : MonoBehaviour
 {
-    AudioSource audioSource;
+    public AudioSource audioSource;
 
     [Header("audio")]
     public AudioClip showNarrativeSFX;
@@ -13,7 +13,10 @@ public class CanvasAudio : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        audioSource = GetComponent<AudioSource>();
+        if(audioSource == null)
+        {
+            audioSource = GetComponent<AudioSource>();
+        }
     }
 
     // Update is called once per frame
