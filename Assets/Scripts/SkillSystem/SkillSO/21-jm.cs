@@ -31,6 +31,11 @@ namespace Skills
 
         public override void OnUpdate(GameObject user, PlayerCC controller, PlayerCC.Posture posture)
         {
+            if (!isCharging && controller.WasJumpPressed())
+            {
+                OnActivate(user, controller, posture);
+            }
+
             if (isCharging)
             {
                 UpdateCharge(controller);

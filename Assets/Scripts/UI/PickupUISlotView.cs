@@ -117,13 +117,15 @@ public class PickupUISlotView : MonoBehaviour, IPointerClickHandler, IPointerEnt
         {
             return;
         }
-        int index = Random.Range(0, clickSFXList.Count);
-        AudioClip clip = clickSFXList[index];
-
-        if (clip != null)
+        if (audioSource != null && clickSFXList != null && clickSFXList.Count > 0)
         {
-            
-            audioSource.PlayOneShot(clip);
+            int index = Random.Range(0, clickSFXList.Count);
+            AudioClip clip = clickSFXList[index];
+
+            if (clip != null)
+            {
+                audioSource.PlayOneShot(clip);
+            }
         }
 
         if (role == SlotRole.Unlock)
