@@ -100079,6 +100079,20 @@ AnimationClip:
     floatParameter: 0
     intParameter: 0
     messageOptions: 0
+  - time: 0
+    functionName: DisableInput
+    data: 
+    objectReferenceParameter: {fileID: 0}
+    floatParameter: 0
+    intParameter: 0
+    messageOptions: 0
+  - time: 3.5333333
+    functionName: OnClimbExitUpFinished
+    data: 
+    objectReferenceParameter: {fileID: 0}
+    floatParameter: 0
+    intParameter: 0
+    messageOptions: 0
   - time: 3.8333333
     functionName: RestorePlayerGravity
     data: 
@@ -100088,6 +100102,13 @@ AnimationClip:
     messageOptions: 0
   - time: 3.8333333
     functionName: LockRootMotion
+    data: 
+    objectReferenceParameter: {fileID: 0}
+    floatParameter: 0
+    intParameter: 0
+    messageOptions: 0
+  - time: 3.8333333
+    functionName: EnableInput
     data: 
     objectReferenceParameter: {fileID: 0}
     floatParameter: 0
