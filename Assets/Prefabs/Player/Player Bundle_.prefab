@@ -4092,12 +4092,39 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 74cd9ab74f031794d893dda61d6d7a0a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  footstepClips:
-  - {fileID: 8300000, guid: 5db89d63cba49d142844ef2aef31efbf, type: 3}
-  - {fileID: 8300000, guid: aff36c7059e34d64a9984fb1f935c3ba, type: 3}
+  controller: {fileID: 2700260223173447758}
+  currentPosture: 0
+  landingCooldown: 0.15
+  otherLandClip:
+  - {fileID: 8300000, guid: 296bf148bb36b224f8a77672680527f3, type: 3}
+  natureLandClip:
+  - {fileID: 8300000, guid: 1ebe08824ac19384cb45c76775ae2f8f, type: 3}
+  waterLandClip:
+  - {fileID: 8300000, guid: f9275ef710fd22e47bc8562813814b26, type: 3}
+  otherStepClip:
+  - {fileID: 8300000, guid: 296bf148bb36b224f8a77672680527f3, type: 3}
+  - {fileID: 8300000, guid: c98684ed47229134c996ef1e2d1018a9, type: 3}
+  - {fileID: 8300000, guid: 49fb5f0074bf5e3458374f3189266c4a, type: 3}
+  - {fileID: 8300000, guid: ffa4772476e412c458a0b3a935816292, type: 3}
+  - {fileID: 8300000, guid: 945c4e31392d6cc49a1a441e0166185a, type: 3}
+  natureStepClip:
+  - {fileID: 8300000, guid: 1ebe08824ac19384cb45c76775ae2f8f, type: 3}
+  - {fileID: 8300000, guid: 58f08229913e7cb4786287412d6badc0, type: 3}
+  - {fileID: 8300000, guid: 4589052477bb4e34089eccb1dd7182ae, type: 3}
+  - {fileID: 8300000, guid: 42ad22409715c574e831b917449761b6, type: 3}
+  waterStepClip:
+  - {fileID: 8300000, guid: c79492821d68a504d97c03cb560cbc02, type: 3}
+  - {fileID: 8300000, guid: f7a67b888dc05624995346e0f4cbcab4, type: 3}
+  - {fileID: 8300000, guid: 8ae9cb5bbf6cc69439e23af6edc231cf, type: 3}
+  - {fileID: 8300000, guid: f9275ef710fd22e47bc8562813814b26, type: 3}
+  - {fileID: 8300000, guid: 4b159ce9704e7714bb9e647f15dedf3f, type: 3}
   audioSource: {fileID: 0}
-  minPitch: 0.95
-  maxPitch: 1.05
+  minPitch: 0.7
+  maxPitch: 1.3
+  rayDistance: 1
+  groundLayer:
+    serializedVersion: 2
+    m_Bits: 4294967295
 --- !u!114 &9114328982574220657
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -12,6 +12,8 @@ public class InteractionPanelController : MonoBehaviour
     [SerializeField] private TMP_Text fixedText;
     [SerializeField] private TMP_Text tmpBodyText;
     [SerializeField] private Text legacyBodyText;
+    public CanvasAudio canvasAudio;
+
 
     private InteractionPanelTrigger activeTrigger;
     private bool isShowingDetail;
@@ -26,6 +28,8 @@ public class InteractionPanelController : MonoBehaviour
 
     private void Awake()
     {
+        
+
         ResolveReferences();
 
         if (Instance != null && Instance != this)
@@ -85,6 +89,7 @@ public class InteractionPanelController : MonoBehaviour
         if (panelRoot != null)
         {
             panelRoot.SetActive(true);
+            canvasAudio.showNarrative();
         }
     }
 
@@ -109,6 +114,7 @@ public class InteractionPanelController : MonoBehaviour
         if (panelRoot != null)
         {
             panelRoot.SetActive(false);
+            canvasAudio.closeNarrative();
         }
     }
 

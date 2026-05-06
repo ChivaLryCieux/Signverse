@@ -19,6 +19,7 @@ public class AnimatorStateDebugger : MonoBehaviour
 
     [Header("音效")]
     public AudioClip dashSFX;
+    public AudioClip ultraDashSFX;
     public AudioClip jumpSFX;
     public AudioClip groundedSFX;
 
@@ -52,6 +53,7 @@ public class AnimatorStateDebugger : MonoBehaviour
     bool dashPressed;
     bool hidePressed;
     bool wasDashAnimating;
+    bool wasUltraDashAnimating;
 
     // Lry的修改：缓存 Animator 参数是否存在。专业术语上这是 parameter capability detection，用于降低 Animator Controller 迭代时的运行时耦合。
     bool hasRun;
@@ -439,18 +441,30 @@ public class AnimatorStateDebugger : MonoBehaviour
         bool hasDashSkill = HasEquippedSkill("30-xx") ||
                             HasEquippedSkill("31-dm") ||
                             HasEquippedSkill("32-dj") ||
-                            HasEquippedSkill("33-dd") ||
                             HasEquippedSkill("34-dc");
+        bool hasUltraDashSkill = HasEquippedSkill("33-dd");
         bool dashAnimating = hasDashSkill && dashPosture > 0.01f;
+        bool ultraDashAnimating = hasUltraDashSkill && dashPosture > 0.01f;
+
+
+            
+        
 
         if (hasDashSkill)
         {
             animator.SetBool("Dash", dashAnimating);
-            SetBoolIfExists(hasUltraDash, "ultraDash", controller.UltraDashActive);
-
             if (dashAnimating && !wasDashAnimating && audioSource != null && dashSFX != null)
             {
                 audioSource.PlayOneShot(dashSFX);
+            }
+        }
+        else if (hasUltraDashSkill)
+        {
+            
+            SetBoolIfExists(hasUltraDash, "ultraDash", ultraDashAnimating);
+            if (ultraDashAnimating && !wasUltraDashAnimating && audioSource != null && dashSFX != null)
+            {
+                audioSource.PlayOneShot(ultraDashSFX);
             }
         }
         else
@@ -460,10 +474,8 @@ public class AnimatorStateDebugger : MonoBehaviour
         }
 
         wasDashAnimating = dashAnimating;
+        wasUltraDashAnimating = ultraDashAnimating;
 
-        // animator.SetFloat("DashVel" , dashPosture);
-        // SetFloatImmediateIfExists(hasDashPosture, "DashPosture", dashPosture);
-        // SetBoolIfExists(hasDash, "Dash", dashPosture > 0.01f);
     }
 
     void HandleUltraMoveFromPlayerCC()
