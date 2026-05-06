@@ -760,7 +760,11 @@ public class AnimatorStateDebugger : MonoBehaviour
             characterController.Move(delta);
         }
     }
-
+    public void OnClimbExitUpFinished()
+    {
+        controller.SetClimbState(false, 0f);   // 退出攀爬
+        controller.SetInputEnabled(true);      // 恢复控制
+    }
 
 
 

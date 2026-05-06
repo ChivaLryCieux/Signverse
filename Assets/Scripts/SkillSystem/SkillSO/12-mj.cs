@@ -32,17 +32,19 @@ namespace Skills
         public bool drawGroundExitCheck = true;
         public Color groundExitHitColor = Color.cyan;
         public Color groundExitMissColor = Color.yellow;
+        // [Header("Exit 瞬间位移脉冲, x=向前，y=向上")]
+        // public Vector2 exitImpulse = new Vector2(0.6f, 0.8f); // x=向前，y=向上
 
-        [Header("边缘翻越")]
-        [Tooltip("翻越结束时的前移距离。y 已不使用，胶囊底部会直接放到 Trigger 顶部。")]
-        public Vector2 exitUpOffset = new Vector2(0.6f, 1.0f);
-        [Tooltip("顶部翻越动画播放多久后，把玩家胶囊放到 Trigger 顶部。")]
-        public float exitUpDuration = 3.1f;
-        [Tooltip("顶部翻越触发冷却，避免落到平台后仍在 Trigger 内导致重复播放翻越动画。")]
-        public float exitUpCooldown = 5f;
-        [Tooltip("翻越结束后向下贴地的距离，防止脚本位移或动画位移让胶囊略微悬空。")]
-        public float exitUpGroundSnapDistance = 1.2f;
-        public bool debugClimbLogs = false;
+        // [Header("边缘翻越")]
+        // [Tooltip("翻越结束时的前移距离。y 已不使用，胶囊底部会直接放到 Trigger 顶部。")]
+        // public Vector2 exitUpOffset = new Vector2(0.6f, 1.0f);
+        // [Tooltip("顶部翻越动画播放多久后，把玩家胶囊放到 Trigger 顶部。")]
+        // public float exitUpDuration = 3.1f;
+        // [Tooltip("顶部翻越触发冷却，避免落到平台后仍在 Trigger 内导致重复播放翻越动画。")]
+        // public float exitUpCooldown = 5f;
+        // [Tooltip("翻越结束后向下贴地的距离，防止脚本位移或动画位移让胶囊略微悬空。")]
+        // public float exitUpGroundSnapDistance = 1.2f;
+        // public bool debugClimbLogs = false;
 
 
 
@@ -62,12 +64,20 @@ namespace Skills
         public override void OnUpdate(GameObject user, PlayerCC controller, PlayerCC.Posture posture)
         {
             
+            Animator animator = user.GetComponentInChildren<Animator>();
 
-            if (isExitingUp)
+            if (animator != null && animator.GetBool("Climb_Exit_Up"))
             {
-                UpdateExitUp(controller);
+                controller.SetClimbState(false, 0f);   // ❗退出攀爬
+                controller.SetVerticalVelocity(0f);    // 可选（防止抖动）
+
                 return;
             }
+            // if (isExitingUp)
+            // {
+            //     UpdateExitUp(controller);
+            //     return;
+            // }
 
             Vector2 input = controller.GetMoveInput();
             Vector3 rayOrigin = user.transform.position + Vector3.up * rayOffsetY;
@@ -152,7 +162,7 @@ namespace Skills
 
             if (controller.CanAutoExitUpFromActiveClimbTrigger())
             {
-                TryStartExitUp(controller, "near climb trigger top");
+                // TryStartExitUp(controller, "near climb trigger top");
                 return;
             }
 
@@ -237,73 +247,82 @@ namespace Skills
         // ===== 动画控制 =====
 
         // 开始顶部翻越流程，并请求对应动画。
-        private void TryStartExitUp(PlayerCC controller, string reason)
-        {
-            if (Time.time < nextExitUpAllowedTime)
-            {
-                DebugClimb(controller, $"Skip StartExitUp: cooldown active. reason={reason}, remaining={nextExitUpAllowedTime - Time.time:F2}s");
-                return;
-            }
+        // private void TryStartExitUp(PlayerCC controller, string reason)
+        // {
+        //     if (Time.time < nextExitUpAllowedTime)
+        //     {
+        //         DebugClimb(controller, $"Skip StartExitUp: cooldown active. reason={reason}, remaining={nextExitUpAllowedTime - Time.time:F2}s");
+        //         return;
+        //     }
 
-            DebugClimb(controller, $"StartExitUp: {reason}.");
-            StartExitUp(controller);
-        }
+        //     DebugClimb(controller, $"StartExitUp: {reason}.");
+        //     StartExitUp(controller);
+        // }
 
-        private void StartExitUp(PlayerCC controller)
-        {
-            nextExitUpAllowedTime = Time.time + Mathf.Max(0f, exitUpCooldown);
-            Vector3 facing = controller.GetFacing().sqrMagnitude > 0.01f ? controller.GetFacing().normalized : Vector3.right;
-            float duration = Mathf.Max(0.01f, exitUpDuration);
+        // private void StartExitUp(PlayerCC controller)
+        // {
+        //     // nextExitUpAllowedTime = Time.time + Mathf.Max(0f, exitUpCooldown);
+        //     // Vector3 facing = controller.GetFacing().sqrMagnitude > 0.01f ? controller.GetFacing().normalized : Vector3.right;
+        //     // float duration = Mathf.Max(0.01f, exitUpDuration);
 
-            controller.RequestClimbExitUpAnimation();
-            controller.SetVerticalVelocity(0f);
-            controller.SetClimbState(true, 0f);
-            ClimbTransitionTrigger activeTrigger = controller.ActiveClimbTransitionTrigger;
-            exitUpTopPosition = activeTrigger != null
-                ? activeTrigger.GetExitTopPosition(controller, exitUpOffset.x)
-                : controller.transform.position + new Vector3(facing.x * exitUpOffset.x, exitUpOffset.y, 0f);
+        //     controller.RequestClimbExitUpAnimation();
+        //     controller.SetVerticalVelocity(0f);
+        //     controller.SetClimbState(true, 0f);
+        //     ClimbTransitionTrigger activeTrigger = controller.ActiveClimbTransitionTrigger;
+        //     // exitUpTopPosition = activeTrigger != null
+        //     //     ? activeTrigger.GetExitTopPosition(controller, exitUpOffset.x)
+        //     //     : controller.transform.position + new Vector3(facing.x * exitUpOffset.x, exitUpOffset.y, 0f);
 
-            isExitingUp = true;
-            exitUpTimer = duration;
-            DebugClimb(controller, $"ExitUp started. duration={duration:F2}, topPosition={exitUpTopPosition}");
-        }
+        //     // isExitingUp = true;
+        //     // exitUpTimer = duration;
+        //     // DebugClimb(controller, $"ExitUp started. duration={duration:F2}, topPosition={exitUpTopPosition}");
+        // }
 
-        // 顶部翻越期间只等待动画播放，胶囊在结束时一次性放到 Trigger 顶部。
-        private void UpdateExitUp(PlayerCC controller)
-        {
-            float step = Mathf.Min(Time.deltaTime, exitUpTimer);
+        // // 顶部翻越期间只等待动画播放，胶囊在结束时一次性放到 Trigger 顶部。
+        // private void UpdateExitUp(PlayerCC controller)
+        // {
+        //     float step = Mathf.Min(Time.deltaTime, exitUpTimer);
 
-            controller.SetVerticalVelocity(0f);
-            controller.SetClimbState(true, 0f);
+        //     controller.SetVerticalVelocity(0f);
+        //     controller.SetClimbState(true, 0f);
 
-            exitUpTimer -= step;
+        //     exitUpTimer -= step;
 
-            if (exitUpTimer > 0f)
-            {
-                return;
-            }
+        //     if (exitUpTimer > 0f)
+        //     {
+        //         return;
+        //     }
 
-            DebugClimb(controller, "FinishExitUp: timer completed.");
-            FinishExitUp(controller);
-        }
+        //     DebugClimb(controller, "FinishExitUp: timer completed.");
+        //     FinishExitUp(controller);
+        // }
 
-        // 结束顶部翻越，清理翻越状态并退出攀爬。
-        private void FinishExitUp(PlayerCC controller)
-        {
-            controller.PlaceCapsuleBottomAt(exitUpTopPosition);
-            isExitingUp = false;
-            exitUpTimer = 0f;
-            exitUpTopPosition = Vector3.zero;
-            controller.RequestGravitySuppressed();
-            StopClimb(controller);
-        }
+        // // 结束顶部翻越，清理翻越状态并退出攀爬。
+        // private void FinishExitUp(PlayerCC controller)
+        // {
+        //     // controller.PlaceCapsuleBottomAt(exitUpTopPosition);
+        //     // Vector3 facing = controller.GetFacing().sqrMagnitude > 0.01f 
+        //     // ? controller.GetFacing().normalized 
+        //     // : Vector3.right;
+
+        //     // Vector3 impulse = new Vector3(facing.x * exitImpulse.x, exitImpulse.y, 0f);
+
+        //     // controller.GetCharacterController().Move(impulse);
+
+
+        //     isExitingUp = false;
+        //     exitUpTimer = 0f;
+        //     exitUpTopPosition = Vector3.zero;
+        //     controller.RequestGravitySuppressed();
+        //     StopClimb(controller);
+        // }
 
         private void DebugClimb(PlayerCC controller, string message)
         {
-            if (!debugClimbLogs)
-            {
-                return;
-            }
+            // if (!debugClimbLogs)
+            // {
+            //     return;
+            // }
 
             Debug.Log($"[Skill12MJClimb] {message}", controller);
         }

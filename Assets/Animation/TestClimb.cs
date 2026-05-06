@@ -11,9 +11,9 @@ public class TestClimb : MonoBehaviour
     public Animator animator;
     public Vector2 exitUpOffset = new Vector2(0.6f, 1f);
     public float exitUpDuration = 3.1f;
-    private bool placingPlayerAfterExitUp;
-    private float exitUpTimer;
-    private Vector3 exitUpTopPosition;
+    // private bool placingPlayerAfterExitUp;
+    // private float exitUpTimer;
+    // private Vector3 exitUpTopPosition;
 
 
 
@@ -60,18 +60,18 @@ public class TestClimb : MonoBehaviour
                 playerCC.SetInputEnabled(false);
                 Vector2 moveOffset = exitUpOffset;
                 float moveDuration = exitUpDuration;
-                if (TryGetClimbSkill(playerCC, out Skill12MJClimb climbSkill))
-                {
-                    moveOffset = climbSkill.exitUpOffset;
-                    moveDuration = climbSkill.exitUpDuration;
-                }
+                // if (TryGetClimbSkill(playerCC, out Skill12MJClimb climbSkill))
+                // {
+                //     moveOffset = climbSkill.exitUpOffset;
+                //     moveDuration = climbSkill.exitUpDuration;
+                // }
 
                 ClimbTransitionTrigger climbTrigger = GetComponent<ClimbTransitionTrigger>();
-                exitUpTopPosition = climbTrigger != null
-                    ? climbTrigger.GetExitTopPosition(playerCC, moveOffset.x)
-                    : playerCC.transform.position + new Vector3(playerCC.GetFacing().x * moveOffset.x, moveOffset.y, 0f);
-                exitUpTimer = Mathf.Max(0.01f, moveDuration);
-                placingPlayerAfterExitUp = true;
+                // exitUpTopPosition = climbTrigger != null
+                //     ? climbTrigger.GetExitTopPosition(playerCC, moveOffset.x)
+                //     : playerCC.transform.position + new Vector3(playerCC.GetFacing().x * moveOffset.x, moveOffset.y, 0f);
+                // exitUpTimer = Mathf.Max(0.01f, moveDuration);
+                // placingPlayerAfterExitUp = true;
             }
             
             if (animator != null)
@@ -119,25 +119,25 @@ public class TestClimb : MonoBehaviour
 
     private void Update()
     {
-        if (!placingPlayerAfterExitUp || playerCC == null)
-        {
-            return;
-        }
+        // if (!placingPlayerAfterExitUp || playerCC == null)
+        // {
+        //     return;
+        // }
 
-        playerCC.SetVerticalVelocity(0f);
-        playerCC.SetClimbState(true, 0f);
-        exitUpTimer -= Time.deltaTime;
+        // playerCC.SetVerticalVelocity(0f);
+        // playerCC.SetClimbState(true, 0f);
+        // exitUpTimer -= Time.deltaTime;
 
-        if (exitUpTimer > 0f)
-        {
-            return;
-        }
+        // if (exitUpTimer > 0f)
+        // {
+        //     return;
+        // }
 
-        playerCC.PlaceCapsuleBottomAt(exitUpTopPosition);
-        playerCC.RequestGravitySuppressed();
-        playerCC.SetClimbState(false, 0f);
-        playerCC.SetInputEnabled(true);
-        placingPlayerAfterExitUp = false;
+        // playerCC.PlaceCapsuleBottomAt(exitUpTopPosition);
+        // playerCC.RequestGravitySuppressed();
+        // playerCC.SetClimbState(false, 0f);
+        // playerCC.SetInputEnabled(true);
+        // placingPlayerAfterExitUp = false;
     }
 
     private bool TryGetClimbSkill(PlayerCC controller, out Skill12MJClimb climbSkill)
