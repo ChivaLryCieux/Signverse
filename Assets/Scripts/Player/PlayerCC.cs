@@ -7,6 +7,8 @@ using System;
 [RequireComponent(typeof(PlayerDeath))]
 public class PlayerCC : MonoBehaviour
 {
+    private const float MinClimbExitUpInputLockDuration = 3f;
+
 
     public enum Posture
     {
@@ -77,6 +79,8 @@ public class PlayerCC : MonoBehaviour
     private int climbTransitionTriggerCount;
     private bool climbExitUpRequested;
     private bool climbExitDownRequested;
+    private bool climbExitUpAnimationLock;
+    private float climbExitUpAnimationLockTimer;
 
     [Header("技能系统 (Slot-Based)")]
     [Tooltip("可选：调试或特殊关卡开局自带技能。正式流程可留空，移动/跳跃/冲刺由拾取和 UI 解锁。")]
@@ -95,6 +99,9 @@ public class PlayerCC : MonoBehaviour
     [SerializeField] private bool drawGroundedGizmo = true;
     [SerializeField] private float groundedGizmoOffsetY;
 
+    [Header("攀爬翻越")]
+    [SerializeField] private float climbExitUpInputLockDuration = 3f;
+
     // --- 给技能脚本提供的“遥控器”接口 ---
     public CharacterController GetCharacterController() => controlProxy != null ? controlProxy : cc;
     public Transform GetControlTransform() => controlProxyTransform != null ? controlProxyTransform : transform;
@@ -106,7 +113,7 @@ public class PlayerCC : MonoBehaviour
     public Vector2 GetMoveInput()
     {
         Vector2 input = GetRawMoveInput();
-        if (moveXDisableTimer > 0f)
+        if (moveXDisableTimer > 0f || climbExitUpAnimationLock)
         {
             input.x = 0f;
         }
@@ -154,6 +161,8 @@ public class PlayerCC : MonoBehaviour
     public void ClearMovementLocks()
     {
         moveXDisableTimer = 0f;
+        climbExitUpAnimationLock = false;
+        climbExitUpAnimationLockTimer = 0f;
     }
 
     public void SetInputEnabled(bool enabled)
@@ -322,6 +331,7 @@ public class PlayerCC : MonoBehaviour
     public void RequestClimbExitUpAnimation()
     {
         climbExitUpRequested = true;
+        BeginClimbExitUpAnimationLock();
     }
 
     public void RequestClimbExitDownAnimation()
@@ -338,6 +348,19 @@ public class PlayerCC : MonoBehaviour
 
         climbExitUpRequested = false;
         return true;
+    }
+
+    public void BeginClimbExitUpAnimationLock()
+    {
+        climbExitUpAnimationLock = true;
+        float lockDuration = Mathf.Max(MinClimbExitUpInputLockDuration, climbExitUpInputLockDuration);
+        climbExitUpAnimationLockTimer = Mathf.Max(climbExitUpAnimationLockTimer, lockDuration);
+    }
+
+    public void FinishClimbExitUpAnimationLock()
+    {
+        climbExitUpAnimationLock = false;
+        climbExitUpAnimationLockTimer = 0f;
     }
 
     public bool ConsumeClimbExitDownAnimationRequest()
@@ -580,6 +603,15 @@ public class PlayerCC : MonoBehaviour
             moveXDisableTimer -= Time.deltaTime;
         }
 
+        if (climbExitUpAnimationLock)
+        {
+            climbExitUpAnimationLockTimer -= Time.deltaTime;
+            if (climbExitUpAnimationLockTimer <= 0f)
+            {
+                FinishClimbExitUpAnimationLock();
+            }
+        }
+
         RefreshPosture();
         RefreshCloakState();
 
@@ -801,7 +833,7 @@ public class PlayerCC : MonoBehaviour
             return;
         }
 
-        float horizontal = GetRawMoveInput().x;
+        float horizontal = GetMoveInput().x;
 
         if (Mathf.Abs(horizontal) <= turnInputThreshold)
         {

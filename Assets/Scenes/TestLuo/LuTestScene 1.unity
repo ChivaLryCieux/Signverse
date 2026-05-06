@@ -241,6 +241,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 153c6dec3dc42d849a9f23e1c761b21a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  enableInputWaitingTime: 1
   playerCC: {fileID: 4037352738551801910}
   animator: {fileID: 4037352738551801908}
   exitUpOffset: {x: 0.6, y: 1}
@@ -2644,6 +2645,11 @@ PrefabInstance:
       propertyPath: cloakVolume
       value: 
       objectReference: {fileID: 1879113066}
+    - target: {fileID: 6893993206064220391, guid: 3d3abe984d450e349a3c0535efd2c7fb,
+        type: 3}
+      propertyPath: climbExitUpInputLockDuration
+      value: 3
+      objectReference: {fileID: 0}
     - target: {fileID: 7751532104160270786, guid: 3d3abe984d450e349a3c0535efd2c7fb,
         type: 3}
       propertyPath: m_LocalPosition.x

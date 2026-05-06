@@ -759,7 +759,7 @@ public class AnimatorStateDebugger : MonoBehaviour
             delta.z = 0f;
             if (controller != null)
             {
-                // Codex: Root Motion 也走 PlayerCC 的移动保护，避免动画横向位移把角色从平台边缘挤下去。
+                // Root Motion 也走 PlayerCC 的移动保护，避免动画横向位移把角色从平台边缘挤下去。
                 controller.MoveWithGroundProtection(delta);
                 return;
             }
@@ -770,6 +770,7 @@ public class AnimatorStateDebugger : MonoBehaviour
     public void OnClimbExitUpFinished()
     {
         controller.SetClimbState(false, 0f);   // 退出攀爬
+        // 翻越触发后的 A/D 横向输入锁由 PlayerCC 的 3 秒计时器解除，避免动画事件提前恢复移动。
         controller.SetInputEnabled(true);      // 恢复控制
     }
 

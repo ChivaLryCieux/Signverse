@@ -54,6 +54,7 @@ namespace Skills
         private float exitUpTimer;
         private float nextExitUpAllowedTime;
         private Vector3 exitUpTopPosition;
+        private bool wasClimbExitUpAnimating;
 
         
 
@@ -66,12 +67,24 @@ namespace Skills
             
             Animator animator = user.GetComponentInChildren<Animator>();
 
-            if (animator != null && animator.GetBool("Climb_Exit_Up"))
+            bool climbExitUpAnimating = animator != null && animator.GetBool("Climb_Exit_Up");
+            if (climbExitUpAnimating)
             {
+                if (!wasClimbExitUpAnimating)
+                {
+                    controller.BeginClimbExitUpAnimationLock();
+                    wasClimbExitUpAnimating = true;
+                }
+
                 controller.SetClimbState(false, 0f);   // ❗退出攀爬
                 controller.SetVerticalVelocity(0f);    // 可选（防止抖动）
 
                 return;
+            }
+
+            if (wasClimbExitUpAnimating)
+            {
+                wasClimbExitUpAnimating = false;
             }
             // if (isExitingUp)
             // {
