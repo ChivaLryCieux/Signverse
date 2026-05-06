@@ -6,6 +6,7 @@ using UnityEngine.InputSystem;
 
 public class TestClimb : MonoBehaviour
 {
+    public float enableInputWaitingTime = 1f;
     public PlayerCC playerCC;
     public Animator animator;
     public Vector2 exitUpOffset = new Vector2(0.6f, 1f);
@@ -77,9 +78,17 @@ public class TestClimb : MonoBehaviour
             {
                 animator.SetBool("Climb_Exit_Up" , true);
             }
-
+            
+            StartCoroutine(InputControlRoutine());
        
             
+        }
+
+        IEnumerator InputControlRoutine()
+        {
+            playerCC.DisableInput();
+            yield return new WaitForSeconds(enableInputWaitingTime);
+            playerCC.EnableInput();
         }
     }
     void OnTriggerExit(Collider other)

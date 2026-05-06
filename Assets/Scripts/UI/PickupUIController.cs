@@ -27,10 +27,12 @@ public class PickupUIController : MonoBehaviour
     [Header("模仿者 UI")]
     [Tooltip("5 号模仿者选中后，右上角 1/2/3/4 变成的黑色版本；模仿成功后 5 号也会显示对应黑色版本。数组下标 0=1，1=2，2=3，3=4。")]
     [SerializeField] private Sprite[] mimicTargetDarkIcons = new Sprite[4];
+
     [SerializeField] private AudioClip mimicSuccessSfx;
     [SerializeField] private AudioClip mimicExitSfx;
     [SerializeField, Range(0f, 1f)] private float mimicSfxVolume = 1f;
     [SerializeField] private AudioSource fallbackAudioSource;
+    [SerializeField] private AudioSource constantSoundAudioSource;
 
     [Header("左上角装备栏")]
     [Tooltip("按界面位置顺序拖入左上角 5 个装备槽。装备不会自动补位，槽位允许空缺。")]
@@ -602,6 +604,7 @@ public class PickupUIController : MonoBehaviour
         hasSelectedUnlockItem = false;
         selectingMimicTarget = true;
         RefreshUnlockedSlots();
+        constantSoundAudioSource.Play();
     }
 
     private void CompleteMimicTargetSelection(PickupUiEntry targetEntry)
@@ -624,6 +627,8 @@ public class PickupUIController : MonoBehaviour
         hasSelectedUnlockItem = false;
 
         PlayMimicSfx(mimicSuccessSfx);
+        constantSoundAudioSource.Stop();
+
         RefreshUnlockedSlots();
         RefreshEquippedSlots();
         SyncLinkedSkills();
@@ -732,10 +737,7 @@ public class PickupUIController : MonoBehaviour
             return;
         }
 
-        if (fallbackAudioSource == null)
-        {
-            fallbackAudioSource = GetComponent<AudioSource>();
-        }
+        
 
         if (fallbackAudioSource != null)
         {

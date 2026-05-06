@@ -164,6 +164,14 @@ public class PlayerCC : MonoBehaviour
             controls.Player.Disable();
         }
     }
+    public void EnableInput()
+    {
+        SetInputEnabled(true);
+    }
+    public void DisableInput()
+    {
+        SetInputEnabled(false);
+    }
 
     public void SetClimbState(bool climbing, float input)
     {
