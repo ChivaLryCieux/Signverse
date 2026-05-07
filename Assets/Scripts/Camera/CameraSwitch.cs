@@ -27,15 +27,38 @@ public class CameraSwitch : MonoBehaviour
 
     const string playerTag = "Player";
 
+    public static void ResetAllSwitches()
+    {
+        CameraSwitch[] switches = FindObjectsOfType<CameraSwitch>();
+        for (int i = 0; i < switches.Length; i++)
+        {
+            if (switches[i] != null)
+            {
+                switches[i].ResetCameraPriorities();
+            }
+        }
+    }
+
     void Start() 
     {
         localCamera = GetComponentInChildren<CinemachineVirtualCamera>();
 
-        localCamera.Priority = inactivePriority;
-        playerForwardCamera.Priority = inactivePriority;
-        playerBackwardCamera.Priority = inactivePriority;
-        playerCloseShotCamera.Priority = inactivePriority;
+        ResetCameraPriorities();
     }
+
+    public void ResetCameraPriorities()
+    {
+        if (localCamera == null)
+        {
+            localCamera = GetComponentInChildren<CinemachineVirtualCamera>();
+        }
+
+        SetPriority(localCamera, inactivePriority);
+        SetPriority(playerForwardCamera, inactivePriority);
+        SetPriority(playerBackwardCamera, inactivePriority);
+        SetPriority(playerCloseShotCamera, inactivePriority);
+    }
+
     void OnTriggerEnter(Collider other)
     {
         //localCamera情况，特殊关卡特殊设置
@@ -43,7 +66,7 @@ public class CameraSwitch : MonoBehaviour
         {
             if (other.CompareTag(playerTag))
             {
-                localCamera.Priority = activePriority;
+                SetPriority(localCamera, activePriority);
             }
             
         }
@@ -52,7 +75,7 @@ public class CameraSwitch : MonoBehaviour
         {
             if (other.CompareTag(playerTag))
             {
-                playerForwardCamera.Priority = activePriority;
+                SetPriority(playerForwardCamera, activePriority);
             }
             
         }
@@ -61,7 +84,7 @@ public class CameraSwitch : MonoBehaviour
         {
             if (other.CompareTag(playerTag))
             {
-                playerBackwardCamera.Priority = activePriority;
+                SetPriority(playerBackwardCamera, activePriority);
             }
             
         }
@@ -69,7 +92,7 @@ public class CameraSwitch : MonoBehaviour
         {
             if (other.CompareTag(playerTag))
             {
-                playerCloseShotCamera.Priority = activePriority;
+                SetPriority(playerCloseShotCamera, activePriority);
             }
             
         }
@@ -78,10 +101,15 @@ public class CameraSwitch : MonoBehaviour
     {
         if (other.CompareTag(playerTag))
         {
-            localCamera.Priority = inactivePriority;
-            playerForwardCamera.Priority = inactivePriority;
-            playerBackwardCamera.Priority = inactivePriority;
-            playerCloseShotCamera.Priority = inactivePriority;
+            ResetCameraPriorities();
+        }
+    }
+
+    private static void SetPriority(CinemachineVirtualCamera virtualCamera, int priority)
+    {
+        if (virtualCamera != null)
+        {
+            virtualCamera.Priority = priority;
         }
     }
 }

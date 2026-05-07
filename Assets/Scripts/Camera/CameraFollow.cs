@@ -20,6 +20,23 @@ public class CameraFollow25D : MonoBehaviour
     private Vector3 targetPosition;
     private PlayerCC targetController;
 
+    public void SnapToTarget()
+    {
+        if (target == null)
+        {
+            return;
+        }
+
+        if (targetController == null)
+        {
+            targetController = target.GetComponent<PlayerCC>();
+        }
+
+        Transform followTarget = targetController != null ? targetController.GetControlTransform() : target;
+        Vector3 snappedPosition = followTarget.position + offset;
+        transform.position = new Vector3(snappedPosition.x, snappedPosition.y, offset.z);
+    }
+
     void LateUpdate()
     {
         if (target == null) return;

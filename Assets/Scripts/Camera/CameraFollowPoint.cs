@@ -16,7 +16,8 @@ public class CameraFollowPoint : MonoBehaviour
         Transform followTarget = playerController != null ? playerController.GetControlTransform() : playerTransform;
         velocityTransform = followTarget != null ? followTarget.position.y - 1 : 0f;
     }
-    void Update()
+
+    public void SnapToTarget()
     {
         if (playerTransform == null)
         {
@@ -29,6 +30,14 @@ public class CameraFollowPoint : MonoBehaviour
         }
 
         Transform followTarget = playerController != null ? playerController.GetControlTransform() : playerTransform;
-        transform.position = new Vector3(followTarget.position.x, followTarget.position.y  - cameraOffset, 0);
+        if (followTarget != null)
+        {
+            transform.position = new Vector3(followTarget.position.x, followTarget.position.y - cameraOffset, 0);
+        }
+    }
+
+    void Update()
+    {
+        SnapToTarget();
     }
 }
