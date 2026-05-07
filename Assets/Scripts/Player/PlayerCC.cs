@@ -44,6 +44,10 @@ public class PlayerCC : MonoBehaviour
     [SerializeField] private float groundSafetyRadiusPadding = 0.03f;
     [SerializeField] private bool drawGroundSafetyCheck;
 
+    [Header("前方 Trigger 移动阻挡")]
+    [SerializeField] private LayerMask directionalMoveBlockMask = ~0;
+    [SerializeField] private bool drawDirectionalMoveBlock;
+
     private float verticalVelocity;
     private Vector3 facingDirection = Vector3.right;
     private float moveXDisableTimer;
@@ -53,6 +57,7 @@ public class PlayerCC : MonoBehaviour
     private Vector3 climbExitMoveVelocity;
     private LayerMask climbExitGroundMask;
     private float climbExitGroundSnapDistance;
+    private readonly List<DirectionalMoveBlockContact> directionalMoveBlockContacts = new List<DirectionalMoveBlockContact>();
 
     [Header("状态监控")]
     public bool isGrounded;
@@ -81,6 +86,12 @@ public class PlayerCC : MonoBehaviour
     private bool climbExitDownRequested;
     private bool climbExitUpAnimationLock;
     private float climbExitUpAnimationLockTimer;
+
+    private struct DirectionalMoveBlockContact
+    {
+        public Collider other;
+        public Transform trigger;
+    }
 
     [Header("技能系统 (Slot-Based)")]
     [Tooltip("可选：调试或特殊关卡开局自带技能。正式流程可留空，移动/跳跃/冲刺由拾取和 UI 解锁。")]
@@ -163,6 +174,7 @@ public class PlayerCC : MonoBehaviour
         moveXDisableTimer = 0f;
         climbExitUpAnimationLock = false;
         climbExitUpAnimationLockTimer = 0f;
+        directionalMoveBlockContacts.Clear();
     }
 
     public void SetInputEnabled(bool enabled)
@@ -385,6 +397,45 @@ public class PlayerCC : MonoBehaviour
         GetControlTransform().forward = dir.normalized;
     }
 
+    public void EnterDirectionalMoveBlockTrigger(Collider other, Transform trigger)
+    {
+        if (!CanUseDirectionalMoveBlockContact(other, trigger))
+        {
+            return;
+        }
+
+        int index = FindDirectionalMoveBlockContact(other, trigger);
+        if (index >= 0)
+        {
+            return;
+        }
+
+        directionalMoveBlockContacts.Add(new DirectionalMoveBlockContact
+        {
+            other = other,
+            trigger = trigger
+        });
+    }
+
+    public void ExitDirectionalMoveBlockTrigger(Collider other, Transform trigger)
+    {
+        int index = FindDirectionalMoveBlockContact(other, trigger);
+        if (index >= 0)
+        {
+            directionalMoveBlockContacts.RemoveAt(index);
+        }
+    }
+
+    public bool CanUseDirectionalMoveBlockContact(Collider other, Transform trigger)
+    {
+        if (other == null || trigger == null || other.transform.IsChildOf(transform))
+        {
+            return false;
+        }
+
+        return (directionalMoveBlockMask.value & (1 << other.gameObject.layer)) != 0;
+    }
+
     public CollisionFlags MoveWithGroundProtection(Vector3 delta)
     {
         CharacterController activeController = GetCharacterController();
@@ -392,6 +443,8 @@ public class PlayerCC : MonoBehaviour
         {
             return CollisionFlags.None;
         }
+
+        delta = ApplyDirectionalMoveBlock(delta);
 
         if (!ShouldProtectGroundedSideMove(delta, activeController))
         {
@@ -662,7 +715,7 @@ public class PlayerCC : MonoBehaviour
         float step = Mathf.Min(Time.deltaTime, climbExitMoveTimer);
         SetVerticalVelocity(0f);
         SetClimbState(true, 0f);
-        GetCharacterController().Move(climbExitMoveVelocity * step);
+        MoveWithGroundProtection(climbExitMoveVelocity * step);
 
         climbExitMoveTimer -= step;
         if (climbExitMoveTimer > 0f)
@@ -717,6 +770,96 @@ public class PlayerCC : MonoBehaviour
         }
 
         return Mathf.Abs(delta.x) > 0.0001f && Mathf.Abs(delta.y) <= 0.0001f;
+    }
+
+    private Vector2 ApplyDirectionalMoveBlock(Vector2 input)
+    {
+        if (IsMoveDirectionBlocked(input.x))
+        {
+            input.x = 0f;
+        }
+
+        return input;
+    }
+
+    private Vector3 ApplyDirectionalMoveBlock(Vector3 delta)
+    {
+        if (IsMoveDirectionBlocked(delta.x))
+        {
+            delta.x = 0f;
+        }
+
+        return delta;
+    }
+
+    private bool IsMoveDirectionBlocked(float x)
+    {
+        if (Mathf.Abs(x) <= 0.0001f)
+        {
+            return false;
+        }
+
+        PruneDirectionalMoveBlockContacts();
+        float moveDirection = Mathf.Sign(x);
+        for (int i = 0; i < directionalMoveBlockContacts.Count; i++)
+        {
+            if (Mathf.Sign(GetDirectionalMoveBlockSign(directionalMoveBlockContacts[i].other)) == moveDirection)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private void PruneDirectionalMoveBlockContacts()
+    {
+        for (int i = directionalMoveBlockContacts.Count - 1; i >= 0; i--)
+        {
+            DirectionalMoveBlockContact contact = directionalMoveBlockContacts[i];
+            if (contact.other == null || contact.trigger == null || !contact.other.enabled || !CanUseDirectionalMoveBlockContact(contact.other, contact.trigger))
+            {
+                directionalMoveBlockContacts.RemoveAt(i);
+            }
+        }
+    }
+
+    private int FindDirectionalMoveBlockContact(Collider other, Transform trigger)
+    {
+        for (int i = 0; i < directionalMoveBlockContacts.Count; i++)
+        {
+            DirectionalMoveBlockContact contact = directionalMoveBlockContacts[i];
+            if (contact.other == other && contact.trigger == trigger)
+            {
+                return i;
+            }
+        }
+
+        return -1;
+    }
+
+    private float GetDirectionalMoveBlockSign(Collider other)
+    {
+        Transform activeTransform = GetControlTransform();
+        float direction = 0f;
+        if (other != null && activeTransform != null)
+        {
+            Vector3 playerPosition = activeTransform.position;
+            Vector3 closestPoint = other.ClosestPoint(playerPosition);
+            direction = closestPoint.x - playerPosition.x;
+
+            if (Mathf.Abs(direction) <= 0.0001f)
+            {
+                direction = other.bounds.center.x - playerPosition.x;
+            }
+        }
+
+        if (Mathf.Abs(direction) > 0.0001f)
+        {
+            return Mathf.Sign(direction);
+        }
+
+        return facingDirection.x >= 0f ? 1f : -1f;
     }
 
     private bool HasGroundSupport(CharacterController activeController)
@@ -812,6 +955,22 @@ public class PlayerCC : MonoBehaviour
         // 2.5D 锁定 Z 轴
         Transform activeTransform = GetControlTransform();
         activeTransform.position = new Vector3(activeTransform.position.x, activeTransform.position.y, 0);
+
+        if (drawDirectionalMoveBlock)
+        {
+            DrawDirectionalMoveBlockDebug();
+        }
+    }
+
+    private void DrawDirectionalMoveBlockDebug()
+    {
+        PruneDirectionalMoveBlockContacts();
+        Vector3 origin = GetControlTransform().position + Vector3.up * 0.5f;
+        for (int i = 0; i < directionalMoveBlockContacts.Count; i++)
+        {
+            float direction = Mathf.Sign(GetDirectionalMoveBlockSign(directionalMoveBlockContacts[i].other));
+            Debug.DrawRay(origin, Vector3.right * direction * 0.75f, Color.yellow);
+        }
     }
 
     public void UnlockNewSkill(string id)
