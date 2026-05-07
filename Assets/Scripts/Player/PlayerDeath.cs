@@ -92,6 +92,7 @@ public class PlayerDeath : MonoBehaviour
         controller.isGrounded = false;
         controller.ClearMovementLocks();
         controller.SetInputEnabled(false);
+        controller.SetDeathPresentationActive(true);
         characterController.enabled = false;
 
         Debug.Log($"<color=red>角色死亡！{respawnDelay:F1} 秒后将在存档点复活。</color>");
@@ -186,6 +187,7 @@ public class PlayerDeath : MonoBehaviour
         deathBlockedThisFrame = false;
 
         characterController.enabled = true;
+        controller.SetDeathPresentationActive(false);
         controller.SetInputEnabled(true);
         ResetRespawnCamera(previousPosition, respawnPosition);
 
