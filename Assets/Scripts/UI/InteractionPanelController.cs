@@ -8,17 +8,26 @@ public class InteractionPanelController : MonoBehaviour
 
     [Header("Panel")]
     [SerializeField] private GameObject panelRoot;
-    [SerializeField] private Image backgroundImage;
-    [SerializeField] private TMP_Text fixedText;
-    [SerializeField] private TMP_Text tmpBodyText;
-    [SerializeField] private Text legacyBodyText;
-    public CanvasAudio canvasAudio;
 
+    [Header("Background")]
+    [SerializeField] private Image backgroundImage;
+
+    [Header("Content States")]
+    [SerializeField] private GameObject fixedContent;
+
+    [SerializeField] private GameObject detailContent;
+
+    [Header("Detail Text")]
+    [SerializeField] private TMP_Text detailText;
+
+    [Header("Audio")]
+    public CanvasAudio canvasAudio;
 
     private InteractionPanelTrigger activeTrigger;
     private bool isShowingDetail;
 
     public bool IsOpen => panelRoot != null && panelRoot.activeSelf;
+
     public bool IsShowingDetail => IsOpen && isShowingDetail;
 
     private void Reset()
@@ -28,8 +37,6 @@ public class InteractionPanelController : MonoBehaviour
 
     private void Awake()
     {
-        
-
         ResolveReferences();
 
         if (Instance != null && Instance != this)
@@ -52,6 +59,9 @@ public class InteractionPanelController : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// 显示固定提示状态
+    /// </summary>
     public void ShowFixed(InteractionPanelTrigger trigger)
     {
         activeTrigger = trigger;
@@ -62,8 +72,8 @@ public class InteractionPanelController : MonoBehaviour
             backgroundImage.enabled = false;
         }
 
-        SetFixedTextVisible(true);
-        SetBodyTextVisible(false);
+        SetFixedContentVisible(true);
+        SetDetailContentVisible(false);
 
         if (panelRoot != null)
         {
@@ -71,6 +81,9 @@ public class InteractionPanelController : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// 显示详细内容状态
+    /// </summary>
     public void ShowDetail(InteractionPanelTrigger trigger, Sprite background, string bodyText)
     {
         activeTrigger = trigger;
@@ -82,14 +95,20 @@ public class InteractionPanelController : MonoBehaviour
             backgroundImage.enabled = background != null;
         }
 
-        SetFixedTextVisible(false);
+        SetFixedContentVisible(false);
+
         SetBodyText(bodyText);
-        SetBodyTextVisible(true);
+
+        SetDetailContentVisible(true);
 
         if (panelRoot != null)
         {
             panelRoot.SetActive(true);
-            canvasAudio.showNarrative();
+
+            if (canvasAudio != null)
+            {
+                canvasAudio.showNarrative();
+            }
         }
     }
 
@@ -114,44 +133,50 @@ public class InteractionPanelController : MonoBehaviour
         if (panelRoot != null)
         {
             panelRoot.SetActive(false);
+        }
+
+        if (canvasAudio != null)
+        {
             canvasAudio.closeNarrative();
         }
     }
 
+    /// <summary>
+    /// 设置正文文字
+    /// </summary>
     private void SetBodyText(string bodyText)
     {
-        if (tmpBodyText != null)
+        if (detailText != null)
         {
-            tmpBodyText.text = bodyText;
-        }
-
-        if (legacyBodyText != null)
-        {
-            legacyBodyText.text = bodyText;
+            detailText.text = bodyText;
         }
     }
 
-    private void SetFixedTextVisible(bool visible)
+    /// <summary>
+    /// 固定提示内容开关
+    /// </summary>
+    private void SetFixedContentVisible(bool visible)
     {
-        if (fixedText != null)
+        if (fixedContent != null)
         {
-            fixedText.gameObject.SetActive(visible);
+            fixedContent.SetActive(visible);
         }
     }
 
-    private void SetBodyTextVisible(bool visible)
+    /// <summary>
+    /// 详细内容开关
+    /// </summary>
+    private void SetDetailContentVisible(bool visible)
     {
-        if (tmpBodyText != null)
+        if (detailContent != null)
         {
-            tmpBodyText.gameObject.SetActive(visible);
-        }
-
-        if (legacyBodyText != null)
-        {
-            legacyBodyText.gameObject.SetActive(visible);
+            detailContent.SetActive(visible);
         }
     }
 
+    /// <summary>
+    /// 自动补引用
+    /// </summary>
     private void ResolveReferences()
     {
         if (panelRoot == null)
@@ -162,29 +187,6 @@ public class InteractionPanelController : MonoBehaviour
         if (backgroundImage == null)
         {
             backgroundImage = GetComponentInChildren<Image>(true);
-        }
-
-        if (tmpBodyText == null)
-        {
-            TMP_Text[] tmpTexts = GetComponentsInChildren<TMP_Text>(true);
-            if (tmpTexts.Length > 0)
-            {
-                tmpBodyText = tmpTexts[0];
-            }
-
-            if (fixedText == null && tmpTexts.Length > 1)
-            {
-                fixedText = tmpTexts[1];
-            }
-        }
-
-        if (legacyBodyText == null)
-        {
-            Text[] legacyTexts = GetComponentsInChildren<Text>(true);
-            if (legacyTexts.Length > 0)
-            {
-                legacyBodyText = legacyTexts[0];
-            }
         }
     }
 }

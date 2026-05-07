@@ -122,6 +122,18 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
+--- !u!114 &128885446 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 1016506089811331038, guid: 4552bfaa0509f6c4882bd57e04aa008f,
+    type: 3}
+  m_PrefabInstance: {fileID: 6694885119736249614}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 153c6dec3dc42d849a9f23e1c761b21a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &265226847
 GameObject:
   m_ObjectHideFlags: 0
@@ -783,18 +795,6 @@ Camera:
     type: 3}
   m_PrefabInstance: {fileID: 579127892}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &1167975358 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 6891943954406921256, guid: 161888dbaa9a7c24591e658043e312d3,
-    type: 3}
-  m_PrefabInstance: {fileID: 2906839644035852416}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7c81d14c13fd4c24ba3c91242e5edb70, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!1 &1276224261
 GameObject:
   m_ObjectHideFlags: 0
@@ -1747,7 +1747,7 @@ PrefabInstance:
         type: 3}
       propertyPath: panelController
       value: 
-      objectReference: {fileID: 1167975358}
+      objectReference: {fileID: 0}
     - target: {fileID: 6564356632576662083, guid: cbdd2a194c3e184449ac1acaa262e647,
         type: 3}
       propertyPath: m_Name
@@ -1838,7 +1838,7 @@ PrefabInstance:
         type: 3}
       propertyPath: panelController
       value: 
-      objectReference: {fileID: 1167975358}
+      objectReference: {fileID: 0}
     - target: {fileID: 6134144535759679706, guid: 66d6c84d7ec0e1c43a72ca414e139ddf,
         type: 3}
       propertyPath: m_LocalPosition.x
@@ -2389,7 +2389,7 @@ PrefabInstance:
         type: 3}
       propertyPath: panelController
       value: 
-      objectReference: {fileID: 1167975358}
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -2407,7 +2407,7 @@ PrefabInstance:
         type: 3}
       propertyPath: panelController
       value: 
-      objectReference: {fileID: 1167975358}
+      objectReference: {fileID: 0}
     - target: {fileID: 7650355506273058329, guid: bf836e336c793104282e452f021c6ab5,
         type: 3}
       propertyPath: m_Name
@@ -2619,6 +2619,11 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 9114328982574220657, guid: 3d3abe984d450e349a3c0535efd2c7fb,
+        type: 3}
+      propertyPath: testClimb
+      value: 
+      objectReference: {fileID: 128885446}
     - target: {fileID: 9114328982574220657, guid: 3d3abe984d450e349a3c0535efd2c7fb,
         type: 3}
       propertyPath: ultraDashSFX

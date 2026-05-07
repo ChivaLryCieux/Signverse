@@ -8,7 +8,8 @@ using System;
 public class PlayerCC : MonoBehaviour
 {
     private const float MinClimbExitUpInputLockDuration = 3f;
-
+    public AudioSource audioSource;
+    public AudioClip deathSFX;
 
     public enum Posture
     {
@@ -666,6 +667,7 @@ public class PlayerCC : MonoBehaviour
         ResolveDeathSign();
         if (deathSign != null)
         {
+            audioSource.PlayOneShot(deathSFX);
             deathSign.gameObject.SetActive(visible);
         }
     }
