@@ -25,6 +25,8 @@ namespace Skills
         private Vector3 dashDirection;
         private bool isDashing;
 
+        protected virtual float DashDistance => dashDistance;
+
         public override void OnActivate(GameObject user, PlayerCC controller, PlayerCC.Posture posture)
         {
             if (posture == PlayerCC.Posture.Climbing)
@@ -124,7 +126,7 @@ namespace Skills
             float posture = EvaluateDashPosture(normalizedTime);
             controller.SetDashPosture(posture);
 
-            Vector3 dashDelta = dashDirection * (dashDistance * posture / (dashCurveArea * actualDuration)) * step;
+            Vector3 dashDelta = dashDirection * (DashDistance * posture / (dashCurveArea * actualDuration)) * step;
             CollisionFlags flags = controller.MoveWithGroundProtection(dashDelta);
 
             if ((flags & (CollisionFlags.Sides | CollisionFlags.Above)) != 0 || dashTimer <= 0f)

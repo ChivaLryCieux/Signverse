@@ -48,6 +48,13 @@ public class PickupUIController : MonoBehaviour
     [SerializeField] private bool removePreviousLinkedSkills = true;
     [SerializeField] private bool allowPrefixFallback = true;
 
+    [Header("Bolt 点数")]
+    [SerializeField] private BoltPanelController boltPanel;
+    [SerializeField] private int firstSkillBoltCost = 1;
+    [SerializeField] private int secondSkillBoltCost = 1;
+    [SerializeField] private int thirdSkillBoltCost = 2;
+    [SerializeField] private int fourthSkillBoltCost = 3;
+
     public event Action<PickupItemId> ItemUnlocked;
     public event Action<PickupItemId> ItemEquipped;
     public event Action<PickupItemId> ItemUnequipped;
@@ -82,9 +89,11 @@ public class PickupUIController : MonoBehaviour
 
         BuildEntries();
         ResolveSkillReferences();
+        ResolveBoltPanel();
         RefreshAllSlots();
         RefreshUnlockedSlots();
         RefreshEquippedSlots();
+        SyncBoltSpend();
         SyncLinkedSkills();
     }
 
@@ -162,12 +171,12 @@ public class PickupUIController : MonoBehaviour
             return;
         }
 
-        if (!entryById.ContainsKey(id))
+        if (!entryById.TryGetValue(id, out PickupUiEntry entry))
         {
             return;
         }
 
-        if (entryById.TryGetValue(id, out PickupUiEntry entry) && IsMimicIndex(GetRightSideIndex(entry)) && !hasMimicTarget)
+        if (IsMimicIndex(GetRightSideIndex(entry)) && !hasMimicTarget)
         {
             BeginMimicTargetSelection();
             return;
@@ -178,6 +187,8 @@ public class PickupUIController : MonoBehaviour
             ClearSelectedUnlockItem();
             return;
         }
+
+        PreviewBoltCost(entry);
 
         hasSelectedUnlockItem = true;
         selectedUnlockItem = id;
@@ -227,12 +238,23 @@ public class PickupUIController : MonoBehaviour
 
         bool replacedExistingItem = equippedSlotOccupied[equippedIndex];
         PickupItemId replacedItem = replacedExistingItem ? equippedSlotItems[equippedIndex] : default(PickupItemId);
+        int replacedCost = replacedExistingItem ? GetEquippedItemBoltCost(replacedItem) : 0;
+        int itemCost = GetEquippedItemBoltCost(itemToEquip);
+
+        ResolveBoltPanel();
+        if (boltPanel != null && itemCost > boltPanel.AvailableCount + replacedCost)
+        {
+            boltPanel.ShowInsufficient();
+            RefreshUnlockedSlots();
+            return;
+        }
 
         equippedSlotItems[equippedIndex] = itemToEquip;
         equippedSlotOccupied[equippedIndex] = true;
 
         ClearSelectedUnlockItem();
         RefreshEquippedSlots();
+        SyncBoltSpend();
         SyncLinkedSkills();
 
         if (replacedExistingItem)
@@ -255,6 +277,7 @@ public class PickupUIController : MonoBehaviour
 
         RefreshUnlockedSlots();
         RefreshEquippedSlots();
+        SyncBoltSpend();
         SyncLinkedSkills();
 
         ItemUnequipped?.Invoke(removedItem);
@@ -300,6 +323,21 @@ public class PickupUIController : MonoBehaviour
         if (skillDatabase == null && player != null)
         {
             skillDatabase = player.masterDatabase;
+        }
+    }
+
+    private void ResolveBoltPanel()
+    {
+        if (boltPanel != null)
+        {
+            return;
+        }
+
+        boltPanel = BoltPanelController.Instance;
+
+        if (boltPanel == null)
+        {
+            boltPanel = FindObjectOfType<BoltPanelController>();
         }
     }
 
@@ -438,6 +476,17 @@ public class PickupUIController : MonoBehaviour
 
         // Lry的修改：把装备槽推导出的技能同步到 PlayerCC。动画脚本不再需要读取 UI 私有状态，只读取 PlayerCC.equippedSkills。
         player.SetEquippedSkills(equippedSkillSnapshot);
+    }
+
+    private void SyncBoltSpend()
+    {
+        ResolveBoltPanel();
+        if (boltPanel == null)
+        {
+            return;
+        }
+
+        boltPanel.SetSpentCount(CalculateEquippedBoltCost());
     }
 
     private void AddLinkedSkillForPair(int mainSlotNumber, int subSlotNumber)
@@ -593,9 +642,77 @@ public class PickupUIController : MonoBehaviour
         return entry.rightSideIndex > 0 ? entry.rightSideIndex : ((int)entry.id + 1);
     }
 
+    private void PreviewBoltCost(PickupUiEntry entry)
+    {
+        int cost = GetBoltCost(entry);
+        if (cost <= 0)
+        {
+            return;
+        }
+
+        ResolveBoltPanel();
+        if (boltPanel == null)
+        {
+            return;
+        }
+
+        if (cost > boltPanel.AvailableCount)
+        {
+            boltPanel.ShowInsufficient();
+            return;
+        }
+
+        boltPanel.PreviewCost(cost);
+    }
+
+    private int CalculateEquippedBoltCost()
+    {
+        int total = 0;
+        EnsureEquippedStateArrays();
+
+        for (int i = 0; i < equippedSlotItems.Length; i++)
+        {
+            if (equippedSlotOccupied[i])
+            {
+                total += GetEquippedItemBoltCost(equippedSlotItems[i]);
+            }
+        }
+
+        return total;
+    }
+
+    private int GetEquippedItemBoltCost(PickupItemId id)
+    {
+        return entryById.TryGetValue(id, out PickupUiEntry entry) ? GetBoltCost(entry) : 0;
+    }
+
+    private int GetBoltCost(PickupUiEntry entry)
+    {
+        int rightSideIndex = GetEffectiveRightSideIndex(entry);
+        switch (rightSideIndex)
+        {
+            case 1:
+                return Mathf.Max(0, firstSkillBoltCost);
+            case 2:
+                return Mathf.Max(0, secondSkillBoltCost);
+            case 3:
+                return Mathf.Max(0, thirdSkillBoltCost);
+            case 4:
+                return Mathf.Max(0, fourthSkillBoltCost);
+            default:
+                return 0;
+        }
+    }
+
     private void ClearSelectedUnlockItem()
     {
         hasSelectedUnlockItem = false;
+        ResolveBoltPanel();
+        if (boltPanel != null)
+        {
+            boltPanel.ClearPreview();
+        }
+
         RefreshUnlockedSlots();
     }
 
@@ -603,8 +720,17 @@ public class PickupUIController : MonoBehaviour
     {
         hasSelectedUnlockItem = false;
         selectingMimicTarget = true;
+        ResolveBoltPanel();
+        if (boltPanel != null)
+        {
+            boltPanel.ClearPreview();
+        }
+
         RefreshUnlockedSlots();
-        constantSoundAudioSource.Play();
+        if (constantSoundAudioSource != null)
+        {
+            constantSoundAudioSource.Play();
+        }
     }
 
     private void CompleteMimicTargetSelection(PickupUiEntry targetEntry)
@@ -627,10 +753,14 @@ public class PickupUIController : MonoBehaviour
         hasSelectedUnlockItem = false;
 
         PlayMimicSfx(mimicSuccessSfx);
-        constantSoundAudioSource.Stop();
+        if (constantSoundAudioSource != null)
+        {
+            constantSoundAudioSource.Stop();
+        }
 
         RefreshUnlockedSlots();
         RefreshEquippedSlots();
+        SyncBoltSpend();
         SyncLinkedSkills();
     }
 
@@ -644,6 +774,7 @@ public class PickupUIController : MonoBehaviour
 
         RefreshUnlockedSlots();
         RefreshEquippedSlots();
+        SyncBoltSpend();
         SyncLinkedSkills();
     }
 

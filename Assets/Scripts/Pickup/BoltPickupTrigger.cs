@@ -13,6 +13,7 @@ public class BoltPickupTrigger : MonoBehaviour
 
     private bool playerInRange;
     private bool collected;
+    private bool tipShown;
     private PlayerCC player;
 
     private void Reset()
@@ -33,6 +34,11 @@ public class BoltPickupTrigger : MonoBehaviour
     private void Awake()
     {
         ResolveReferences();
+    }
+
+    private void OnDisable()
+    {
+        HideTip();
     }
 
     private void Update()
@@ -62,10 +68,7 @@ public class BoltPickupTrigger : MonoBehaviour
         playerInRange = true;
         ResolveReferences();
 
-        if (tipController != null)
-        {
-            tipController.Show();
-        }
+        ShowTip();
     }
 
     private void OnTriggerExit(Collider other)
@@ -79,10 +82,7 @@ public class BoltPickupTrigger : MonoBehaviour
         playerInRange = false;
         player = null;
 
-        if (tipController != null)
-        {
-            tipController.Hide();
-        }
+        HideTip();
     }
 
     private void TryCollect()
@@ -103,10 +103,7 @@ public class BoltPickupTrigger : MonoBehaviour
         collected = true;
         playerInRange = false;
 
-        if (tipController != null)
-        {
-            tipController.Hide();
-        }
+        HideTip();
 
         if (destroyAfterPickup)
         {
@@ -121,6 +118,37 @@ public class BoltPickupTrigger : MonoBehaviour
     private bool WasInteractPressed()
     {
         return Keyboard.current != null && Keyboard.current.eKey.wasPressedThisFrame;
+    }
+
+    private void ShowTip()
+    {
+        if (tipShown)
+        {
+            return;
+        }
+
+        ResolveReferences();
+        if (tipController == null)
+        {
+            return;
+        }
+
+        tipShown = true;
+        tipController.Show();
+    }
+
+    private void HideTip()
+    {
+        if (!tipShown)
+        {
+            return;
+        }
+
+        tipShown = false;
+        if (tipController != null)
+        {
+            tipController.Hide();
+        }
     }
 
     private void ResolveReferences()

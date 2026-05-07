@@ -27,9 +27,17 @@ public class PlayerCC : MonoBehaviour
     private Transform controlProxyTransform;
     private readonly List<Collider> disabledOwnerCollidersForProxy = new List<Collider>();
     private bool ownerControllerEnabledBeforeProxy;
+    private readonly Dictionary<Renderer, bool> rendererVisibilityBeforeDeath = new Dictionary<Renderer, bool>();
+    private readonly List<Collider> disabledCollidersForDeath = new List<Collider>();
+    private bool deathPresentationActive;
 
     [Header("动画引用")]
     [SerializeField] private Animator animator;
+
+    [Header("死亡表现")]
+    [SerializeField] private Transform deathSign;
+    [SerializeField] private string deathSignName = "DeathSign";
+    [SerializeField] private bool hideDeathSignOnAwake = true;
 
     [Header("物理参数")]
     public float gravity = -25f;
@@ -200,6 +208,29 @@ public class PlayerCC : MonoBehaviour
     public void DisableInput()
     {
         SetInputEnabled(false);
+    }
+
+    public void SetDeathPresentationActive(bool active)
+    {
+        if (deathPresentationActive == active)
+        {
+            return;
+        }
+
+        deathPresentationActive = active;
+
+        if (active)
+        {
+            ShowDeathSign(true);
+            HidePlayerRenderersForDeath();
+            DisablePlayerCollidersForDeath();
+        }
+        else
+        {
+            RestorePlayerCollidersAfterDeath();
+            RestorePlayerRenderersAfterDeath();
+            ShowDeathSign(false);
+        }
     }
 
     public void SetClimbState(bool climbing, float input)
@@ -611,6 +642,103 @@ public class PlayerCC : MonoBehaviour
         disabledOwnerCollidersForProxy.Clear();
     }
 
+    private void ResolveDeathSign()
+    {
+        if (deathSign != null)
+        {
+            return;
+        }
+
+        Transform[] children = GetComponentsInChildren<Transform>(true);
+        for (int i = 0; i < children.Length; i++)
+        {
+            Transform child = children[i];
+            if (child != null && string.Equals(child.name, deathSignName, StringComparison.OrdinalIgnoreCase))
+            {
+                deathSign = child;
+                return;
+            }
+        }
+    }
+
+    private void ShowDeathSign(bool visible)
+    {
+        ResolveDeathSign();
+        if (deathSign != null)
+        {
+            deathSign.gameObject.SetActive(visible);
+        }
+    }
+
+    private void HidePlayerRenderersForDeath()
+    {
+        rendererVisibilityBeforeDeath.Clear();
+
+        Renderer[] renderers = GetComponentsInChildren<Renderer>(true);
+        for (int i = 0; i < renderers.Length; i++)
+        {
+            Renderer targetRenderer = renderers[i];
+            if (targetRenderer == null || IsPartOfDeathSign(targetRenderer.transform))
+            {
+                continue;
+            }
+
+            rendererVisibilityBeforeDeath[targetRenderer] = targetRenderer.enabled;
+            targetRenderer.enabled = false;
+        }
+    }
+
+    private void RestorePlayerRenderersAfterDeath()
+    {
+        foreach (KeyValuePair<Renderer, bool> entry in rendererVisibilityBeforeDeath)
+        {
+            if (entry.Key != null)
+            {
+                entry.Key.enabled = entry.Value;
+            }
+        }
+
+        rendererVisibilityBeforeDeath.Clear();
+    }
+
+    private void DisablePlayerCollidersForDeath()
+    {
+        disabledCollidersForDeath.Clear();
+
+        Collider[] colliders = GetComponentsInChildren<Collider>(true);
+        for (int i = 0; i < colliders.Length; i++)
+        {
+            Collider targetCollider = colliders[i];
+            if (targetCollider == null || !targetCollider.enabled || IsPartOfDeathSign(targetCollider.transform))
+            {
+                continue;
+            }
+
+            targetCollider.enabled = false;
+            disabledCollidersForDeath.Add(targetCollider);
+        }
+    }
+
+    private void RestorePlayerCollidersAfterDeath()
+    {
+        for (int i = 0; i < disabledCollidersForDeath.Count; i++)
+        {
+            Collider targetCollider = disabledCollidersForDeath[i];
+            if (targetCollider != null)
+            {
+                targetCollider.enabled = true;
+            }
+        }
+
+        disabledCollidersForDeath.Clear();
+    }
+
+    private bool IsPartOfDeathSign(Transform target)
+    {
+        ResolveDeathSign();
+        return deathSign != null && target != null && target.IsChildOf(deathSign);
+    }
+
     void Awake()
     {
         cc = GetComponent<CharacterController>();
@@ -622,6 +750,12 @@ public class PlayerCC : MonoBehaviour
         }
 
         controls = new PlayerControls();
+        ResolveDeathSign();
+        if (hideDeathSignOnAwake)
+        {
+            ShowDeathSign(false);
+        }
+
         isGrounded = false;
         CurrentPosture = Posture.Airborne;
         SetClimbState(false, 0f);

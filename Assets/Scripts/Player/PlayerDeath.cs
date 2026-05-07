@@ -19,6 +19,7 @@ public class PlayerDeath : MonoBehaviour
 
     private PlayerCC controller;
     private CharacterController characterController;
+    private PlayerCameraRespawnReset cameraRespawnReset;
     private float airStartY;
     private bool wasGrounded;
     private float invincibleUntil;
@@ -34,6 +35,12 @@ public class PlayerDeath : MonoBehaviour
     {
         controller = GetComponent<PlayerCC>();
         characterController = GetComponent<CharacterController>();
+        cameraRespawnReset = GetComponent<PlayerCameraRespawnReset>();
+        if (cameraRespawnReset == null)
+        {
+            cameraRespawnReset = gameObject.AddComponent<PlayerCameraRespawnReset>();
+        }
+
         currentCheckpoint = transform.position;
     }
 
@@ -85,6 +92,7 @@ public class PlayerDeath : MonoBehaviour
         controller.isGrounded = false;
         controller.ClearMovementLocks();
         controller.SetInputEnabled(false);
+        controller.SetDeathPresentationActive(true);
         characterController.enabled = false;
 
         Debug.Log($"<color=red>角色死亡！{respawnDelay:F1} 秒后将在存档点复活。</color>");
@@ -160,6 +168,7 @@ public class PlayerDeath : MonoBehaviour
 
     private void RespawnAtCheckpoint()
     {
+        Vector3 previousPosition = transform.position;
         Vector3 respawnPosition = new Vector3(currentCheckpoint.x, currentCheckpoint.y, 0f);
 
         transform.position = respawnPosition;
@@ -178,8 +187,23 @@ public class PlayerDeath : MonoBehaviour
         deathBlockedThisFrame = false;
 
         characterController.enabled = true;
+        controller.SetDeathPresentationActive(false);
         controller.SetInputEnabled(true);
+        ResetRespawnCamera(previousPosition, respawnPosition);
 
         Debug.Log("<color=cyan>角色已在存档点复活。</color>");
+    }
+
+    private void ResetRespawnCamera(Vector3 previousPosition, Vector3 respawnPosition)
+    {
+        if (cameraRespawnReset == null)
+        {
+            cameraRespawnReset = GetComponent<PlayerCameraRespawnReset>();
+        }
+
+        if (cameraRespawnReset != null)
+        {
+            cameraRespawnReset.ResetAfterRespawn(previousPosition, respawnPosition);
+        }
     }
 }
