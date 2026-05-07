@@ -704,7 +704,7 @@ public class AnimatorStateDebugger : MonoBehaviour
             cachedGravity = controller.gravity;
             hasCachedGravity = true;
         }
-
+        Debug.Log("gravity");
         controller.gravity = 0f;
         controller.SetVerticalVelocity(0f);
     }

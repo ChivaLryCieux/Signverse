@@ -43,8 +43,10 @@ public class TestClimb : MonoBehaviour
 
     void OnTriggerEnter(Collider other)
     {
+        Debug.Log("entered");
         if (other.CompareTag("Player") )
         {
+            Debug.Log("playered");
             if (playerCC == null)
             {
                 playerCC = other.GetComponentInParent<PlayerCC>();
@@ -57,6 +59,7 @@ public class TestClimb : MonoBehaviour
 
             if (playerCC != null)
             {
+                playerCC.SetClimbState(true, 0f);
                 playerCC.SetInputEnabled(false);
                 Vector2 moveOffset = exitUpOffset;
                 float moveDuration = exitUpDuration;
@@ -76,7 +79,9 @@ public class TestClimb : MonoBehaviour
             
             if (animator != null)
             {
+                playerCC.SetClimbState(true, 0f);
                 animator.SetBool("Climb_Exit_Up" , true);
+                Debug.Log("ok");
             }
             
             StartCoroutine(InputControlRoutine());

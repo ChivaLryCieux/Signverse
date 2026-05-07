@@ -337,7 +337,7 @@ namespace Skills
             //     return;
             // }
 
-            Debug.Log($"[Skill12MJClimb] {message}", controller);
+            // Debug.Log($"[Skill12MJClimb] {message}", controller);
         }
 
         // 统一关闭 PlayerCC 的攀爬状态。
