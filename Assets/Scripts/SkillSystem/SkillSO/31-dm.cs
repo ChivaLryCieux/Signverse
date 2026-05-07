@@ -3,13 +3,14 @@ using UnityEngine;
 namespace Skills
 {
     [CreateAssetMenu(fileName = "31-dm", menuName = "Game/Skills/31 DM Dash Distance Up")]
-    public class Skill31DMDashDistanceUp : Skill33DDUltraDash
+    public class Skill31DMDashDistanceUp : Skill30StdDash
     {
         // ===== 元数据 =====
 
         // ===== 物理控制 =====
-        protected override float DashSpeed => 24f;
-        protected override bool UsesUltraDashAnimation => false;
+        [SerializeField] private float upgradedDashDistance = 14f;
+
+        protected override float DashDistance => upgradedDashDistance;
 
         // ===== 动画控制 =====
     }
