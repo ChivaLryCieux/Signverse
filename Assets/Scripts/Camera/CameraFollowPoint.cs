@@ -8,7 +8,7 @@ public class CameraFollowPoint : MonoBehaviour
 {
     [SerializeField] Transform playerTransform;
     [SerializeField] float cameraOffset = 0f;
-    [SerializeField] Vector3 cameraOffsetFromPoint = new Vector3(5.869836f, -7.93083f, 1.726473f);
+    [SerializeField] Vector3 cameraOffsetFromPoint = new Vector3(-0.167f, 1.443f, -9.89f);
     [SerializeField] bool lockLinkedCamerasToOffset = true;
 
     float velocityTransform;
