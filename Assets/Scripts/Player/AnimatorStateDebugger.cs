@@ -10,6 +10,11 @@ public class AnimatorStateDebugger : MonoBehaviour
     // 临时缓存 PlayerCC 原始重力，避免恢复时写死数值。
     private float cachedGravity;
 
+    [Header("Jump Charge")]
+    [SerializeField] private float maxJumpChargeTime = 1.5f;
+
+    private bool isChargingJump;
+    private float jumpChargeNormalized;
     // 标记是否已经缓存过重力，防止重复调用时把 0 当成原始重力。
     private bool hasCachedGravity;
     [Header("核心引用")]
@@ -400,6 +405,7 @@ public class AnimatorStateDebugger : MonoBehaviour
     // Lry的修改：Jump/VerticalVelocity 由物理层真实速度驱动。这里与原 jumpHold 曲线冲突：原曲线是测试用 procedural animation parameter，不代表 CharacterController 的真实起落速度。
     void HandleJumpFromPlayerCC()
     {
+        
         // 1️⃣ 判断是否在空中 → 控制 Jump Bool
         if(currentPosture == Posture.Airborne)
         {
@@ -419,6 +425,7 @@ public class AnimatorStateDebugger : MonoBehaviour
         }
         if(currentPosture == Posture.Grounded)
         {
+            
             bool jumpPressed = jumpAxis > 0f;
             
             if (HasEquippedSkill("20-StdJump")  || HasEquippedSkill("22-jj"))
@@ -455,6 +462,9 @@ public class AnimatorStateDebugger : MonoBehaviour
                 {
                     float holdTime = Time.time - jumpPressStartTime;
 
+                    //========================
+                    // 长按检测（蓄力音）
+                    //========================
                     if (holdTime >= longPressThreshold && !hasTriggeredChargeSFX)
                     {
                         hasTriggeredChargeSFX = true;
@@ -463,6 +473,7 @@ public class AnimatorStateDebugger : MonoBehaviour
                         {
                             audioSource.PlayOneShot(jumpHoldSFX);
                         }
+                        
                     }
                 }
 
@@ -480,6 +491,7 @@ public class AnimatorStateDebugger : MonoBehaviour
                         audioSource.Stop();
                         audioSource.PlayOneShot(jumpSFX);
                         if(HasEquippedSkill("23-jd"))  audioSource.PlayOneShot(jumpBoostSFX);
+                        
                     }
                 }
 

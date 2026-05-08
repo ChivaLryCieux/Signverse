@@ -78,8 +78,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   playerTransform: {fileID: 1150442017236008130}
   cameraOffset: -1.23
-  cameraOffsetFromPoint: {x: 0, y: 2.02, z: -7.73}
-  lockLinkedCamerasToOffset: 1
 --- !u!1 &155002486079242318
 GameObject:
   m_ObjectHideFlags: 0
@@ -922,7 +920,7 @@ Transform:
   m_GameObject: {fileID: 1149113967884882768}
   serializedVersion: 2
   m_LocalRotation: {x: 0.07236338, y: 0.008459767, z: -0.0006138087, w: 0.9973423}
-  m_LocalPosition: {x: -0.16760254, y: 2.3813553, z: -9.892944}
+  m_LocalPosition: {x: -0.1675415, y: 2.3813515, z: -9.892944}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -1273,7 +1271,7 @@ Transform:
   m_GameObject: {fileID: 1592427855050780527}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: 0.7071068, z: -0, w: 0.7071068}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: 0, y: 0, z: -0}
   m_LocalScale: {x: 1.242, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -1339,6 +1337,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d32f1993a53126c3a998c1d879d477f6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  isClimbInvincible: 0
   audioSource: {fileID: 0}
   deathSFX: {fileID: 0}
   cc: {fileID: 0}
@@ -1926,6 +1925,12 @@ MonoBehaviour:
   invisibleWeight: 1
   requestTimeout: 0.15
   hideRenderersWhileCloaked: 1
+  ignoreWaterCollidersWhileCloaked: 1
+  dieIfCloakEndsInsideWater: 1
+  waterTags:
+  - Water
+  - water
+  waterColliderRefreshInterval: 0.25
   cloakSfx: {fileID: 8300000, guid: 1f0333472cdd96143a78d409c2f3481f, type: 3}
   cloakSfxVolume: 1
 --- !u!114 &7609777647483254863
@@ -1940,13 +1945,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 79b8e7ee609b69d4282534c87405ecc8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  maxJumpChargeTime: 1.5
   animator: {fileID: 8376494352301127695}
   audioSource: {fileID: 0}
   controller: {fileID: 3231404106518263102}
   dashSFX: {fileID: 0}
   ultraDashSFX: {fileID: 0}
   jumpSFX: {fileID: 0}
+  jumpHoldSFX: {fileID: 0}
+  jumpBoostSFX: {fileID: 0}
   groundedSFX: {fileID: 0}
+  longPressThreshold: 0.15
   equippedSkills: []
   currentPosture: 0
   usePlayerCCState: 1
@@ -1994,6 +2003,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d32f1993a53126c3a998c1d879d477f6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  isClimbInvincible: 0
   audioSource: {fileID: 0}
   deathSFX: {fileID: 0}
   cc: {fileID: 7328401899107123119}
@@ -3388,7 +3398,7 @@ Transform:
   m_GameObject: {fileID: 6495775797186656827}
   serializedVersion: 2
   m_LocalRotation: {x: 0.064457096, y: -0.4534013, z: 0.03289748, w: 0.8883639}
-  m_LocalPosition: {x: 3.3135986, y: 1.2013721, z: -2.8245497}
+  m_LocalPosition: {x: 3.3135986, y: 1.2013664, z: -2.8245618}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -3806,7 +3816,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &7837530994086408323
 Transform:
   m_ObjectHideFlags: 0
@@ -4291,6 +4301,7 @@ GameObject:
   - component: {fileID: 2700260223173447758}
   - component: {fileID: 7044257517534222107}
   - component: {fileID: 9002573486119968125}
+  - component: {fileID: 3234838176601691774}
   m_Layer: 0
   m_Name: PlayerModel
   m_TagString: Player
@@ -4358,6 +4369,12 @@ MonoBehaviour:
   invisibleWeight: 1
   requestTimeout: 0.15
   hideRenderersWhileCloaked: 1
+  ignoreWaterCollidersWhileCloaked: 1
+  dieIfCloakEndsInsideWater: 1
+  waterTags:
+  - Water
+  - water
+  waterColliderRefreshInterval: 0.25
   cloakSfx: {fileID: 8300000, guid: 1f0333472cdd96143a78d409c2f3481f, type: 3}
   cloakSfxVolume: 1
 --- !u!114 &8822816916050314392
@@ -4417,13 +4434,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 79b8e7ee609b69d4282534c87405ecc8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  maxJumpChargeTime: 1.5
   animator: {fileID: 4366372259605253898}
   audioSource: {fileID: 9002573486119968125}
   controller: {fileID: 2700260223173447758}
   dashSFX: {fileID: 8300000, guid: a98b6399dc1ba584188cea8e096d4193, type: 3}
   ultraDashSFX: {fileID: 8300000, guid: e4b3448a0de5535439dd0aeeb17ac2f4, type: 3}
   jumpSFX: {fileID: 8300000, guid: fdc23900412ccc249b8270b79d476d03, type: 3}
+  jumpHoldSFX: {fileID: 8300000, guid: 5741db2f4d15d4048bf52d481f2bddf6, type: 3}
+  jumpBoostSFX: {fileID: 8300000, guid: 85e58ea881fdca848b2853d20a4b78a1, type: 3}
   groundedSFX: {fileID: 8300000, guid: 5db89d63cba49d142844ef2aef31efbf, type: 3}
+  longPressThreshold: 0.15
   equippedSkills: []
   currentPosture: 0
   usePlayerCCState: 1
@@ -4471,6 +4492,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d32f1993a53126c3a998c1d879d477f6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  isClimbInvincible: 0
   audioSource: {fileID: 9002573486119968125}
   deathSFX: {fileID: 8300000, guid: c41b0d8047c4ccc47aee93ae09aeadab, type: 3}
   cc: {fileID: 8672346852895499661}
@@ -4625,6 +4647,24 @@ AudioSource:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
+--- !u!114 &3234838176601691774
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7854750620454331124}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 111fccee19901cc46a5bc06c66c150bd, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  controller: {fileID: 0}
+  rayDistance: 1.5
+  groundLayer:
+    serializedVersion: 2
+    m_Bits: 8
+  invincibleTime: 0.2
 --- !u!1 &7891016166851358082
 GameObject:
   m_ObjectHideFlags: 0
@@ -4715,7 +4755,7 @@ Transform:
   m_GameObject: {fileID: 7900270276517895118}
   serializedVersion: 2
   m_LocalRotation: {x: 0.07091771, y: 0.1985965, z: -0.014409578, w: 0.977406}
-  m_LocalPosition: {x: 0.6385498, y: 2.3813686, z: -6.509713}
+  m_LocalPosition: {x: 0.63848877, y: 2.3813686, z: -6.50969}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -5497,7 +5537,7 @@ Transform:
   m_GameObject: {fileID: 9151517648053959098}
   serializedVersion: 2
   m_LocalRotation: {x: 0.07538822, y: 0, z: 0, w: 0.9971543}
-  m_LocalPosition: {x: 0.7402344, y: 1.4413033, z: -3.5154383}
+  m_LocalPosition: {x: 0.74035645, y: 1.4413033, z: -3.5154386}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -5708,6 +5748,11 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Name
       value: Dash
+      objectReference: {fileID: 0}
+    - target: {fileID: 4831629427782886822, guid: ee2e7dd02ce3aebdba807898838bba23,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 5642037311599748483, guid: ee2e7dd02ce3aebdba807898838bba23,
         type: 3}
