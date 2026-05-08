@@ -5,6 +5,8 @@ using UnityEngine;
 [RequireComponent(typeof(CharacterController))]
 public class PlayerDeath : MonoBehaviour
 {
+    private const string HazardousTag = "Hazardous";
+
     [Header("摔死检测")]
     public float deathDistance = 8.0f;
     public float respawnDelay = 3.0f;
@@ -123,6 +125,31 @@ public class PlayerDeath : MonoBehaviour
 
         deathBlockedThisFrame = false;
         return true;
+    }
+
+    private void OnControllerColliderHit(ControllerColliderHit hit)
+    {
+        TryDieFromHazard(hit.collider);
+    }
+
+    private void OnTriggerEnter(Collider other)
+    {
+        TryDieFromHazard(other);
+    }
+
+    private void OnCollisionEnter(Collision collision)
+    {
+        TryDieFromHazard(collision.collider);
+    }
+
+    private void TryDieFromHazard(Collider hazardCollider)
+    {
+        if (isDead || hazardCollider == null || !hazardCollider.CompareTag(HazardousTag))
+        {
+            return;
+        }
+
+        Die();
     }
 
     private void CheckElectricFloor()
