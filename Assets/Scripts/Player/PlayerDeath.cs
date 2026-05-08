@@ -5,6 +5,7 @@ using UnityEngine;
 [RequireComponent(typeof(CharacterController))]
 public class PlayerDeath : MonoBehaviour
 {
+
     private const string HazardousTag = "Hazardous";
 
     [Header("摔死检测")]
@@ -180,6 +181,7 @@ public class PlayerDeath : MonoBehaviour
             float fallHeight = airStartY - transform.position.y;
             if (fallHeight > deathDistance)
             {
+                if(controller.isClimbInvincible) return;
                 Die();
             }
         }

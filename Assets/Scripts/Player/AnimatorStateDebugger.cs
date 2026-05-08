@@ -21,8 +21,19 @@ public class AnimatorStateDebugger : MonoBehaviour
     public AudioClip dashSFX;
     public AudioClip ultraDashSFX;
     public AudioClip jumpSFX;
+    public AudioClip jumpHoldSFX;
+    public AudioClip jumpBoostSFX;
+    
     public AudioClip groundedSFX;
 
+    [Header("jump长按判定")]
+    public float longPressThreshold = 0.15f;
+
+    private bool wasJumpPressed;
+
+    private float jumpPressStartTime;
+
+    private bool hasTriggeredChargeSFX;
     
     // [Header("落地音效冷却（秒）")]
     // public float landingCooldown = 0.15f;
@@ -408,15 +419,71 @@ public class AnimatorStateDebugger : MonoBehaviour
         }
         if(currentPosture == Posture.Grounded)
         {
+            bool jumpPressed = jumpAxis > 0f;
             
-            if (HasEquippedSkill("20-StdJump") || HasEquippedSkill("21-jm")  || HasEquippedSkill("22-jj") || HasEquippedSkill("23-jd"))
+            if (HasEquippedSkill("20-StdJump")  || HasEquippedSkill("22-jj"))
             {
-                if(currentPosture == Posture.Grounded && jumpAxis > 0f)
+                if(currentPosture == Posture.Grounded && jumpPressed && !wasJumpPressed)
                 {
                     audioSource.Stop();
                     audioSource.PlayOneShot(jumpSFX);
                     
                 }
+                wasJumpPressed = jumpPressed;
+            }
+            else if (HasEquippedSkill("21-jm") || HasEquippedSkill("22-jj") || HasEquippedSkill("23-jd"))
+            {
+
+                //========================
+                // 按下瞬间（短按起跳音）
+                //========================
+                if (currentPosture == Posture.Grounded &&
+                    jumpPressed &&
+                    !wasJumpPressed)
+                {
+                    jumpPressStartTime = Time.time;
+                    hasTriggeredChargeSFX = false;
+
+                    audioSource.Stop();
+                    audioSource.PlayOneShot(jumpSFX);
+                }
+
+                //========================
+                // 长按检测（蓄力音）
+                //========================
+                if (currentPosture == Posture.Grounded && jumpPressed)
+                {
+                    float holdTime = Time.time - jumpPressStartTime;
+
+                    if (holdTime >= longPressThreshold && !hasTriggeredChargeSFX)
+                    {
+                        hasTriggeredChargeSFX = true;
+
+                        if (jumpHoldSFX != null)
+                        {
+                            audioSource.PlayOneShot(jumpHoldSFX);
+                        }
+                    }
+                }
+
+                //========================
+                // 松开（长按释放补一次 jumpSFX）
+                //========================
+                if (currentPosture == Posture.Grounded &&
+                    !jumpPressed &&
+                    wasJumpPressed)
+                {
+                    float holdTime = Time.time - jumpPressStartTime;
+
+                    if (holdTime >= longPressThreshold)
+                    {
+                        audioSource.Stop();
+                        audioSource.PlayOneShot(jumpSFX);
+                        if(HasEquippedSkill("23-jd"))  audioSource.PlayOneShot(jumpBoostSFX);
+                    }
+                }
+
+                wasJumpPressed = jumpPressed;
             }
             
         }

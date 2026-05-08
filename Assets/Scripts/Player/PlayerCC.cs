@@ -7,9 +7,12 @@ using System;
 [RequireComponent(typeof(PlayerDeath))]
 public class PlayerCC : MonoBehaviour
 {
+    public bool isClimbInvincible = false;
     private const float MinClimbExitUpInputLockDuration = 3f;
     public AudioSource audioSource;
     public AudioClip deathSFX;
+    
+    
 
     public enum Posture
     {
@@ -244,6 +247,8 @@ public class PlayerCC : MonoBehaviour
     {
         isClimbing = climbing;
         ClimbInput = climbing ? Mathf.Clamp(input, -1f, 1f) : 0f;
+        
+
         RefreshPosture();
     }
 
@@ -1147,6 +1152,7 @@ public class PlayerCC : MonoBehaviour
             CurrentPosture = Posture.Climbing;
             return;
         }
+        
 
         CurrentPosture = isGrounded ? Posture.Grounded : Posture.Airborne;
     }
@@ -1246,6 +1252,11 @@ public class PlayerCC : MonoBehaviour
     {
         if (playerDeath != null)
         {
+            if (isClimbInvincible)
+            {
+                Debug.Log("[PlayerCC] 无敌状态，死亡被拦截");
+                return;
+            }
             playerDeath.Die();
         }
     }
