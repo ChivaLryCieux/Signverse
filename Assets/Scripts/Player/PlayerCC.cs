@@ -52,6 +52,7 @@ public class PlayerCC : MonoBehaviour
     [SerializeField] private float groundSafetyCheckDistance = 0.35f;
     [SerializeField] private float groundSafetyRadiusPadding = 0.03f;
     [SerializeField] private bool drawGroundSafetyCheck;
+    [SerializeField] private float ceilingHitFallVelocity = -0.5f;
 
     [Header("前方 Trigger 移动阻挡")]
     [SerializeField] private LayerMask directionalMoveBlockMask = ~0;
@@ -118,6 +119,11 @@ public class PlayerCC : MonoBehaviour
     [Header("地面检测调试")]
     [SerializeField] private bool drawGroundedGizmo = true;
     [SerializeField] private float groundedGizmoOffsetY;
+
+    [Header("技能装配限制")]
+    [SerializeField] private string skillLoadoutSurfaceTag = "Nature";
+    [SerializeField] private LayerMask skillLoadoutSurfaceMask = ~0;
+    [SerializeField] private float skillLoadoutSurfaceCheckDistance = 0.25f;
 
     [Header("攀爬翻越")]
     [SerializeField] private float climbExitUpInputLockDuration = 3f;
@@ -345,6 +351,11 @@ public class PlayerCC : MonoBehaviour
         return false;
     }
 
+    public bool CanModifySkillLoadout()
+    {
+        return IsStandingOnTaggedSurface(skillLoadoutSurfaceTag);
+    }
+
     // Lry的修改：由 UI 装备系统统一提交当前装备技能快照。使用快照同步可以避免动画脚本读取 UI 私有数组，降低模块耦合。
     public void SetEquippedSkills(IList<SkillBase> skills)
     {
@@ -480,13 +491,16 @@ public class PlayerCC : MonoBehaviour
 
         if (!ShouldProtectGroundedSideMove(delta, activeController))
         {
-            return activeController.Move(delta);
+            CollisionFlags moveFlags = activeController.Move(delta);
+            HandleMoveCollisionFlags(moveFlags, delta);
+            return moveFlags;
         }
 
         Transform activeTransform = GetControlTransform();
         Vector3 positionBeforeMove = activeTransform.position;
         bool hadGroundSupport = HasGroundSupport(activeController);
         CollisionFlags flags = activeController.Move(delta);
+        HandleMoveCollisionFlags(flags, delta);
 
         if (!hadGroundSupport || (flags & CollisionFlags.Sides) == 0 || HasGroundSupport(activeController))
         {
@@ -838,7 +852,9 @@ public class PlayerCC : MonoBehaviour
 
         HandleGravity();
 
-        GetCharacterController().Move(new Vector3(0, verticalVelocity, 0) * Time.deltaTime);
+        Vector3 gravityDelta = new Vector3(0, verticalVelocity, 0) * Time.deltaTime;
+        CollisionFlags gravityFlags = GetCharacterController().Move(gravityDelta);
+        HandleMoveCollisionFlags(gravityFlags, gravityDelta);
     }
 
     private void UpdateClimbExitMove()
@@ -1031,6 +1047,55 @@ public class PlayerCC : MonoBehaviour
         }
 
         return hitGround;
+    }
+
+    private void HandleMoveCollisionFlags(CollisionFlags flags, Vector3 attemptedMove)
+    {
+        if ((flags & CollisionFlags.Above) == 0)
+        {
+            return;
+        }
+
+        if (attemptedMove.y <= 0f && verticalVelocity <= 0f)
+        {
+            return;
+        }
+
+        verticalVelocity = ceilingHitFallVelocity < 0f ? ceilingHitFallVelocity : -0.5f;
+    }
+
+    private bool IsStandingOnTaggedSurface(string requiredTag)
+    {
+        if (string.IsNullOrWhiteSpace(requiredTag))
+        {
+            return true;
+        }
+
+        CharacterController activeController = GetCharacterController();
+        if (activeController == null || skillLoadoutSurfaceMask.value == 0)
+        {
+            return false;
+        }
+
+        Vector3 worldCenter = activeController.transform.TransformPoint(activeController.center);
+        float bottomOffset = Mathf.Max(0f, activeController.height * 0.5f - activeController.radius);
+        Vector3 sphereOrigin = worldCenter + Vector3.down * bottomOffset + Vector3.up * 0.05f;
+        float radius = Mathf.Max(0.01f, activeController.radius * 0.9f);
+        float distance = Mathf.Max(0.01f, skillLoadoutSurfaceCheckDistance + 0.05f);
+
+        if (!Physics.SphereCast(
+                sphereOrigin,
+                radius,
+                Vector3.down,
+                out RaycastHit hit,
+                distance,
+                skillLoadoutSurfaceMask,
+                QueryTriggerInteraction.Ignore))
+        {
+            return false;
+        }
+
+        return hit.collider != null && hit.collider.CompareTag(requiredTag);
     }
 
     private void RefreshCloakState()
