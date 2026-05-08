@@ -17,6 +17,11 @@ namespace Skills
         [Header("角色显示")]
         [SerializeField] private bool hideRenderersWhileCloaked = true;
 
+        [Header("隐身穿透")]
+        [SerializeField] private bool ignoreWaterCollidersWhileCloaked = true;
+        [SerializeField] private string[] waterTags = { "Water", "water" };
+        [SerializeField, Min(0.02f)] private float waterColliderRefreshInterval = 0.25f;
+
         [Header("音效")]
         [SerializeField] private AudioClip cloakSfx;
         [SerializeField, Range(0f, 1f)] private float cloakSfxVolume = 1f;
@@ -31,9 +36,17 @@ namespace Skills
             public float exitVolumeSpeed;
         }
 
+        private struct IgnoredCollisionPair
+        {
+            public Collider ownerCollider;
+            public Collider waterCollider;
+        }
+
         private readonly Dictionary<object, CloakRequest> activeRequests = new Dictionary<object, CloakRequest>();
         private readonly Dictionary<Renderer, bool> rendererVisibilityBeforeCloak = new Dictionary<Renderer, bool>();
+        private readonly List<IgnoredCollisionPair> ignoredWaterCollisionPairs = new List<IgnoredCollisionPair>();
         private Renderer[] cachedRenderers;
+        private Collider[] cachedOwnerColliders;
         private AudioSource audioSource;
         private PlayerDeath playerDeath;
         private bool isCloaked;
@@ -41,6 +54,7 @@ namespace Skills
         private float currentEnterVolumeSpeed = InstantVolumeSpeed;
         private float currentExitVolumeSpeed = InstantVolumeSpeed;
         private float lastVolumeUpdateTime = -1f;
+        private float nextWaterColliderRefreshTime;
         public bool IsCloaked => isCloaked;
 
         private void Awake()
@@ -48,6 +62,7 @@ namespace Skills
             audioSource = GetComponent<AudioSource>();
             playerDeath = GetComponent<PlayerDeath>();
             cachedRenderers = GetComponentsInChildren<Renderer>(true);
+            cachedOwnerColliders = GetComponentsInChildren<Collider>(true);
             ResolveCloakVolume();
 
             if (cloakVolume != null)
@@ -59,6 +74,7 @@ namespace Skills
         private void OnDisable()
         {
             activeRequests.Clear();
+            RestoreWaterCollisionIgnore();
             SetCloaked(false);
 
             if (cloakVolume != null)
@@ -72,6 +88,7 @@ namespace Skills
             ClearExpiredRequests();
             RefreshCloakStateFromRequests();
             UpdateVolumeWeight();
+            UpdateWaterCollisionIgnore();
             UpdateDeathImmunity();
         }
 
@@ -156,10 +173,12 @@ namespace Skills
             if (isCloaked)
             {
                 HideCloakedRenderers();
+                EnableWaterCollisionIgnore(true);
             }
             else
             {
                 RestoreRendererVisibility();
+                RestoreWaterCollisionIgnore();
             }
 
             if (isCloaked && audioSource != null)
@@ -249,6 +268,115 @@ namespace Skills
             }
 
             rendererVisibilityBeforeCloak.Clear();
+        }
+
+        private void UpdateWaterCollisionIgnore()
+        {
+            if (!isCloaked || !ignoreWaterCollidersWhileCloaked)
+            {
+                return;
+            }
+
+            if (Time.time < nextWaterColliderRefreshTime)
+            {
+                return;
+            }
+
+            EnableWaterCollisionIgnore(false);
+        }
+
+        private void EnableWaterCollisionIgnore(bool forceRefresh)
+        {
+            if (!ignoreWaterCollidersWhileCloaked)
+            {
+                return;
+            }
+
+            if (!forceRefresh && Time.time < nextWaterColliderRefreshTime)
+            {
+                return;
+            }
+
+            nextWaterColliderRefreshTime = Time.time + waterColliderRefreshInterval;
+
+            if (cachedOwnerColliders == null || cachedOwnerColliders.Length == 0)
+            {
+                cachedOwnerColliders = GetComponentsInChildren<Collider>(true);
+            }
+
+            Collider[] allColliders = FindObjectsOfType<Collider>(true);
+            for (int i = 0; i < cachedOwnerColliders.Length; i++)
+            {
+                Collider ownerCollider = cachedOwnerColliders[i];
+                if (ownerCollider == null)
+                {
+                    continue;
+                }
+
+                for (int j = 0; j < allColliders.Length; j++)
+                {
+                    Collider waterCollider = allColliders[j];
+                    if (waterCollider == null || waterCollider == ownerCollider || !HasWaterTag(waterCollider))
+                    {
+                        continue;
+                    }
+
+                    IgnoreWaterCollisionPair(ownerCollider, waterCollider);
+                }
+            }
+        }
+
+        private void IgnoreWaterCollisionPair(Collider ownerCollider, Collider waterCollider)
+        {
+            for (int i = 0; i < ignoredWaterCollisionPairs.Count; i++)
+            {
+                IgnoredCollisionPair pair = ignoredWaterCollisionPairs[i];
+                if (pair.ownerCollider == ownerCollider && pair.waterCollider == waterCollider)
+                {
+                    return;
+                }
+            }
+
+            Physics.IgnoreCollision(ownerCollider, waterCollider, true);
+            ignoredWaterCollisionPairs.Add(new IgnoredCollisionPair
+            {
+                ownerCollider = ownerCollider,
+                waterCollider = waterCollider
+            });
+        }
+
+        private void RestoreWaterCollisionIgnore()
+        {
+            for (int i = 0; i < ignoredWaterCollisionPairs.Count; i++)
+            {
+                IgnoredCollisionPair pair = ignoredWaterCollisionPairs[i];
+                if (pair.ownerCollider != null && pair.waterCollider != null)
+                {
+                    Physics.IgnoreCollision(pair.ownerCollider, pair.waterCollider, false);
+                }
+            }
+
+            ignoredWaterCollisionPairs.Clear();
+        }
+
+        private bool HasWaterTag(Collider targetCollider)
+        {
+            if (targetCollider == null || waterTags == null)
+            {
+                return false;
+            }
+
+            string targetTag = targetCollider.gameObject.tag;
+            for (int i = 0; i < waterTags.Length; i++)
+            {
+                string waterTag = waterTags[i];
+                if (!string.IsNullOrWhiteSpace(waterTag) && targetTag == waterTag)
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         private void ClearExpiredRequests()
