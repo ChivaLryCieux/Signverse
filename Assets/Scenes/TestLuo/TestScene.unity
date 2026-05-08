@@ -3289,6 +3289,12 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1446780194 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 6339443912427368253, guid: 161888dbaa9a7c24591e658043e312d3,
+    type: 3}
+  m_PrefabInstance: {fileID: 2906839644035852416}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1474618164
 GameObject:
   m_ObjectHideFlags: 0
@@ -5274,6 +5280,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6339443912427368253, guid: 161888dbaa9a7c24591e658043e312d3,
         type: 3}
+      propertyPath: m_Name
+      value: DetailPanel-1
+      objectReference: {fileID: 0}
+    - target: {fileID: 6339443912427368253, guid: 161888dbaa9a7c24591e658043e312d3,
+        type: 3}
       propertyPath: m_IsActive
       value: 0
       objectReference: {fileID: 0}
@@ -5308,6 +5319,11 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 21300000, guid: 816a4dd434a428a46b06645414a9fc73,
         type: 3}
+    - target: {fileID: 7930556482060909779, guid: 161888dbaa9a7c24591e658043e312d3,
+        type: 3}
+      propertyPath: entries.Array.data[0].detailPanel
+      value: 
+      objectReference: {fileID: 1446780194}
     - target: {fileID: 9045698150270877358, guid: 161888dbaa9a7c24591e658043e312d3,
         type: 3}
       propertyPath: m_Name

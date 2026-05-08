@@ -113,10 +113,26 @@ public class PickupUISlotView : MonoBehaviour, IPointerClickHandler, IPointerEnt
 
     public void OnPointerClick(PointerEventData eventData)
     {
-        if (!initialized || owner == null || eventData.button != PointerEventData.InputButton.Left)
+        if (!initialized || owner == null)
         {
             return;
         }
+
+        if (eventData.button == PointerEventData.InputButton.Right)
+        {
+            if (role == SlotRole.Unlock && hasItem)
+            {
+                owner.ShowDetailPanel(itemId);
+            }
+
+            return;
+        }
+
+        if (eventData.button != PointerEventData.InputButton.Left)
+        {
+            return;
+        }
+
         if (audioSource != null && clickSFXList != null && clickSFXList.Count > 0)
         {
             int index = Random.Range(0, clickSFXList.Count);

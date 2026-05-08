@@ -54,6 +54,11 @@ public class PausePanelController : MonoBehaviour
 
     private void Update()
     {
+        if (PickupUIController.BlocksPauseEscape)
+        {
+            return;
+        }
+
         if (Input.GetKeyDown(KeyCode.Escape))
         {
             Toggle();

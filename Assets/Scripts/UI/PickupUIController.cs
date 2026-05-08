@@ -18,6 +18,8 @@ public class PickupUIController : MonoBehaviour
         public Sprite icon;
         [Tooltip("右上角用于点击装备的槽位。")]
         public PickupUISlotView unlockSlot;
+        [Tooltip("右键技能图标时显示的详情面板。为空时使用通用 DetailPanel。")]
+        public GameObject detailPanel;
     }
 
     public static PickupUIController Instance { get; private set; }
@@ -46,6 +48,9 @@ public class PickupUIController : MonoBehaviour
     [SerializeField] private GameObject leftPanel;
     [SerializeField] private GameObject rightPanel;
     [SerializeField] private GameObject boltHudPanel;
+
+    [Header("技能详情")]
+    [SerializeField] private GameObject detailPanel;
 
     [Header("联动技能")]
     [SerializeField] private PlayerCC player;
@@ -77,13 +82,21 @@ public class PickupUIController : MonoBehaviour
     private string mimicTargetComboCode;
     private readonly List<SkillBase> appliedLinkedSkills = new List<SkillBase>();
     private InputAction toggleHudAction;
+    private InputAction closeDetailAction;
     private bool isHudVisible = true;
+    private bool isDetailPanelOpen;
+    private PickupItemId currentDetailItem;
+    private GameObject activeDetailPanel;
+    private int detailPanelClosedFrame = -1;
 
     // Lry的修改：装备槽组合后真正生效的 SkillBase 快照。它会同步到 PlayerCC.equippedSkills，供动画层读取当前 loadout。
     private readonly List<SkillBase> equippedSkillSnapshot = new List<SkillBase>();
 
     public bool HasSelectedUnlockItem => hasSelectedUnlockItem;
     public bool IsHudVisible => isHudVisible;
+    public PickupItemId CurrentDetailItem => currentDetailItem;
+    public static bool BlocksPauseEscape => Instance != null &&
+        (Instance.isDetailPanelOpen || Instance.detailPanelClosedFrame == Time.frameCount);
 
     private void Awake()
     {
@@ -98,9 +111,12 @@ public class PickupUIController : MonoBehaviour
 
         BuildEntries();
         InitializeHudToggleInput();
+        InitializeDetailInput();
         ResolveHudPanels();
+        ResolveDetailPanel();
         isHudVisible = true;
         ApplyHudVisibility();
+        HideDetailPanel();
         ResolveSkillReferences();
         ResolveBoltPanel();
         RefreshAllSlots();
@@ -116,6 +132,11 @@ public class PickupUIController : MonoBehaviour
         {
             toggleHudAction.Enable();
         }
+
+        if (closeDetailAction != null)
+        {
+            closeDetailAction.Enable();
+        }
     }
 
     private void OnDisable()
@@ -123,6 +144,11 @@ public class PickupUIController : MonoBehaviour
         if (toggleHudAction != null)
         {
             toggleHudAction.Disable();
+        }
+
+        if (closeDetailAction != null)
+        {
+            closeDetailAction.Disable();
         }
     }
 
@@ -133,6 +159,13 @@ public class PickupUIController : MonoBehaviour
             toggleHudAction.performed -= OnToggleHudPerformed;
             toggleHudAction.Dispose();
             toggleHudAction = null;
+        }
+
+        if (closeDetailAction != null)
+        {
+            closeDetailAction.performed -= OnCloseDetailPerformed;
+            closeDetailAction.Dispose();
+            closeDetailAction = null;
         }
 
         if (Instance == this)
@@ -174,6 +207,48 @@ public class PickupUIController : MonoBehaviour
 
         isHudVisible = visible;
         ApplyHudVisibility();
+    }
+
+    public void ShowDetailPanel(PickupItemId id)
+    {
+        if (!unlockedItems.Contains(id) || !entryById.TryGetValue(id, out PickupUiEntry entry))
+        {
+            return;
+        }
+
+        HideDetailPanel();
+
+        currentDetailItem = id;
+        isDetailPanelOpen = true;
+        ResolveDetailPanel();
+
+        activeDetailPanel = entry.detailPanel != null ? entry.detailPanel : detailPanel;
+        if (detailPanel != null && activeDetailPanel != null && activeDetailPanel.transform.IsChildOf(detailPanel.transform))
+        {
+            detailPanel.SetActive(true);
+        }
+
+        SetDetailPanelActive(activeDetailPanel, true);
+    }
+
+    public void HideDetailPanel()
+    {
+        bool wasOpen = isDetailPanelOpen;
+        isDetailPanelOpen = false;
+        if (wasOpen)
+        {
+            detailPanelClosedFrame = Time.frameCount;
+        }
+
+        ResolveDetailPanel();
+
+        SetDetailPanelActive(activeDetailPanel, false);
+        activeDetailPanel = null;
+
+        if (detailPanel != null)
+        {
+            detailPanel.SetActive(false);
+        }
     }
 
     public void OnUnlockSlotClicked(PickupItemId id, int clickCount)
@@ -425,11 +500,30 @@ public class PickupUIController : MonoBehaviour
         toggleHudAction.performed += OnToggleHudPerformed;
     }
 
+    private void InitializeDetailInput()
+    {
+        if (closeDetailAction != null)
+        {
+            return;
+        }
+
+        closeDetailAction = new InputAction("CloseSkillDetail", InputActionType.Button, "<Keyboard>/escape");
+        closeDetailAction.performed += OnCloseDetailPerformed;
+    }
+
     private void OnToggleHudPerformed(InputAction.CallbackContext context)
     {
         if (context.performed)
         {
             ToggleHudVisibility();
+        }
+    }
+
+    private void OnCloseDetailPerformed(InputAction.CallbackContext context)
+    {
+        if (context.performed && isDetailPanelOpen)
+        {
+            HideDetailPanel();
         }
     }
 
@@ -448,6 +542,14 @@ public class PickupUIController : MonoBehaviour
         if (boltHudPanel == null)
         {
             boltHudPanel = FindHudPanel("BoltPanel");
+        }
+    }
+
+    private void ResolveDetailPanel()
+    {
+        if (detailPanel == null)
+        {
+            detailPanel = FindHudPanel("DetailPanel");
         }
     }
 
@@ -475,6 +577,14 @@ public class PickupUIController : MonoBehaviour
     }
 
     private static void SetHudPanelActive(GameObject panel, bool active)
+    {
+        if (panel != null && panel.activeSelf != active)
+        {
+            panel.SetActive(active);
+        }
+    }
+
+    private static void SetDetailPanelActive(GameObject panel, bool active)
     {
         if (panel != null && panel.activeSelf != active)
         {
