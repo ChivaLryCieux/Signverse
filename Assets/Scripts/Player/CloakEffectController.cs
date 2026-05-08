@@ -19,6 +19,7 @@ namespace Skills
 
         [Header("隐身穿透")]
         [SerializeField] private bool ignoreWaterCollidersWhileCloaked = true;
+        [SerializeField] private bool dieIfCloakEndsInsideWater = true;
         [SerializeField] private string[] waterTags = { "Water", "water" };
         [SerializeField, Min(0.02f)] private float waterColliderRefreshInterval = 0.25f;
 
@@ -177,8 +178,13 @@ namespace Skills
             }
             else
             {
+                bool shouldDieInWater = dieIfCloakEndsInsideWater && IsOverlappingWater();
                 RestoreRendererVisibility();
                 RestoreWaterCollisionIgnore();
+                if (shouldDieInWater)
+                {
+                    ForceDieInWater();
+                }
             }
 
             if (isCloaked && audioSource != null)
@@ -357,6 +363,76 @@ namespace Skills
             }
 
             ignoredWaterCollisionPairs.Clear();
+        }
+
+        private bool IsOverlappingWater()
+        {
+            if (cachedOwnerColliders == null || cachedOwnerColliders.Length == 0)
+            {
+                cachedOwnerColliders = GetComponentsInChildren<Collider>(true);
+            }
+
+            Collider[] allColliders = FindObjectsOfType<Collider>(true);
+            for (int i = 0; i < cachedOwnerColliders.Length; i++)
+            {
+                Collider ownerCollider = cachedOwnerColliders[i];
+                if (!IsUsableCollider(ownerCollider))
+                {
+                    continue;
+                }
+
+                for (int j = 0; j < allColliders.Length; j++)
+                {
+                    Collider waterCollider = allColliders[j];
+                    if (!IsUsableCollider(waterCollider) || waterCollider == ownerCollider || !HasWaterTag(waterCollider))
+                    {
+                        continue;
+                    }
+
+                    if (AreCollidersOverlapping(ownerCollider, waterCollider))
+                    {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
+        }
+
+        private bool AreCollidersOverlapping(Collider ownerCollider, Collider waterCollider)
+        {
+            if (Physics.ComputePenetration(
+                ownerCollider,
+                ownerCollider.transform.position,
+                ownerCollider.transform.rotation,
+                waterCollider,
+                waterCollider.transform.position,
+                waterCollider.transform.rotation,
+                out _,
+                out _))
+            {
+                return true;
+            }
+
+            return ownerCollider.bounds.Intersects(waterCollider.bounds);
+        }
+
+        private bool IsUsableCollider(Collider targetCollider)
+        {
+            return targetCollider != null && targetCollider.enabled && targetCollider.gameObject.activeInHierarchy;
+        }
+
+        private void ForceDieInWater()
+        {
+            if (playerDeath == null)
+            {
+                playerDeath = GetComponent<PlayerDeath>();
+            }
+
+            if (playerDeath != null)
+            {
+                playerDeath.ForceDie();
+            }
         }
 
         private bool HasWaterTag(Collider targetCollider)
