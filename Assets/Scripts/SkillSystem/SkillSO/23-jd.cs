@@ -22,19 +22,28 @@ namespace Skills
         // 激活喷气背包蓄力流程。
         public override void OnActivate(GameObject user, PlayerCC controller, PlayerCC.Posture posture)
         {
-            BeginCharge();
+            if (posture == PlayerCC.Posture.Grounded)
+            {
+                BeginCharge();
+            }
         }
 
         // 每帧处理按住蓄力和松开发射。
         public override void OnUpdate(GameObject user, PlayerCC controller, PlayerCC.Posture posture)
         {
-            if (controller.WasJumpPressed())
+            if (controller.WasJumpPressed() && posture == PlayerCC.Posture.Grounded)
             {
                 BeginCharge();
             }
 
             if (!isCharging)
             {
+                return;
+            }
+
+            if (posture != PlayerCC.Posture.Grounded)
+            {
+                CancelCharge();
                 return;
             }
 
@@ -55,6 +64,12 @@ namespace Skills
         {
             isCharging = true;
             ThrustHeight = Mathf.Clamp(startHeight, 0f, maxThrustHeight);
+        }
+
+        private void CancelCharge()
+        {
+            isCharging = false;
+            ThrustHeight = 0f;
         }
 
         // 根据蓄力高度设置竖直速度，并短暂禁用横向输入。
