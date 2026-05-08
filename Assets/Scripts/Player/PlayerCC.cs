@@ -124,7 +124,11 @@ public class PlayerCC : MonoBehaviour
     [SerializeField] private float groundedGizmoOffsetY;
 
     [Header("技能装配限制")]
-    [SerializeField] private string skillLoadoutSurfaceTag = "Nature";
+    [SerializeField] private List<string> skillLoadoutSurfaceTags = new List<string>()
+    {
+        "Nature",
+        "Water"
+    };
     [SerializeField] private LayerMask skillLoadoutSurfaceMask = ~0;
     [SerializeField] private float skillLoadoutSurfaceCheckDistance = 0.25f;
 
@@ -358,7 +362,7 @@ public class PlayerCC : MonoBehaviour
 
     public bool CanModifySkillLoadout()
     {
-        return IsStandingOnTaggedSurface(skillLoadoutSurfaceTag);
+        return IsStandingOnAnyTaggedSurface(skillLoadoutSurfaceTags);
     }
 
     // Lry的修改：由 UI 装备系统统一提交当前装备技能快照。使用快照同步可以避免动画脚本读取 UI 私有数组，降低模块耦合。
@@ -1068,7 +1072,59 @@ public class PlayerCC : MonoBehaviour
 
         verticalVelocity = ceilingHitFallVelocity < 0f ? ceilingHitFallVelocity : -0.5f;
     }
+    private bool IsStandingOnAnyTaggedSurface(List<string> requiredTags)
+    {
+        if (requiredTags == null || requiredTags.Count == 0)
+        {
+            return true;
+        }
 
+        CharacterController activeController = GetCharacterController();
+        if (activeController == null || skillLoadoutSurfaceMask.value == 0)
+        {
+            return false;
+        }
+
+        Vector3 worldCenter = activeController.transform.TransformPoint(activeController.center);
+        float bottomOffset = Mathf.Max(0f, activeController.height * 0.5f - activeController.radius);
+
+        Vector3 sphereOrigin =
+            worldCenter +
+            Vector3.down * bottomOffset +
+            Vector3.up * 0.05f;
+
+        float radius = Mathf.Max(0.01f, activeController.radius * 0.9f);
+
+        float distance =
+            Mathf.Max(0.01f, skillLoadoutSurfaceCheckDistance + 0.05f);
+
+        if (!Physics.SphereCast(
+                sphereOrigin,
+                radius,
+                Vector3.down,
+                out RaycastHit hit,
+                distance,
+                skillLoadoutSurfaceMask,
+                QueryTriggerInteraction.Ignore))
+        {
+            return false;
+        }
+
+        if (hit.collider == null)
+        {
+            return false;
+        }
+
+        for (int i = 0; i < requiredTags.Count; i++)
+        {
+            if (hit.collider.CompareTag(requiredTags[i]))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
     private bool IsStandingOnTaggedSurface(string requiredTag)
     {
         if (string.IsNullOrWhiteSpace(requiredTag))
