@@ -387,6 +387,11 @@ PrefabInstance:
       propertyPath: preventSideCollisionPushOffGround
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 1649055673277003749, guid: 442dd687be27363f1880dbeef3e867a1,
+        type: 3}
+      propertyPath: m_Name
+      value: CameraFollowPoint
+      objectReference: {fileID: 0}
     - target: {fileID: 2165770545944897919, guid: 442dd687be27363f1880dbeef3e867a1,
         type: 3}
       propertyPath: m_Name
@@ -396,6 +401,21 @@ PrefabInstance:
         type: 3}
       propertyPath: m_LocalPosition.y
       value: 0.03
+      objectReference: {fileID: 0}
+    - target: {fileID: 4081560681788322812, guid: 442dd687be27363f1880dbeef3e867a1,
+        type: 3}
+      propertyPath: cameraOffsetFromPoint.x
+      value: -0.167
+      objectReference: {fileID: 0}
+    - target: {fileID: 4081560681788322812, guid: 442dd687be27363f1880dbeef3e867a1,
+        type: 3}
+      propertyPath: cameraOffsetFromPoint.y
+      value: 1.443
+      objectReference: {fileID: 0}
+    - target: {fileID: 4081560681788322812, guid: 442dd687be27363f1880dbeef3e867a1,
+        type: 3}
+      propertyPath: cameraOffsetFromPoint.z
+      value: -9.89
       objectReference: {fileID: 0}
     - target: {fileID: 7020566751297728477, guid: 442dd687be27363f1880dbeef3e867a1,
         type: 3}
@@ -455,7 +475,7 @@ PrefabInstance:
     - target: {fileID: 8362327944152056311, guid: 442dd687be27363f1880dbeef3e867a1,
         type: 3}
       propertyPath: deathDistance
-      value: 100
+      value: 10
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
