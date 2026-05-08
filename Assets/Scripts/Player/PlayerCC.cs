@@ -51,6 +51,7 @@ public class PlayerCC : MonoBehaviour
     [SerializeField] private float groundSafetyCheckDistance = 0.35f;
     [SerializeField] private float groundSafetyRadiusPadding = 0.03f;
     [SerializeField] private bool drawGroundSafetyCheck;
+    [SerializeField] private float ceilingHitFallVelocity = -0.5f;
 
     [Header("前方 Trigger 移动阻挡")]
     [SerializeField] private LayerMask directionalMoveBlockMask = ~0;
@@ -489,13 +490,16 @@ public class PlayerCC : MonoBehaviour
 
         if (!ShouldProtectGroundedSideMove(delta, activeController))
         {
-            return activeController.Move(delta);
+            CollisionFlags moveFlags = activeController.Move(delta);
+            HandleMoveCollisionFlags(moveFlags, delta);
+            return moveFlags;
         }
 
         Transform activeTransform = GetControlTransform();
         Vector3 positionBeforeMove = activeTransform.position;
         bool hadGroundSupport = HasGroundSupport(activeController);
         CollisionFlags flags = activeController.Move(delta);
+        HandleMoveCollisionFlags(flags, delta);
 
         if (!hadGroundSupport || (flags & CollisionFlags.Sides) == 0 || HasGroundSupport(activeController))
         {
@@ -846,7 +850,9 @@ public class PlayerCC : MonoBehaviour
 
         HandleGravity();
 
-        GetCharacterController().Move(new Vector3(0, verticalVelocity, 0) * Time.deltaTime);
+        Vector3 gravityDelta = new Vector3(0, verticalVelocity, 0) * Time.deltaTime;
+        CollisionFlags gravityFlags = GetCharacterController().Move(gravityDelta);
+        HandleMoveCollisionFlags(gravityFlags, gravityDelta);
     }
 
     private void UpdateClimbExitMove()
@@ -1039,6 +1045,21 @@ public class PlayerCC : MonoBehaviour
         }
 
         return hitGround;
+    }
+
+    private void HandleMoveCollisionFlags(CollisionFlags flags, Vector3 attemptedMove)
+    {
+        if ((flags & CollisionFlags.Above) == 0)
+        {
+            return;
+        }
+
+        if (attemptedMove.y <= 0f && verticalVelocity <= 0f)
+        {
+            return;
+        }
+
+        verticalVelocity = ceilingHitFallVelocity < 0f ? ceilingHitFallVelocity : -0.5f;
     }
 
     private bool IsStandingOnTaggedSurface(string requiredTag)
