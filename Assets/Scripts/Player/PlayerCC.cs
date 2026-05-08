@@ -118,6 +118,11 @@ public class PlayerCC : MonoBehaviour
     [SerializeField] private bool drawGroundedGizmo = true;
     [SerializeField] private float groundedGizmoOffsetY;
 
+    [Header("技能装配限制")]
+    [SerializeField] private string skillLoadoutSurfaceTag = "Nature";
+    [SerializeField] private LayerMask skillLoadoutSurfaceMask = ~0;
+    [SerializeField] private float skillLoadoutSurfaceCheckDistance = 0.25f;
+
     [Header("攀爬翻越")]
     [SerializeField] private float climbExitUpInputLockDuration = 3f;
 
@@ -342,6 +347,11 @@ public class PlayerCC : MonoBehaviour
         }
 
         return false;
+    }
+
+    public bool CanModifySkillLoadout()
+    {
+        return IsStandingOnTaggedSurface(skillLoadoutSurfaceTag);
     }
 
     // Lry的修改：由 UI 装备系统统一提交当前装备技能快照。使用快照同步可以避免动画脚本读取 UI 私有数组，降低模块耦合。
@@ -1029,6 +1039,40 @@ public class PlayerCC : MonoBehaviour
         }
 
         return hitGround;
+    }
+
+    private bool IsStandingOnTaggedSurface(string requiredTag)
+    {
+        if (string.IsNullOrWhiteSpace(requiredTag))
+        {
+            return true;
+        }
+
+        CharacterController activeController = GetCharacterController();
+        if (activeController == null || skillLoadoutSurfaceMask.value == 0)
+        {
+            return false;
+        }
+
+        Vector3 worldCenter = activeController.transform.TransformPoint(activeController.center);
+        float bottomOffset = Mathf.Max(0f, activeController.height * 0.5f - activeController.radius);
+        Vector3 sphereOrigin = worldCenter + Vector3.down * bottomOffset + Vector3.up * 0.05f;
+        float radius = Mathf.Max(0.01f, activeController.radius * 0.9f);
+        float distance = Mathf.Max(0.01f, skillLoadoutSurfaceCheckDistance + 0.05f);
+
+        if (!Physics.SphereCast(
+                sphereOrigin,
+                radius,
+                Vector3.down,
+                out RaycastHit hit,
+                distance,
+                skillLoadoutSurfaceMask,
+                QueryTriggerInteraction.Ignore))
+        {
+            return false;
+        }
+
+        return hit.collider != null && hit.collider.CompareTag(requiredTag);
     }
 
     private void RefreshCloakState()

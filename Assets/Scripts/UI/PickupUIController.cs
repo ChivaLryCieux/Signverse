@@ -140,6 +140,11 @@ public class PickupUIController : MonoBehaviour
         {
             if (clickCount >= 2 && hasMimicTarget)
             {
+                if (!CanModifySkillLoadout())
+                {
+                    return;
+                }
+
                 ClearMimicTarget();
                 PlayMimicSfx(mimicExitSfx);
                 return;
@@ -205,6 +210,11 @@ public class PickupUIController : MonoBehaviour
 
         if (clickCount >= 2 && equippedSlotOccupied[equippedIndex] && IsMimicItem(equippedSlotItems[equippedIndex]) && hasMimicTarget)
         {
+            if (!CanModifySkillLoadout())
+            {
+                return;
+            }
+
             ClearMimicTarget();
             PlayMimicSfx(mimicExitSfx);
             return;
@@ -225,6 +235,11 @@ public class PickupUIController : MonoBehaviour
     private void EquipSelectedAt(int equippedIndex)
     {
         if (!hasSelectedUnlockItem || !IsValidEquippedIndex(equippedIndex))
+        {
+            return;
+        }
+
+        if (!CanModifySkillLoadout())
         {
             return;
         }
@@ -268,6 +283,11 @@ public class PickupUIController : MonoBehaviour
     public void UnequipAt(int equippedIndex)
     {
         if (!IsValidEquippedIndex(equippedIndex) || !equippedSlotOccupied[equippedIndex])
+        {
+            return;
+        }
+
+        if (!CanModifySkillLoadout())
         {
             return;
         }
@@ -740,6 +760,11 @@ public class PickupUIController : MonoBehaviour
             return;
         }
 
+        if (!CanModifySkillLoadout())
+        {
+            return;
+        }
+
         int targetIndex = GetRightSideIndex(targetEntry);
         if (IsMimicIndex(targetIndex))
         {
@@ -766,6 +791,11 @@ public class PickupUIController : MonoBehaviour
 
     private void ClearMimicTarget()
     {
+        if (!CanModifySkillLoadout())
+        {
+            return;
+        }
+
         hasMimicTarget = false;
         mimicTargetRightSideIndex = 0;
         mimicTargetComboCode = null;
@@ -830,6 +860,18 @@ public class PickupUIController : MonoBehaviour
         }
 
         return entry.comboCode;
+    }
+
+    private bool CanModifySkillLoadout()
+    {
+        ResolveSkillReferences();
+        if (player != null && player.CanModifySkillLoadout())
+        {
+            return true;
+        }
+
+        Debug.Log("只有站在 Nature 标签的物体上时，才能装备或卸下技能。", this);
+        return false;
     }
 
     private bool IsMimicItem(PickupItemId id)
