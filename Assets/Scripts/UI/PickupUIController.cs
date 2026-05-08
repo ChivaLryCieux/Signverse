@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using Skills;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 public class PickupUIController : MonoBehaviour
 {
@@ -41,6 +42,11 @@ public class PickupUIController : MonoBehaviour
     [Header("行为")]
     [SerializeField] private bool hideLockedSlotsOnStart = true;
 
+    [Header("HUD 显示")]
+    [SerializeField] private GameObject leftPanel;
+    [SerializeField] private GameObject rightPanel;
+    [SerializeField] private GameObject boltHudPanel;
+
     [Header("联动技能")]
     [SerializeField] private PlayerCC player;
     [SerializeField] private SkillDatabase skillDatabase;
@@ -70,11 +76,14 @@ public class PickupUIController : MonoBehaviour
     private int mimicTargetRightSideIndex;
     private string mimicTargetComboCode;
     private readonly List<SkillBase> appliedLinkedSkills = new List<SkillBase>();
+    private InputAction toggleHudAction;
+    private bool isHudVisible = true;
 
     // Lry的修改：装备槽组合后真正生效的 SkillBase 快照。它会同步到 PlayerCC.equippedSkills，供动画层读取当前 loadout。
     private readonly List<SkillBase> equippedSkillSnapshot = new List<SkillBase>();
 
     public bool HasSelectedUnlockItem => hasSelectedUnlockItem;
+    public bool IsHudVisible => isHudVisible;
 
     private void Awake()
     {
@@ -88,6 +97,10 @@ public class PickupUIController : MonoBehaviour
         }
 
         BuildEntries();
+        InitializeHudToggleInput();
+        ResolveHudPanels();
+        isHudVisible = true;
+        ApplyHudVisibility();
         ResolveSkillReferences();
         ResolveBoltPanel();
         RefreshAllSlots();
@@ -97,8 +110,31 @@ public class PickupUIController : MonoBehaviour
         SyncLinkedSkills();
     }
 
+    private void OnEnable()
+    {
+        if (toggleHudAction != null)
+        {
+            toggleHudAction.Enable();
+        }
+    }
+
+    private void OnDisable()
+    {
+        if (toggleHudAction != null)
+        {
+            toggleHudAction.Disable();
+        }
+    }
+
     private void OnDestroy()
     {
+        if (toggleHudAction != null)
+        {
+            toggleHudAction.performed -= OnToggleHudPerformed;
+            toggleHudAction.Dispose();
+            toggleHudAction = null;
+        }
+
         if (Instance == this)
         {
             Instance = null;
@@ -121,6 +157,23 @@ public class PickupUIController : MonoBehaviour
         RefreshUnlockedSlots();
 
         ItemUnlocked?.Invoke(id);
+    }
+
+    public void ToggleHudVisibility()
+    {
+        SetHudVisibility(!isHudVisible);
+    }
+
+    public void SetHudVisibility(bool visible)
+    {
+        if (isHudVisible == visible)
+        {
+            ApplyHudVisibility();
+            return;
+        }
+
+        isHudVisible = visible;
+        ApplyHudVisibility();
     }
 
     public void OnUnlockSlotClicked(PickupItemId id, int clickCount)
@@ -358,6 +411,74 @@ public class PickupUIController : MonoBehaviour
         if (boltPanel == null)
         {
             boltPanel = FindObjectOfType<BoltPanelController>();
+        }
+    }
+
+    private void InitializeHudToggleInput()
+    {
+        if (toggleHudAction != null)
+        {
+            return;
+        }
+
+        toggleHudAction = new InputAction("ToggleSkillHud", InputActionType.Button, "<Keyboard>/tab");
+        toggleHudAction.performed += OnToggleHudPerformed;
+    }
+
+    private void OnToggleHudPerformed(InputAction.CallbackContext context)
+    {
+        if (context.performed)
+        {
+            ToggleHudVisibility();
+        }
+    }
+
+    private void ResolveHudPanels()
+    {
+        if (leftPanel == null)
+        {
+            leftPanel = FindHudPanel("LeftPanel");
+        }
+
+        if (rightPanel == null)
+        {
+            rightPanel = FindHudPanel("RightPanel");
+        }
+
+        if (boltHudPanel == null)
+        {
+            boltHudPanel = FindHudPanel("BoltPanel");
+        }
+    }
+
+    private GameObject FindHudPanel(string panelName)
+    {
+        Transform searchRoot = transform.root != null ? transform.root : transform;
+        Transform[] children = searchRoot.GetComponentsInChildren<Transform>(true);
+        for (int i = 0; i < children.Length; i++)
+        {
+            if (children[i] != null && children[i].name == panelName)
+            {
+                return children[i].gameObject;
+            }
+        }
+
+        return null;
+    }
+
+    private void ApplyHudVisibility()
+    {
+        ResolveHudPanels();
+        SetHudPanelActive(leftPanel, isHudVisible);
+        SetHudPanelActive(rightPanel, isHudVisible);
+        SetHudPanelActive(boltHudPanel, isHudVisible);
+    }
+
+    private static void SetHudPanelActive(GameObject panel, bool active)
+    {
+        if (panel != null && panel.activeSelf != active)
+        {
+            panel.SetActive(active);
         }
     }
 
