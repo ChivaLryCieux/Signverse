@@ -160,7 +160,7 @@ namespace Skills
             PlayerDeath death = controller.GetComponent<PlayerDeath>();
             if (death != null)
             {
-                death.GrantInvincibility(fallDeathGraceAfterDash);
+                death.GrantFallDeathGrace(fallDeathGraceAfterDash);
             }
         }
 

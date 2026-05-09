@@ -26,6 +26,7 @@ public class PlayerDeath : MonoBehaviour
     private float airStartY;
     private bool wasGrounded;
     private float invincibleUntil;
+    private float fallDeathGraceUntil;
     private int deathBlockRequestFrame = -1;
     private bool deathBlockedThisFrame;
 
@@ -123,6 +124,11 @@ public class PlayerDeath : MonoBehaviour
         invincibleUntil = Mathf.Max(invincibleUntil, Time.time + Mathf.Max(0f, duration));
     }
 
+    public void GrantFallDeathGrace(float duration)
+    {
+        fallDeathGraceUntil = Mathf.Max(fallDeathGraceUntil, Time.time + Mathf.Max(0f, duration));
+    }
+
     public bool ConsumeDeathBlockedThisFrame()
     {
         if (!deathBlockedThisFrame)
@@ -187,7 +193,7 @@ public class PlayerDeath : MonoBehaviour
             float fallHeight = airStartY - transform.position.y;
             if (fallHeight > deathDistance)
             {
-                if(controller.isClimbInvincible) return;
+                if(controller.isClimbInvincible || Time.time < fallDeathGraceUntil) return;
                 Die();
             }
         }
@@ -225,6 +231,7 @@ public class PlayerDeath : MonoBehaviour
         wasGrounded = false;
         isDead = false;
         invincibleUntil = 0f;
+        fallDeathGraceUntil = 0f;
         deathBlockRequestFrame = -1;
         deathBlockedThisFrame = false;
 
