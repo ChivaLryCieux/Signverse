@@ -848,7 +848,17 @@ public class AnimatorStateDebugger : MonoBehaviour
     }
     public void OnClimbExitUpFinished()
     {
-        controller.SetClimbState(false, 0f);   // 退出攀爬
+        if (controller == null)
+        {
+            controller = GetComponentInParent<PlayerCC>();
+        }
+
+        if (controller == null)
+        {
+            return;
+        }
+
+        controller.CompleteClimbExitUpAnimation();
         // 翻越触发后的 A/D 横向输入锁由 PlayerCC 的 3 秒计时器解除，避免动画事件提前恢复移动。
         controller.SetInputEnabled(true);      // 恢复控制
     }

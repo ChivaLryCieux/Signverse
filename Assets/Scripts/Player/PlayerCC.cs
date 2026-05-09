@@ -100,6 +100,9 @@ public class PlayerCC : MonoBehaviour
     private bool climbExitDownRequested;
     private bool climbExitUpAnimationLock;
     private float climbExitUpAnimationLockTimer;
+    private bool hasQueuedClimbExitUpForcedMove;
+    private Vector2 queuedClimbExitUpForcedOffset;
+    private float queuedClimbExitUpForcedMoveDuration;
 
     private struct DirectionalMoveBlockContact
     {
@@ -197,6 +200,7 @@ public class PlayerCC : MonoBehaviour
         moveXDisableTimer = 0f;
         climbExitUpAnimationLock = false;
         climbExitUpAnimationLockTimer = 0f;
+        hasQueuedClimbExitUpForcedMove = false;
         directionalMoveBlockContacts.Clear();
     }
 
@@ -426,6 +430,28 @@ public class PlayerCC : MonoBehaviour
     {
         climbExitUpAnimationLock = false;
         climbExitUpAnimationLockTimer = 0f;
+    }
+
+    public void QueueClimbExitUpForcedMove(Vector2 offset, float duration)
+    {
+        hasQueuedClimbExitUpForcedMove = true;
+        queuedClimbExitUpForcedOffset = offset;
+        queuedClimbExitUpForcedMoveDuration = Mathf.Max(0.01f, duration);
+    }
+
+    public void CompleteClimbExitUpAnimation()
+    {
+        FinishClimbExitUpAnimationLock();
+
+        if (hasQueuedClimbExitUpForcedMove)
+        {
+            hasQueuedClimbExitUpForcedMove = false;
+            BeginClimbExitMove(queuedClimbExitUpForcedOffset, queuedClimbExitUpForcedMoveDuration);
+            return;
+        }
+
+        RequestGravitySuppressed();
+        SetClimbState(false, 0f);
     }
 
     public bool ConsumeClimbExitDownAnimationRequest()

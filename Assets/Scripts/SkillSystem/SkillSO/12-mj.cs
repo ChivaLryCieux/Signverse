@@ -175,7 +175,12 @@ namespace Skills
 
             if (controller.CanAutoExitUpFromActiveClimbTrigger())
             {
-                // TryStartExitUp(controller, "near climb trigger top");
+                ClimbTransitionTrigger activeTrigger = controller.ActiveClimbTransitionTrigger;
+                if (activeTrigger != null && activeTrigger.TryStartExitUp(controller))
+                {
+                    DebugClimb(controller, "StartExitUp: near climb trigger top.");
+                }
+
                 return;
             }
 

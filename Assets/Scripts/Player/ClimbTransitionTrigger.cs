@@ -12,8 +12,19 @@ public class ClimbTransitionTrigger : MonoBehaviour
     [SerializeField] private bool actsAsClimbVolume = true;
     [Tooltip("玩家距离这个 Trigger 顶部小于该距离时，自动触发顶部翻越动画。")]
     [SerializeField] private float autoExitUpTopDistance = 0.35f;
+
+    [Header("顶部翻越强制位移")]
+    [Tooltip("到达顶部并完成翻越动画后应用的强制位移。X=面朝方向前进距离，Y=向上距离。")]
+    [SerializeField] private Vector2 exitUpForcedOffset = new Vector2(0.6f, 0.8f);
+    [Tooltip("强制位移持续时间。越小越接近瞬移，越大越平滑。")]
+    [SerializeField] private float exitUpForcedMoveDuration = 0.18f;
+    [Tooltip("触发顶部翻越后的冷却，避免仍停留在 Trigger 内时重复触发。")]
+    [SerializeField] private float exitUpCooldown = 0.75f;
+
     [Header("调试")]
     [SerializeField] private bool debugLogs = false;
+
+    private float nextExitUpAllowedTime;
 
     public bool ActsAsClimbVolume => actsAsClimbVolume;
     public bool DebugLogs => debugLogs;
@@ -49,6 +60,32 @@ public class ClimbTransitionTrigger : MonoBehaviour
         position.y = topY;
         position.z = 0f;
         return position;
+    }
+
+    public bool TryStartExitUp(PlayerCC controller)
+    {
+        if (!CanUseClimbTransition(controller) || !CanAutoExitUp(controller))
+        {
+            return false;
+        }
+
+        if (Time.time < nextExitUpAllowedTime)
+        {
+            return true;
+        }
+
+        nextExitUpAllowedTime = Time.time + Mathf.Max(0f, exitUpCooldown);
+        controller.QueueClimbExitUpForcedMove(exitUpForcedOffset, exitUpForcedMoveDuration);
+        controller.RequestClimbExitUpAnimation();
+        controller.SetVerticalVelocity(0f);
+        controller.SetClimbState(true, 0f);
+
+        if (debugLogs)
+        {
+            Debug.Log($"[ClimbTransitionTrigger] Start exit up. player={controller.name}, offset={exitUpForcedOffset}, duration={exitUpForcedMoveDuration:F2}", this);
+        }
+
+        return true;
     }
 
     private void Reset()

@@ -70,6 +70,10 @@ public class TestClimb : MonoBehaviour
                 // }
 
                 ClimbTransitionTrigger climbTrigger = GetComponent<ClimbTransitionTrigger>();
+                if (climbTrigger != null)
+                {
+                    climbTrigger.TryStartExitUp(playerCC);
+                }
                 // exitUpTopPosition = climbTrigger != null
                 //     ? climbTrigger.GetExitTopPosition(playerCC, moveOffset.x)
                 //     : playerCC.transform.position + new Vector3(playerCC.GetFacing().x * moveOffset.x, moveOffset.y, 0f);
