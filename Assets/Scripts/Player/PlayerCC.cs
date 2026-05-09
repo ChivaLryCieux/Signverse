@@ -13,7 +13,8 @@ public class PlayerCC : MonoBehaviour
     public AudioClip deathSFX;
     
     
-
+    [Header("临时任务道具")]
+    public bool hasDoorPickup;
     public enum Posture
     {
         Grounded,
