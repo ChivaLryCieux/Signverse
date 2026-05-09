@@ -9,6 +9,7 @@ namespace Skills
         [SerializeField] private float dashDistance = 9f;
         [SerializeField] private float dashDuration = 0.12f;
         [SerializeField] private float cooldown = 1.25f;
+        [SerializeField] private float fallDeathGraceAfterDash = 2f;
 
         [SerializeField] private AnimationCurve dashPostureCurve = new AnimationCurve(
             new Keyframe(0f, 0f),
@@ -145,6 +146,21 @@ namespace Skills
             if (controller != null)
             {
                 controller.SetDashPosture(0f);
+                GrantFallDeathGrace(controller);
+            }
+        }
+
+        private void GrantFallDeathGrace(PlayerCC controller)
+        {
+            if (fallDeathGraceAfterDash <= 0f || controller == null)
+            {
+                return;
+            }
+
+            PlayerDeath death = controller.GetComponent<PlayerDeath>();
+            if (death != null)
+            {
+                death.GrantInvincibility(fallDeathGraceAfterDash);
             }
         }
 

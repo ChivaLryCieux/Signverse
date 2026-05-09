@@ -11,6 +11,7 @@ namespace Skills
         [Header("超级冲刺")]
         [SerializeField] protected float dashSpeed = 18f;
         [SerializeField] protected float cooldown = 1.25f;
+        [SerializeField] protected float fallDeathGraceAfterDash = 2f;
 
         protected float cooldownTimer;
         protected Vector3 dashDirection;
@@ -130,6 +131,21 @@ namespace Skills
             {
                 controller.SetDashPosture(0f);
                 controller.SetUltraDashActive(false);
+                GrantFallDeathGrace(controller);
+            }
+        }
+
+        protected void GrantFallDeathGrace(PlayerCC controller)
+        {
+            if (fallDeathGraceAfterDash <= 0f || controller == null)
+            {
+                return;
+            }
+
+            PlayerDeath death = controller.GetComponent<PlayerDeath>();
+            if (death != null)
+            {
+                death.GrantInvincibility(fallDeathGraceAfterDash);
             }
         }
     }
