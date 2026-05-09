@@ -29222,6 +29222,7 @@ GameObject:
   - component: {fileID: 5971181168642482465}
   - component: {fileID: 5971181168643449825}
   - component: {fileID: 6972979716483199054}
+  - component: {fileID: 7161281662238549476}
   m_Layer: 8
   m_Name: "\u6FC0\u5149\u5C04\u7EBF"
   m_TagString: Hazardous
@@ -29318,6 +29319,27 @@ MeshCollider:
   m_Convex: 0
   m_CookingOptions: 30
   m_Mesh: {fileID: 4300000, guid: 7e2bcef4c87e3fd4a9059f3183385609, type: 3}
+--- !u!65 &7161281662238549476
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5971181168641195297}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 0.400002, y: 0.40000802, z: 1.0000002}
+  m_Center: {x: 0.000008587027, y: 0.000003963709, z: 0.5}
 --- !u!1 &5992467716741497707
 GameObject:
   m_ObjectHideFlags: 0
