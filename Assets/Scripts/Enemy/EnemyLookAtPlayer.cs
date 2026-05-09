@@ -14,6 +14,10 @@ public class EnemyLookAtPlayer : MonoBehaviour
     [Tooltip("哪个轴的正方向用于朝向玩家")]
     public Axis forwardAxis = Axis.Z;
 
+    [Header("目标偏移")]
+    [Tooltip("对玩家位置增加偏移")]
+    public Vector3 targetOffset;
+
     [Header("音效设置")]
     [Tooltip("玩家进入范围时播放的音效")]
     public AudioClip detectClip;
@@ -79,9 +83,9 @@ public class EnemyLookAtPlayer : MonoBehaviour
     {
         if (detectClip == null)
             return;
+
         audioSource.Stop();
         audioSource.PlayOneShot(detectClip);
-       
     }
 
     // ------------------------
@@ -115,8 +119,11 @@ public class EnemyLookAtPlayer : MonoBehaviour
 
     void RotateTowardsPlayer()
     {
+        Vector3 targetPosition =
+            player.position + targetOffset;
+
         Vector3 direction =
-            player.position - transform.position;
+            targetPosition - transform.position;
 
         if (direction.sqrMagnitude < 0.001f)
             return;
@@ -165,12 +172,31 @@ public class EnemyLookAtPlayer : MonoBehaviour
 
     void OnDrawGizmosSelected()
     {
-        if (!debugDraw) return;
+        if (!debugDraw)
+            return;
 
+        // 检测范围
         Gizmos.color = Color.yellow;
+
         Gizmos.DrawWireSphere(
             transform.position,
             field
         );
+
+        // 目标偏移位置
+        if (player != null)
+        {
+            Gizmos.color = Color.red;
+
+            Gizmos.DrawSphere(
+                player.position + targetOffset,
+                0.15f
+            );
+
+            Gizmos.DrawLine(
+                transform.position,
+                player.position + targetOffset
+            );
+        }
     }
 }
