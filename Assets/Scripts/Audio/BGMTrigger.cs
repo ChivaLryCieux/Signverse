@@ -25,12 +25,12 @@ public class TriggerPlaySFX : MonoBehaviour
 
         // 判断是否玩家
         PlayerCC player = other.GetComponentInParent<PlayerCC>();
-
+        Debug.Log("enteredBGMTrigger");
         if (player == null)
         {
             return;
         }
-
+        Debug.Log("playBGM");
         // 根据 Inspector 选择播放模式
         if (playAsLoop)
         {
