@@ -23,7 +23,7 @@ public class ElectricFloor : MonoBehaviour
     Renderer targetRenderer;
 
     public Material electrifiedMat;
-    Material defaultMat;
+    Material[] defaultMats;  // 改为数组存储所有默认材质
 
 
     [Header("可选音效")]
@@ -39,7 +39,8 @@ public class ElectricFloor : MonoBehaviour
         targetRenderer = GetComponent<Renderer>();
         audioSource = GetComponent<AudioSource>();
 
-        defaultMat = targetRenderer.material;
+        // 保存所有原始材质
+        defaultMats = targetRenderer.materials;
 
         StartCoroutine(ElectricLoop());
     }
@@ -51,7 +52,6 @@ public class ElectricFloor : MonoBehaviour
         {
             // 安全阶段
             SetElectrified(false);
-            
 
             yield return new WaitForSeconds(cooldownTime);
             audioSource.Stop();
@@ -69,13 +69,24 @@ public class ElectricFloor : MonoBehaviour
     {
         isElectrified = state;
 
-        // 视觉反馈
+        // 视觉反馈 - 修改所有材质
         if (targetRenderer != null)
         {
             if (isElectrified)
-                targetRenderer.material = electrifiedMat;
+            {
+                // 将所有材质设置为闪光材质
+                Material[] newMats = new Material[defaultMats.Length];
+                for (int i = 0; i < defaultMats.Length; i++)
+                {
+                    newMats[i] = electrifiedMat;
+                }
+                targetRenderer.materials = newMats;
+            }
             else
-                targetRenderer.material = defaultMat;
+            {
+                // 恢复所有原始材质
+                targetRenderer.materials = defaultMats;
+            }
         }
 
         // 音效反馈
