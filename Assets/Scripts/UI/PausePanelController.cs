@@ -1,4 +1,6 @@
 using UnityEngine;
+using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 
 public class PausePanelController : MonoBehaviour
 {
@@ -11,6 +13,18 @@ public class PausePanelController : MonoBehaviour
     [Header("Pause")]
     [SerializeField] private bool pauseGameWhenOpen;
     [SerializeField] private bool controlCursor = true;
+
+    [Header("Actions")]
+    [SerializeField] private PlayerDeath playerDeath;
+    [SerializeField] private string mainMenuSceneName = "开始界面";
+
+    [Header("Placed Images")]
+    [SerializeField] private Image rewindImage;
+    [SerializeField] private Image continueImage;
+    [SerializeField] private Image exitImage;
+    [SerializeField] private Button checkpointButton;
+    [SerializeField] private Button continueButton;
+    [SerializeField] private Button mainMenuButton;
 
     private float previousTimeScale = 1f;
     private CanvasGroup panelCanvasGroup;
@@ -45,6 +59,7 @@ public class PausePanelController : MonoBehaviour
     private void Awake()
     {
         ResolveReferences();
+        SetupActionButtons();
 
         if (hideOnStart)
         {
@@ -118,6 +133,40 @@ public class PausePanelController : MonoBehaviour
         }
     }
 
+    public void RespawnAtLastCheckpoint()
+    {
+        ResolvePlayerDeath();
+        RestoreTimeScaleBeforeAction();
+        Hide();
+
+        if (playerDeath != null)
+        {
+            playerDeath.RespawnAtLastCheckpoint();
+        }
+        else
+        {
+            Debug.LogWarning("PausePanelController 没有找到 PlayerDeath，无法返回上一个 checkpoint。", this);
+        }
+    }
+
+    public void ContinueGame()
+    {
+        Hide();
+    }
+
+    public void LoadMainMenuScene()
+    {
+        if (string.IsNullOrWhiteSpace(mainMenuSceneName))
+        {
+            Debug.LogWarning("PausePanelController 没有设置主菜单 Scene 名称。", this);
+            return;
+        }
+
+        RestoreTimeScaleBeforeAction();
+        activePanel = null;
+        SceneManager.LoadScene(mainMenuSceneName);
+    }
+
     private void OnDestroy()
     {
         if (pauseGameWhenOpen && IsOpen)
@@ -145,6 +194,98 @@ public class PausePanelController : MonoBehaviour
             {
                 panelCanvasGroup = panelRoot.AddComponent<CanvasGroup>();
             }
+        }
+
+        ResolvePlayerDeath();
+    }
+
+    private void SetupActionButtons()
+    {
+        checkpointButton = ResolvePlacedImageButton(rewindImage, checkpointButton);
+        continueButton = ResolvePlacedImageButton(continueImage, continueButton);
+        mainMenuButton = ResolvePlacedImageButton(exitImage, mainMenuButton);
+
+        BindButton(checkpointButton, RespawnAtLastCheckpoint);
+        BindButton(continueButton, ContinueGame);
+        BindButton(mainMenuButton, LoadMainMenuScene);
+    }
+
+    private Button ResolvePlacedImageButton(Image image, Button existingButton)
+    {
+        if (existingButton != null)
+        {
+            if (existingButton.targetGraphic == null && image != null)
+            {
+                existingButton.targetGraphic = image;
+            }
+
+            return existingButton;
+        }
+
+        if (image == null)
+        {
+            return null;
+        }
+
+        image.raycastTarget = true;
+        if (!image.TryGetComponent(out Button button))
+        {
+            button = image.gameObject.AddComponent<Button>();
+        }
+
+        button.targetGraphic = image;
+        return button;
+    }
+
+    private void BindButton(Button button, UnityEngine.Events.UnityAction action)
+    {
+        if (button == null || action == null)
+        {
+            return;
+        }
+
+        button.onClick.RemoveListener(action);
+        button.onClick.AddListener(action);
+    }
+
+    private void ResolvePlayerDeath()
+    {
+        if (playerDeath != null && playerDeath.gameObject.activeInHierarchy)
+        {
+            return;
+        }
+
+        GameObject taggedPlayer = GameObject.FindGameObjectWithTag("Player");
+        if (taggedPlayer != null)
+        {
+            playerDeath = taggedPlayer.GetComponentInParent<PlayerDeath>();
+            if (playerDeath == null)
+            {
+                playerDeath = taggedPlayer.GetComponentInChildren<PlayerDeath>(true);
+            }
+        }
+
+        if (playerDeath != null)
+        {
+            return;
+        }
+
+        PlayerDeath[] playerDeaths = FindObjectsOfType<PlayerDeath>(true);
+        for (int i = 0; i < playerDeaths.Length; i++)
+        {
+            if (playerDeaths[i] != null && playerDeaths[i].gameObject.activeInHierarchy)
+            {
+                playerDeath = playerDeaths[i];
+                return;
+            }
+        }
+    }
+
+    private void RestoreTimeScaleBeforeAction()
+    {
+        if (pauseGameWhenOpen)
+        {
+            Time.timeScale = previousTimeScale;
         }
     }
 

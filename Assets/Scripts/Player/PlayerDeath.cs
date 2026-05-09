@@ -76,6 +76,12 @@ public class PlayerDeath : MonoBehaviour
         Die(true);
     }
 
+    public void RespawnAtLastCheckpoint()
+    {
+        StopAllCoroutines();
+        RespawnAtCheckpoint();
+    }
+
     private void Die(bool ignoreInvincibility)
     {
         if (isDead)
@@ -199,6 +205,13 @@ public class PlayerDeath : MonoBehaviour
     {
         Vector3 previousPosition = transform.position;
         Vector3 respawnPosition = new Vector3(currentCheckpoint.x, currentCheckpoint.y, 0f);
+        bool wasCharacterControllerEnabled = characterController != null && characterController.enabled;
+        bool wasDead = isDead;
+
+        if (characterController != null)
+        {
+            characterController.enabled = false;
+        }
 
         transform.position = respawnPosition;
         transform.forward = Vector3.right;
@@ -215,7 +228,11 @@ public class PlayerDeath : MonoBehaviour
         deathBlockRequestFrame = -1;
         deathBlockedThisFrame = false;
 
-        characterController.enabled = true;
+        if (characterController != null)
+        {
+            characterController.enabled = wasCharacterControllerEnabled || wasDead;
+        }
+
         controller.SetDeathPresentationActive(false);
         controller.SetInputEnabled(true);
         ResetRespawnCamera(previousPosition, respawnPosition);

@@ -19,7 +19,7 @@ public class Checkpoint : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
-        PlayerCC player = other.GetComponent<PlayerCC>();
+        PlayerCC player = other.GetComponentInParent<PlayerCC>();
         if (player == null)
         {
             return;
