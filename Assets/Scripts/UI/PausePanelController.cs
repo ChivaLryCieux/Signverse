@@ -19,6 +19,9 @@ public class PausePanelController : MonoBehaviour
     [SerializeField] private PlayerDeath playerDeath;
     [SerializeField] private string mainMenuSceneName = "开始界面";
 
+    [Header("Audio")]
+    [SerializeField] private CanvasAudio canvasAudio;
+
     [Header("Placed Images")]
     [SerializeField] private Image rewindImage;
     [SerializeField] private Image continueImage;
@@ -91,7 +94,13 @@ public class PausePanelController : MonoBehaviour
             Toggle();
         }
     }
-
+    private void PlayPauseButtonSFX()
+    {
+        if (canvasAudio != null)
+        {
+            canvasAudio.PlayPauseButtonSFX();
+        }
+    }
     public void Toggle()
     {
         if (IsOpen)
@@ -244,9 +253,23 @@ public class PausePanelController : MonoBehaviour
         continueButton = ResolvePlacedImageButton(continueImage, continueButton);
         mainMenuButton = ResolvePlacedImageButton(exitImage, mainMenuButton);
 
-        BindButton(checkpointButton, RespawnAtLastCheckpoint);
-        BindButton(continueButton, OpenTipPanel);
-        BindButton(mainMenuButton, LoadMainMenuScene);
+        BindButton(checkpointButton, () =>
+        {
+            PlayPauseButtonSFX();
+            RespawnAtLastCheckpoint();
+        });
+
+        BindButton(continueButton, () =>
+        {
+            PlayPauseButtonSFX();
+            OpenTipPanel();
+        });
+
+        BindButton(mainMenuButton, () =>
+        {
+            PlayPauseButtonSFX();
+            LoadMainMenuScene();
+        });
     }
 
     private Button ResolvePlacedImageButton(Image image, Button existingButton)

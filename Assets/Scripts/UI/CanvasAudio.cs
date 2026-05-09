@@ -10,6 +10,7 @@ public class CanvasAudio : MonoBehaviour
     [Header("audio")]
     public AudioClip showNarrativeSFX;
     public AudioClip closeNarrativeSFX; 
+    public AudioClip pauseButtonSFX;
     // Start is called before the first frame update
     void Start()
     {
@@ -31,5 +32,9 @@ public class CanvasAudio : MonoBehaviour
     public void closeNarrative()
     {
         audioSource.PlayOneShot(closeNarrativeSFX);
+    }
+    public void PlayPauseButtonSFX()
+    {
+        audioSource.PlayOneShot(pauseButtonSFX);
     }
 }
