@@ -8,6 +8,7 @@ public class PausePanelController : MonoBehaviour
 
     [Header("Panel")]
     [SerializeField] private GameObject panelRoot;
+    [SerializeField] private GameObject tipPanel;
     [SerializeField] private bool hideOnStart = true;
 
     [Header("Pause")]
@@ -28,10 +29,11 @@ public class PausePanelController : MonoBehaviour
 
     private float previousTimeScale = 1f;
     private CanvasGroup panelCanvasGroup;
+    private CanvasGroup tipPanelCanvasGroup;
 
     private bool UsesCanvasGroupVisibility => panelRoot == gameObject;
 
-    public static bool IsPaused => activePanel != null && activePanel.IsOpen;
+    public static bool IsPaused => activePanel != null && (activePanel.IsOpen || activePanel.IsTipPanelOpen());
 
     public bool IsOpen
     {
@@ -65,6 +67,10 @@ public class PausePanelController : MonoBehaviour
         {
             Hide();
         }
+        else
+        {
+            SetTipPanelVisible(false);
+        }
     }
 
     private void Update()
@@ -76,6 +82,12 @@ public class PausePanelController : MonoBehaviour
 
         if (Input.GetKeyDown(KeyCode.Escape))
         {
+            if (IsTipPanelOpen())
+            {
+                CloseTipPanel();
+                return;
+            }
+
             Toggle();
         }
     }
@@ -120,6 +132,7 @@ public class PausePanelController : MonoBehaviour
 
     public void Hide()
     {
+        SetTipPanelVisible(false);
         SetPanelVisible(false);
 
         if (activePanel == this)
@@ -154,6 +167,31 @@ public class PausePanelController : MonoBehaviour
         Hide();
     }
 
+    public void OpenTipPanel()
+    {
+        if (tipPanel == null)
+        {
+            ResolveTipPanel();
+        }
+
+        if (tipPanel == null)
+        {
+            Debug.LogWarning("PausePanelController 没有找到 TipPanel，无法打开提示面板。", this);
+            return;
+        }
+
+        SetPanelVisible(false);
+        SetTipPanelVisible(true);
+        activePanel = this;
+    }
+
+    public void CloseTipPanel()
+    {
+        SetTipPanelVisible(false);
+        SetPanelVisible(true);
+        activePanel = this;
+    }
+
     public void LoadMainMenuScene()
     {
         if (string.IsNullOrWhiteSpace(mainMenuSceneName))
@@ -169,7 +207,7 @@ public class PausePanelController : MonoBehaviour
 
     private void OnDestroy()
     {
-        if (pauseGameWhenOpen && IsOpen)
+        if (pauseGameWhenOpen && (IsOpen || IsTipPanelOpen()))
         {
             Time.timeScale = previousTimeScale;
         }
@@ -197,6 +235,7 @@ public class PausePanelController : MonoBehaviour
         }
 
         ResolvePlayerDeath();
+        ResolveTipPanel();
     }
 
     private void SetupActionButtons()
@@ -206,7 +245,7 @@ public class PausePanelController : MonoBehaviour
         mainMenuButton = ResolvePlacedImageButton(exitImage, mainMenuButton);
 
         BindButton(checkpointButton, RespawnAtLastCheckpoint);
-        BindButton(continueButton, ContinueGame);
+        BindButton(continueButton, OpenTipPanel);
         BindButton(mainMenuButton, LoadMainMenuScene);
     }
 
@@ -281,6 +320,29 @@ public class PausePanelController : MonoBehaviour
         }
     }
 
+    private void ResolveTipPanel()
+    {
+        if (tipPanel != null)
+        {
+            CacheTipPanelCanvasGroup();
+            return;
+        }
+
+        GameObject[] sceneObjects = Resources.FindObjectsOfTypeAll<GameObject>();
+        for (int i = 0; i < sceneObjects.Length; i++)
+        {
+            GameObject sceneObject = sceneObjects[i];
+            if (sceneObject == null || sceneObject.name != "TipPanel" || !sceneObject.scene.IsValid())
+            {
+                continue;
+            }
+
+            tipPanel = sceneObject;
+            CacheTipPanelCanvasGroup();
+            return;
+        }
+    }
+
     private void RestoreTimeScaleBeforeAction()
     {
         if (pauseGameWhenOpen)
@@ -314,5 +376,60 @@ public class PausePanelController : MonoBehaviour
         }
 
         panelRoot.SetActive(visible);
+    }
+
+    private bool IsTipPanelOpen()
+    {
+        if (tipPanel == null)
+        {
+            return false;
+        }
+
+        if (tipPanelCanvasGroup != null)
+        {
+            return tipPanel.activeInHierarchy && tipPanelCanvasGroup.alpha > 0f;
+        }
+
+        return tipPanel.activeSelf;
+    }
+
+    private void SetTipPanelVisible(bool visible)
+    {
+        if (tipPanel == null)
+        {
+            ResolveTipPanel();
+        }
+
+        if (tipPanel == null)
+        {
+            return;
+        }
+
+        CacheTipPanelCanvasGroup();
+        if (visible && !tipPanel.activeSelf)
+        {
+            tipPanel.SetActive(true);
+        }
+
+        if (tipPanelCanvasGroup != null)
+        {
+            tipPanelCanvasGroup.alpha = visible ? 1f : 0f;
+            tipPanelCanvasGroup.interactable = visible;
+            tipPanelCanvasGroup.blocksRaycasts = visible;
+            return;
+        }
+
+        tipPanel.SetActive(visible);
+    }
+
+    private void CacheTipPanelCanvasGroup()
+    {
+        if (tipPanel == null)
+        {
+            tipPanelCanvasGroup = null;
+            return;
+        }
+
+        tipPanelCanvasGroup = tipPanel.GetComponent<CanvasGroup>();
     }
 }
