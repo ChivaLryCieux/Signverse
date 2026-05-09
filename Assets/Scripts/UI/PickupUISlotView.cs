@@ -133,6 +133,12 @@ public class PickupUISlotView : MonoBehaviour, IPointerClickHandler, IPointerEnt
             return;
         }
 
+        if (role == SlotRole.Equipped && !owner.IsEquippedSlotUnlocked(equippedIndex))
+        {
+            owner.OnEquippedSlotClicked(equippedIndex, eventData.clickCount);
+            return;
+        }
+
         if (audioSource != null && clickSFXList != null && clickSFXList.Count > 0)
         {
             int index = Random.Range(0, clickSFXList.Count);
@@ -164,7 +170,8 @@ public class PickupUISlotView : MonoBehaviour, IPointerClickHandler, IPointerEnt
             return;
         }
 
-        bool interactive = hasItem || (role == SlotRole.Equipped && owner != null && owner.HasSelectedUnlockItem);
+        bool slotUnlocked = role != SlotRole.Equipped || owner == null || owner.IsEquippedSlotUnlocked(equippedIndex);
+        bool interactive = slotUnlocked && (hasItem || (role == SlotRole.Equipped && owner != null && owner.HasSelectedUnlockItem));
         if (!interactive)
         {
             return;

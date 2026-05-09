@@ -41,6 +41,10 @@ public class PickupUIController : MonoBehaviour
     [Tooltip("按界面位置顺序拖入左上角 5 个装备槽。装备不会自动补位，槽位允许空缺。")]
     [SerializeField] private PickupUISlotView[] equippedSlots = new PickupUISlotView[5];
 
+    [Header("第五装备槽")]
+    [Tooltip("左上角第 5 个装备槽是否已解锁。未解锁时不能安装技能，可通过 Trigger Pickup 按 E 解锁。")]
+    [SerializeField] private bool fifthEquippedSlotUnlocked;
+
     [Header("行为")]
     [SerializeField] private bool hideLockedSlotsOnStart = true;
 
@@ -336,6 +340,12 @@ public class PickupUIController : MonoBehaviour
             return;
         }
 
+        if (!IsEquippedSlotUnlocked(equippedIndex))
+        {
+            Debug.Log("左上角第 5 个技能槽尚未解锁，需要先拾取对应道具。", this);
+            return;
+        }
+
         if (clickCount >= 2 && equippedSlotOccupied[equippedIndex] && IsMimicItem(equippedSlotItems[equippedIndex]) && hasMimicTarget)
         {
             if (!CanModifySkillLoadout())
@@ -367,6 +377,12 @@ public class PickupUIController : MonoBehaviour
             return;
         }
 
+        if (!IsEquippedSlotUnlocked(equippedIndex))
+        {
+            Debug.Log("左上角第 5 个技能槽尚未解锁，需要先拾取对应道具。", this);
+            return;
+        }
+
         if (!CanModifySkillLoadout())
         {
             return;
@@ -376,6 +392,12 @@ public class PickupUIController : MonoBehaviour
         if (!unlockedItems.Contains(itemToEquip) || IsEquipped(itemToEquip))
         {
             ClearSelectedUnlockItem();
+            return;
+        }
+
+        if (!CanEquipItemAtSlot(itemToEquip, equippedIndex))
+        {
+            Debug.Log("左上角第 5 个技能槽只能装备 10、20、30、40 系列的基础技能。", this);
             return;
         }
 
@@ -429,6 +451,39 @@ public class PickupUIController : MonoBehaviour
         SyncLinkedSkills();
 
         ItemUnequipped?.Invoke(removedItem);
+    }
+
+    public void UnlockFifthEquippedSlot()
+    {
+        if (fifthEquippedSlotUnlocked)
+        {
+            RefreshEquippedSlots();
+            return;
+        }
+
+        fifthEquippedSlotUnlocked = true;
+        RefreshEquippedSlots();
+    }
+
+    public bool IsEquippedSlotUnlocked(int equippedIndex)
+    {
+        return equippedIndex != 4 || fifthEquippedSlotUnlocked;
+    }
+
+    private bool CanEquipItemAtSlot(PickupItemId itemId, int equippedIndex)
+    {
+        if (equippedIndex != 4)
+        {
+            return true;
+        }
+
+        if (!entryById.TryGetValue(itemId, out PickupUiEntry entry) || entry == null)
+        {
+            return false;
+        }
+
+        int rightSideIndex = GetEffectiveRightSideIndex(entry);
+        return rightSideIndex >= 1 && rightSideIndex <= 4;
     }
 
     public bool IsUnlocked(PickupItemId id)
@@ -668,6 +723,12 @@ public class PickupUIController : MonoBehaviour
             }
 
             slot.InitializeEquippedSlot(this, i);
+            if (!IsEquippedSlotUnlocked(i))
+            {
+                slot.ClearIcon();
+                continue;
+            }
+
             if (!equippedSlotOccupied[i])
             {
                 slot.ClearIcon();
@@ -724,6 +785,7 @@ public class PickupUIController : MonoBehaviour
 
         AddLinkedSkillForPair(1, 2);
         AddLinkedSkillForPair(3, 4);
+        AddStandaloneSkillForSlot(5);
 
         // Lry的修改：把装备槽推导出的技能同步到 PlayerCC。动画脚本不再需要读取 UI 私有状态，只读取 PlayerCC.equippedSkills。
         player.SetEquippedSkills(equippedSkillSnapshot);
@@ -768,6 +830,42 @@ public class PickupUIController : MonoBehaviour
         }
 
         // Lry的修改：无论该技能之前是否已在 unlockedSkills 中，都应该进入当前装备快照；unlocked 与 equipped 是两个不同生命周期的集合。
+        if (!equippedSkillSnapshot.Contains(skill))
+        {
+            equippedSkillSnapshot.Add(skill);
+        }
+    }
+
+    private void AddStandaloneSkillForSlot(int slotNumber)
+    {
+        if (!TryGetEquippedEntry(slotNumber, out PickupUiEntry entry))
+        {
+            return;
+        }
+
+        int mainIndex = GetEffectiveRightSideIndex(entry);
+        if (mainIndex < 1 || mainIndex > 4)
+        {
+            return;
+        }
+
+        string mainCode = GetEffectiveComboCode(entry);
+        string prefix = mainIndex + "0-";
+        string exactId = BuildLinkedSkillId(prefix, mainCode, null);
+        SkillBase skill = FindSkill(exactId, prefix);
+
+        if (skill == null)
+        {
+            Debug.LogWarning($"没有在 SkillDatabase 中找到基础技能：{exactId} 或前缀 {prefix}", this);
+            return;
+        }
+
+        if (!player.unlockedSkills.Contains(skill))
+        {
+            player.unlockedSkills.Add(skill);
+            appliedLinkedSkills.Add(skill);
+        }
+
         if (!equippedSkillSnapshot.Contains(skill))
         {
             equippedSkillSnapshot.Add(skill);
