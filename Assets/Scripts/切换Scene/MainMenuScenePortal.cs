@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.InputSystem;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
@@ -33,10 +34,24 @@ public class MainMenuScenePortal : MonoBehaviour
     // ------------------------
 
     void Awake()
+{
+    // 停止全局 SFX
+    if (AudioSFXManager.Instance != null)
     {
-        if(audioSource == null)
+        AudioSFXManager.Instance.StopAllAudioImmediately();
+    }
+
+    if(audioSource == null)
+    {
+        audioSource = GetComponent<AudioSource>();
+    }
+}
+    void Update()
+    {
+        if (Keyboard.current.escapeKey.wasPressedThisFrame)
         {
-            audioSource = GetComponent<AudioSource>();
+            Application.Quit();
+            Debug.Log("已退出游戏！");
         }
     }
     private void OnMouseDown()

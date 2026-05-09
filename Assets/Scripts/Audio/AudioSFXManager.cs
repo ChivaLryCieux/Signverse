@@ -102,4 +102,23 @@ public class AudioSFXManager : MonoBehaviour
 
         fadeCoroutine = null;
     }
+
+
+    public void StopAllAudioImmediately()
+    {
+        if (fadeCoroutine != null)
+        {
+            StopCoroutine(fadeCoroutine);
+            fadeCoroutine = null;
+        }
+
+        if (sfxSource == null)
+        {
+            return;
+        }
+
+        sfxSource.Stop();
+        sfxSource.clip = null;
+        sfxSource.loop = false;
+    }
 }
