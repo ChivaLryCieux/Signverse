@@ -34,6 +34,10 @@ public class ElectricFloor : MonoBehaviour
     public AudioClip chargeElectricitySFX;
 
 
+    // 保存原始tag
+    private string originalTag;
+
+
     void Start()
     {
         targetRenderer = GetComponent<Renderer>();
@@ -41,6 +45,9 @@ public class ElectricFloor : MonoBehaviour
 
         // 保存所有原始材质
         defaultMats = targetRenderer.materials;
+
+        // 保存原始tag
+        originalTag = gameObject.tag;
 
         StartCoroutine(ElectricLoop());
     }
@@ -88,6 +95,19 @@ public class ElectricFloor : MonoBehaviour
                 targetRenderer.materials = defaultMats;
             }
         }
+
+        // ===== 新增：Tag切换逻辑 =====
+        if (isElectrified)
+        {
+            // 通电时设置为 Hazardous
+            gameObject.tag = "Hazardous";
+        }
+        else
+        {
+            // 安全时恢复原始tag
+            gameObject.tag = originalTag;
+        }
+        // ============================
 
         // 音效反馈
         if (isElectrified)
