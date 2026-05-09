@@ -22,7 +22,7 @@ namespace Skills
                 cloakEffect = user.AddComponent<CloakEffectController>();
             }
 
-            cloakEffect.RequestCloak(this, active, volumeTargetWeight, volumeEnterLerpSpeed, volumeExitLerpSpeed);
+            cloakEffect.RequestCloak(this, active, volumeTargetWeight, volumeEnterLerpSpeed, volumeExitLerpSpeed, false);
         }
     }
 }

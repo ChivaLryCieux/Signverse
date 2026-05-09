@@ -1099,32 +1099,15 @@ public class PlayerCC : MonoBehaviour
         float distance =
             Mathf.Max(0.01f, skillLoadoutSurfaceCheckDistance + 0.05f);
 
-        if (!Physics.SphereCast(
-                sphereOrigin,
-                radius,
-                Vector3.down,
-                out RaycastHit hit,
-                distance,
-                skillLoadoutSurfaceMask,
-                QueryTriggerInteraction.Ignore))
-        {
-            return false;
-        }
+        RaycastHit[] hits = Physics.SphereCastAll(
+            sphereOrigin,
+            radius,
+            Vector3.down,
+            distance,
+            skillLoadoutSurfaceMask,
+            QueryTriggerInteraction.Ignore);
 
-        if (hit.collider == null)
-        {
-            return false;
-        }
-
-        for (int i = 0; i < requiredTags.Count; i++)
-        {
-            if (hit.collider.CompareTag(requiredTags[i]))
-            {
-                return true;
-            }
-        }
-
-        return false;
+        return HasAnyTaggedSurfaceHit(hits, requiredTags);
     }
     private bool IsStandingOnTaggedSurface(string requiredTag)
     {
@@ -1145,19 +1128,82 @@ public class PlayerCC : MonoBehaviour
         float radius = Mathf.Max(0.01f, activeController.radius * 0.9f);
         float distance = Mathf.Max(0.01f, skillLoadoutSurfaceCheckDistance + 0.05f);
 
-        if (!Physics.SphereCast(
-                sphereOrigin,
-                radius,
-                Vector3.down,
-                out RaycastHit hit,
-                distance,
-                skillLoadoutSurfaceMask,
-                QueryTriggerInteraction.Ignore))
+        RaycastHit[] hits = Physics.SphereCastAll(
+            sphereOrigin,
+            radius,
+            Vector3.down,
+            distance,
+            skillLoadoutSurfaceMask,
+            QueryTriggerInteraction.Ignore);
+
+        return HasAnyTaggedSurfaceHit(hits, requiredTag);
+    }
+
+    private bool HasAnyTaggedSurfaceHit(RaycastHit[] hits, List<string> requiredTags)
+    {
+        if (hits == null || requiredTags == null)
         {
             return false;
         }
 
-        return hit.collider != null && hit.collider.CompareTag(requiredTag);
+        for (int i = 0; i < hits.Length; i++)
+        {
+            Collider hitCollider = hits[i].collider;
+            if (hitCollider == null)
+            {
+                continue;
+            }
+
+            for (int j = 0; j < requiredTags.Count; j++)
+            {
+                if (HasTagInParents(hitCollider.transform, requiredTags[j]))
+                {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    private bool HasAnyTaggedSurfaceHit(RaycastHit[] hits, string requiredTag)
+    {
+        if (hits == null)
+        {
+            return false;
+        }
+
+        for (int i = 0; i < hits.Length; i++)
+        {
+            Collider hitCollider = hits[i].collider;
+            if (hitCollider != null && HasTagInParents(hitCollider.transform, requiredTag))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private bool HasTagInParents(Transform target, string requiredTag)
+    {
+        if (target == null || string.IsNullOrWhiteSpace(requiredTag))
+        {
+            return false;
+        }
+
+        Transform current = target;
+        while (current != null)
+        {
+            if (string.Equals(current.gameObject.tag, requiredTag, StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+
+            current = current.parent;
+        }
+
+        return false;
     }
 
     private void RefreshCloakState()

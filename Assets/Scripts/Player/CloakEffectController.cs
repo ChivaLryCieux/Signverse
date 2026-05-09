@@ -35,6 +35,7 @@ namespace Skills
             public float volumeWeight;
             public float enterVolumeSpeed;
             public float exitVolumeSpeed;
+            public bool hideRenderers;
         }
 
         private struct IgnoredCollisionPair
@@ -56,6 +57,8 @@ namespace Skills
         private float currentExitVolumeSpeed = InstantVolumeSpeed;
         private float lastVolumeUpdateTime = -1f;
         private float nextWaterColliderRefreshTime;
+        private bool shouldHideRenderersForActiveCloak;
+        private bool areRenderersHiddenByCloak;
         public bool IsCloaked => isCloaked;
 
         private void Awake()
@@ -105,6 +108,17 @@ namespace Skills
             float enterVolumeSpeed,
             float exitVolumeSpeed)
         {
+            RequestCloak(source, active, volumeWeight, enterVolumeSpeed, exitVolumeSpeed, hideRenderersWhileCloaked);
+        }
+
+        public void RequestCloak(
+            object source,
+            bool active,
+            float volumeWeight,
+            float enterVolumeSpeed,
+            float exitVolumeSpeed,
+            bool hideRenderers)
+        {
             if (source == null)
             {
                 source = this;
@@ -122,6 +136,7 @@ namespace Skills
                 request.volumeWeight = Mathf.Clamp01(volumeWeight);
                 request.enterVolumeSpeed = Mathf.Max(0f, enterVolumeSpeed);
                 request.exitVolumeSpeed = Mathf.Max(0f, exitVolumeSpeed);
+                request.hideRenderers = hideRenderers;
             }
             else
             {
@@ -140,6 +155,7 @@ namespace Skills
         private void RefreshCloakStateFromRequests()
         {
             bool hasActiveRequest = activeRequests.Count > 0;
+            shouldHideRenderersForActiveCloak = false;
 
             if (hasActiveRequest)
             {
@@ -153,6 +169,8 @@ namespace Skills
                         currentVolumeTargetWeight = request.volumeWeight;
                         currentEnterVolumeSpeed = request.enterVolumeSpeed;
                     }
+
+                    shouldHideRenderersForActiveCloak |= request.hideRenderers;
                 }
             }
             else
@@ -161,6 +179,7 @@ namespace Skills
             }
 
             SetCloaked(hasActiveRequest);
+            UpdateCloakedRendererVisibility();
         }
 
         private void SetCloaked(bool cloaked)
@@ -173,7 +192,6 @@ namespace Skills
             isCloaked = cloaked;
             if (isCloaked)
             {
-                HideCloakedRenderers();
                 EnableWaterCollisionIgnore(true);
             }
             else
@@ -195,6 +213,17 @@ namespace Skills
                     audioSource.PlayOneShot(clip, cloakSfxVolume);
                 }
             }
+        }
+
+        private void UpdateCloakedRendererVisibility()
+        {
+            if (isCloaked && shouldHideRenderersForActiveCloak)
+            {
+                HideCloakedRenderers();
+                return;
+            }
+
+            RestoreRendererVisibility();
         }
 
         private void UpdateVolumeWeight()
@@ -231,11 +260,6 @@ namespace Skills
 
         private void HideCloakedRenderers()
         {
-            if (!hideRenderersWhileCloaked)
-            {
-                return;
-            }
-
             if (cachedRenderers == null || cachedRenderers.Length == 0)
             {
                 cachedRenderers = GetComponentsInChildren<Renderer>(true);
@@ -256,11 +280,13 @@ namespace Skills
 
                 targetRenderer.enabled = false;
             }
+
+            areRenderersHiddenByCloak = true;
         }
 
         private void RestoreRendererVisibility()
         {
-            if (!hideRenderersWhileCloaked)
+            if (!areRenderersHiddenByCloak)
             {
                 return;
             }
@@ -274,6 +300,7 @@ namespace Skills
             }
 
             rendererVisibilityBeforeCloak.Clear();
+            areRenderersHiddenByCloak = false;
         }
 
         private void UpdateWaterCollisionIgnore()
