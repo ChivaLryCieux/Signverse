@@ -12,7 +12,6 @@ namespace Skills
         [SerializeField] private float dashDistance = 9f;
         [SerializeField] private float dashDuration = 0.12f;
         [SerializeField] private float cooldown = 0.8f;
-        [SerializeField] private float fallDeathGraceAfterDash = 2f;
         [SerializeField] [Range(0.1f, 2f)]
         private float diagonalBias = 0.7f; // 控制斜前方角度
 
@@ -100,6 +99,7 @@ namespace Skills
         {
             float actualDuration = Mathf.Max(0.01f, dashDuration);
             Vector3 normalizedDirection = direction.normalized;
+            ResetFallDeathHeight(controller);
 
             isDashing = true;
             dashTimer = actualDuration;
@@ -148,13 +148,12 @@ namespace Skills
             {
                 controller.SetDashPosture(0f);
                 controller.SetUltraDashActive(false);
-                GrantFallDeathGrace(controller);
             }
         }
 
-        private void GrantFallDeathGrace(PlayerCC controller)
+        private void ResetFallDeathHeight(PlayerCC controller)
         {
-            if (fallDeathGraceAfterDash <= 0f || controller == null)
+            if (controller == null)
             {
                 return;
             }
@@ -162,7 +161,7 @@ namespace Skills
             PlayerDeath death = controller.GetComponent<PlayerDeath>();
             if (death != null)
             {
-                death.GrantFallDeathGrace(fallDeathGraceAfterDash);
+                death.ResetFallDeathHeight();
             }
         }
 

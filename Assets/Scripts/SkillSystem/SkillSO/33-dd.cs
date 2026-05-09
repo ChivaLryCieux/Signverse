@@ -11,7 +11,6 @@ namespace Skills
         [Header("超级冲刺")]
         [SerializeField] protected float dashSpeed = 18f;
         [SerializeField] protected float cooldown = 1.25f;
-        [SerializeField] protected float fallDeathGraceAfterDash = 2f;
 
         protected float cooldownTimer;
         protected Vector3 dashDirection;
@@ -89,6 +88,7 @@ namespace Skills
         protected void StartDash(PlayerCC controller, Vector3 dashDirection)
         {
             Vector3 normalizedDirection = dashDirection.normalized;
+            ResetFallDeathHeight(controller);
 
             isDashing = true;
             this.dashDirection = normalizedDirection;
@@ -131,13 +131,12 @@ namespace Skills
             {
                 controller.SetDashPosture(0f);
                 controller.SetUltraDashActive(false);
-                GrantFallDeathGrace(controller);
             }
         }
 
-        protected void GrantFallDeathGrace(PlayerCC controller)
+        protected void ResetFallDeathHeight(PlayerCC controller)
         {
-            if (fallDeathGraceAfterDash <= 0f || controller == null)
+            if (controller == null)
             {
                 return;
             }
@@ -145,7 +144,7 @@ namespace Skills
             PlayerDeath death = controller.GetComponent<PlayerDeath>();
             if (death != null)
             {
-                death.GrantFallDeathGrace(fallDeathGraceAfterDash);
+                death.ResetFallDeathHeight();
             }
         }
     }

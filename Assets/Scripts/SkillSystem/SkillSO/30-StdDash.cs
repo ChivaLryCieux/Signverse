@@ -9,7 +9,6 @@ namespace Skills
         [SerializeField] private float dashDistance = 9f;
         [SerializeField] private float dashDuration = 0.12f;
         [SerializeField] private float cooldown = 1.25f;
-        [SerializeField] private float fallDeathGraceAfterDash = 2f;
 
         [SerializeField] private AnimationCurve dashPostureCurve = new AnimationCurve(
             new Keyframe(0f, 0f),
@@ -101,6 +100,7 @@ namespace Skills
         {
             float actualDuration = Mathf.Max(0.01f, dashDuration);
             Vector3 normalizedDirection = direction.normalized;
+            ResetFallDeathHeight(controller);
 
             isDashing = true;
             dashTimer = actualDuration;
@@ -146,13 +146,12 @@ namespace Skills
             if (controller != null)
             {
                 controller.SetDashPosture(0f);
-                GrantFallDeathGrace(controller);
             }
         }
 
-        private void GrantFallDeathGrace(PlayerCC controller)
+        private void ResetFallDeathHeight(PlayerCC controller)
         {
-            if (fallDeathGraceAfterDash <= 0f || controller == null)
+            if (controller == null)
             {
                 return;
             }
@@ -160,7 +159,7 @@ namespace Skills
             PlayerDeath death = controller.GetComponent<PlayerDeath>();
             if (death != null)
             {
-                death.GrantFallDeathGrace(fallDeathGraceAfterDash);
+                death.ResetFallDeathHeight();
             }
         }
 
