@@ -11,6 +11,13 @@ public class BoltPickupTrigger : MonoBehaviour
     [Header("提示")]
     [SerializeField] private BoltPickupTipController tipController;
 
+    [Header("消失物体")]
+    [SerializeField] private GameObject objectToDisappear;  // 按E后要从画面中消失的物体
+
+    [Header("音效")]
+    [SerializeField] private AudioClip pickupSound;        // 拾取音效
+    public AudioSource audioSource;      // 播放音效的源
+
     private bool playerInRange;
     private bool collected;
     private bool tipShown;
@@ -34,6 +41,12 @@ public class BoltPickupTrigger : MonoBehaviour
     private void Awake()
     {
         ResolveReferences();
+        // 如果没有手动指定 AudioSource，尝试从当前物体获取或添加
+        if (audioSource == null)
+        {
+            audioSource = GetComponent<AudioSource>();
+            
+        }
     }
 
     private void OnDisable()
@@ -105,6 +118,15 @@ public class BoltPickupTrigger : MonoBehaviour
 
         HideTip();
 
+        // 播放拾取音效
+        PlayPickupSound();
+
+        // 让指定的物体从画面中消失
+        if (objectToDisappear != null)
+        {
+            objectToDisappear.SetActive(false);
+        }
+
         if (destroyAfterPickup)
         {
             Destroy(gameObject);
@@ -112,6 +134,14 @@ public class BoltPickupTrigger : MonoBehaviour
         else
         {
             gameObject.SetActive(false);
+        }
+    }
+
+    private void PlayPickupSound()
+    {
+        if (pickupSound != null && audioSource != null)
+        {
+            audioSource.PlayOneShot(pickupSound);
         }
     }
 

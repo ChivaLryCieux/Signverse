@@ -76,7 +76,7 @@ namespace Skills
             }
         }
 
-        private bool TryGetDashDirection(PlayerCC controller, out Vector3 direction)
+        protected virtual bool TryGetDashDirection(PlayerCC controller, out Vector3 direction)
         {
             Vector2 input = controller.GetMoveInput();
 
@@ -109,6 +109,8 @@ namespace Skills
             dashCurveArea = Mathf.Max(0.01f, CalculateCurveArea(dashPostureCurve, dashCurveSamples));
             cooldownTimer = cooldown;
             controller.SetDashPosture(EvaluateDashPosture(0f));
+            controller.SetUltraDashActive(false);
+            OnDashStarted(controller, actualDuration);
 
             if (Mathf.Abs(normalizedDirection.x) > 0.01f)
             {
@@ -146,6 +148,7 @@ namespace Skills
             if (controller != null)
             {
                 controller.SetDashPosture(0f);
+                controller.SetUltraDashActive(false);
             }
         }
 
@@ -193,6 +196,10 @@ namespace Skills
             }
 
             return area;
+        }
+
+        protected virtual void OnDashStarted(PlayerCC controller, float duration)
+        {
         }
     }
 }
