@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 1322971119448596478}
   - component: {fileID: 175641337348892074}
   - component: {fileID: 6032746975147376783}
+  - component: {fileID: 6866085101489019606}
   m_Layer: 0
   m_Name: Cloak
   m_TagString: Untagged
@@ -73,6 +74,32 @@ MonoBehaviour:
   skillPrompt: {fileID: 0}
   skillPromptName: SkillPrompt
   skillId: c
+  pickupSound: {fileID: 8300000, guid: a370c807cf99b9f4984d1545d901e403, type: 3}
+  audioSource: {fileID: 0}
+--- !u!114 &6866085101489019606
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5193088043389708752}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 92734226a7cdcad4292e653b3f11dadc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  amplitude: 0.3
+  speed: 1
+  randomizeSpeed: 1
+  minSpeed: 0.9
+  maxSpeed: 1.5
+  speedRange: {x: 0, y: 0}
+  randomizeAmplitude: 1
+  minAmplitude: 0.08
+  maxAmplitude: 0.18
+  amplitudeRange: {x: 0, y: 0}
+  phaseOffset: 0
+  randomizePhase: 1
 --- !u!1001 &2721119097476955988
 PrefabInstance:
   m_ObjectHideFlags: 0

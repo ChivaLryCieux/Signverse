@@ -17,6 +17,10 @@ public class PickupCollectible : MonoBehaviour
     [Tooltip("不为空时，拾取后会调用 PlayerCC.UnlockNewSkill(skillId)。")]
     [SerializeField] private string skillId;
 
+    [Header("音效")]
+    [SerializeField] private AudioClip pickupSound;        // 拾取音效
+    [SerializeField] private AudioSource audioSource;      // 播放音效的源
+
     private bool playerInRange;
     private bool collected;
     private bool promptShown;
@@ -39,6 +43,16 @@ public class PickupCollectible : MonoBehaviour
         if (skillPrompt != null)
         {
             skillPrompt.SetActive(false);
+        }
+
+        // 如果没有手动指定 AudioSource，尝试从当前物体获取或添加
+        if (audioSource == null)
+        {
+            audioSource = GetComponent<AudioSource>();
+            if (audioSource == null)
+            {
+                audioSource = gameObject.AddComponent<AudioSource>();
+            }
         }
     }
 
@@ -101,6 +115,9 @@ public class PickupCollectible : MonoBehaviour
         playerInRange = false;
         HidePrompt();
 
+        // 播放拾取音效
+        PlayPickupSound();
+
         PickupUIController uiController = PickupUIController.Instance;
         if (uiController == null)
         {
@@ -128,6 +145,14 @@ public class PickupCollectible : MonoBehaviour
         else
         {
             gameObject.SetActive(false);
+        }
+    }
+
+    private void PlayPickupSound()
+    {
+        if (pickupSound != null && audioSource != null)
+        {
+            audioSource.PlayOneShot(pickupSound);
         }
     }
 
