@@ -150,7 +150,12 @@ public class InteractionPanelTrigger : MonoBehaviour
 
     private bool WasInteractPressed()
     {
+<<<<<<< HEAD
         return Keyboard.current != null &&
+=======
+        return !CartoonPanelController.IsPlaying &&
+               Keyboard.current != null &&
+>>>>>>> 9f279571ee96533e4d879bbaa5feaa2762236803
                Keyboard.current.eKey.wasPressedThisFrame;
     }
 

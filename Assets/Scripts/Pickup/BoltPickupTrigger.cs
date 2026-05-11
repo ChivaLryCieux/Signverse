@@ -159,7 +159,9 @@ public class BoltPickupTrigger : MonoBehaviour
 
     private bool WasInteractPressed()
     {
-        return Keyboard.current != null &&
+        
+        return !CartoonPanelController.IsPlaying &&
+               Keyboard.current != null &&
                Keyboard.current.eKey.wasPressedThisFrame;
     }
 

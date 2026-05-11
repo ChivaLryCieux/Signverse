@@ -15,7 +15,7 @@ public class DoorPickup : MonoBehaviour
             return;
 
         // 按E拾取
-        if (Input.GetKeyDown(KeyCode.E))
+        if (!CartoonPanelController.IsPlaying && Input.GetKeyDown(KeyCode.E))
         {
             currentPlayer.hasDoorPickup = true;
             Debug.Log("picked door");
