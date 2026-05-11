@@ -11,12 +11,14 @@ public class BoltPickupTrigger : MonoBehaviour
     [Header("提示")]
     [SerializeField] private BoltPickupTipController tipController;
 
+    [SerializeField] private GameObject extraTipObject;
+
     [Header("消失物体")]
     [SerializeField] private GameObject objectToDisappear;  // 按E后要从画面中消失的物体
 
     [Header("音效")]
     [SerializeField] private AudioClip pickupSound;        // 拾取音效
-    public AudioSource audioSource;      // 播放音效的源
+    public AudioSource audioSource;                        // 播放音效的源
 
     private bool playerInRange;
     private bool collected;
@@ -32,6 +34,7 @@ public class BoltPickupTrigger : MonoBehaviour
     private void OnValidate()
     {
         Collider triggerCollider = GetComponent<Collider>();
+
         if (triggerCollider != null)
         {
             triggerCollider.isTrigger = true;
@@ -41,11 +44,17 @@ public class BoltPickupTrigger : MonoBehaviour
     private void Awake()
     {
         ResolveReferences();
-        // 如果没有手动指定 AudioSource，尝试从当前物体获取或添加
+
+        // 如果没有手动指定 AudioSource，尝试从当前物体获取
         if (audioSource == null)
         {
             audioSource = GetComponent<AudioSource>();
-            
+        }
+
+        // 开局默认关闭额外提示物体
+        if (extraTipObject != null)
+        {
+            extraTipObject.SetActive(false);
         }
     }
 
@@ -72,6 +81,7 @@ public class BoltPickupTrigger : MonoBehaviour
         }
 
         PlayerCC enteringPlayer = other.GetComponentInParent<PlayerCC>();
+
         if (enteringPlayer == null)
         {
             return;
@@ -79,6 +89,7 @@ public class BoltPickupTrigger : MonoBehaviour
 
         player = enteringPlayer;
         playerInRange = true;
+
         ResolveReferences();
 
         ShowTip();
@@ -87,6 +98,7 @@ public class BoltPickupTrigger : MonoBehaviour
     private void OnTriggerExit(Collider other)
     {
         PlayerCC exitingPlayer = other.GetComponentInParent<PlayerCC>();
+
         if (exitingPlayer == null || exitingPlayer != player)
         {
             return;
@@ -121,7 +133,7 @@ public class BoltPickupTrigger : MonoBehaviour
         // 播放拾取音效
         PlayPickupSound();
 
-        // 让指定的物体从画面中消失
+        // 让指定物体消失
         if (objectToDisappear != null)
         {
             objectToDisappear.SetActive(false);
@@ -147,6 +159,7 @@ public class BoltPickupTrigger : MonoBehaviour
 
     private bool WasInteractPressed()
     {
+        
         return !CartoonPanelController.IsPlaying &&
                Keyboard.current != null &&
                Keyboard.current.eKey.wasPressedThisFrame;
@@ -160,13 +173,21 @@ public class BoltPickupTrigger : MonoBehaviour
         }
 
         ResolveReferences();
+
         if (tipController == null)
         {
             return;
         }
 
         tipShown = true;
+
         tipController.Show();
+
+        // 开启额外提示物体
+        if (extraTipObject != null)
+        {
+            extraTipObject.SetActive(true);
+        }
     }
 
     private void HideTip()
@@ -177,9 +198,16 @@ public class BoltPickupTrigger : MonoBehaviour
         }
 
         tipShown = false;
+
         if (tipController != null)
         {
             tipController.Hide();
+        }
+
+        // 关闭额外提示物体
+        if (extraTipObject != null)
+        {
+            extraTipObject.SetActive(false);
         }
     }
 
