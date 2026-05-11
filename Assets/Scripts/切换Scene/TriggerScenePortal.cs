@@ -26,7 +26,7 @@ public class TriggerScenePortal : MonoBehaviour
         }
 
         // 按下 E 切换场景
-        if (Input.GetKeyDown(KeyCode.E))
+        if (!CartoonPanelController.IsPlaying && Input.GetKeyDown(KeyCode.E))
         {
             ChangeScene();
         }
