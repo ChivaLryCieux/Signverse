@@ -10,14 +10,12 @@ public class CartoonPanelController : MonoBehaviour, IPointerClickHandler
 
     [Header("Panel")]
     [SerializeField] private GameObject panelRoot;
-    [SerializeField] private Image cartoonImage;
     [SerializeField] private Button startGameButton;
     [SerializeField] private bool playOnStart = true;
     [SerializeField] private bool hideWhenFinished = true;
 
     [Header("Images")]
-    [SerializeField] private Sprite[] pictures;
-    [SerializeField] private bool preserveImageAspect = true;
+    [SerializeField] private Image[] pictureImages;
 
     [Header("Fade")]
     [SerializeField] private float fadeDuration = 0.35f;
@@ -37,22 +35,23 @@ public class CartoonPanelController : MonoBehaviour, IPointerClickHandler
     private bool previousCursorVisible;
     private CursorLockMode previousCursorLockState;
     private bool cursorWasChangedByPanel;
+    private float[] pictureTargetAlphas;
 
     public bool IsShowing => isShowing;
-    public bool IsOnLastPicture => pictures != null && pictures.Length > 0 && currentIndex >= pictures.Length - 1;
+    public bool IsOnLastPicture => pictureImages != null && pictureImages.Length > 0 && currentIndex >= pictureImages.Length - 1;
     public static bool IsPlaying => activePanel != null && activePanel.isShowing;
 
     private void Reset()
     {
         panelRoot = gameObject;
         panelCanvasGroup = GetComponent<CanvasGroup>();
-        cartoonImage = GetComponentInChildren<Image>(true);
         startGameButton = GetComponentInChildren<Button>(true);
     }
 
     private void Awake()
     {
         ResolveReferences();
+        CachePictureTargetAlphas();
         SetupStartButton();
 
         if (playOnStart)
@@ -92,19 +91,20 @@ public class CartoonPanelController : MonoBehaviour, IPointerClickHandler
     {
         ResolveReferences();
 
-        if (pictures == null || pictures.Length == 0)
+        if (pictureImages == null || pictureImages.Length == 0)
         {
-            Debug.LogWarning("CartoonPanelController 没有配置 pictures，开场漫画不会播放。", this);
+            Debug.LogWarning("CartoonPanelController 没有配置 pictureImages，开场漫画不会播放。", this);
             HideImmediate();
             return;
         }
 
+        CachePictureTargetAlphas();
         currentIndex = 0;
         isShowing = true;
         activePanel = this;
         SetPanelVisible(true);
         SetStartButtonVisible(false);
-        SetPicture(currentIndex, 0f);
+        SetAllPicturesAlpha(0f);
         LockPlayerInput();
 
         if (transitionCoroutine != null)
@@ -133,7 +133,7 @@ public class CartoonPanelController : MonoBehaviour, IPointerClickHandler
 
     public void OnPointerClick(PointerEventData eventData)
     {
-        if (!isShowing || isTransitioning || pictures == null || pictures.Length == 0)
+        if (!isShowing || isTransitioning || pictureImages == null || pictureImages.Length == 0)
         {
             return;
         }
@@ -159,7 +159,7 @@ public class CartoonPanelController : MonoBehaviour, IPointerClickHandler
     private IEnumerator ShowFirstPictureCoroutine()
     {
         isTransitioning = true;
-        yield return FadeImage(1f);
+        yield return FadeImage(pictureImages[currentIndex], GetPictureTargetAlpha(currentIndex));
 
         isTransitioning = false;
         transitionCoroutine = null;
@@ -175,12 +175,9 @@ public class CartoonPanelController : MonoBehaviour, IPointerClickHandler
         isTransitioning = true;
         SetStartButtonVisible(false);
 
-        yield return FadeImage(0f);
-
-        currentIndex = Mathf.Min(currentIndex + 1, pictures.Length - 1);
-        SetPicture(currentIndex, 0f);
-
-        yield return FadeImage(1f);
+        currentIndex = Mathf.Min(currentIndex + 1, pictureImages.Length - 1);
+        SetImageAlpha(pictureImages[currentIndex], 0f);
+        yield return FadeImage(pictureImages[currentIndex], GetPictureTargetAlpha(currentIndex));
 
         isTransitioning = false;
         transitionCoroutine = null;
@@ -213,25 +210,25 @@ public class CartoonPanelController : MonoBehaviour, IPointerClickHandler
         }
     }
 
-    private IEnumerator FadeImage(float targetAlpha)
+    private IEnumerator FadeImage(Image image, float targetAlpha)
     {
-        if (cartoonImage == null)
+        if (image == null)
         {
             yield break;
         }
 
-        float startAlpha = cartoonImage.color.a;
+        float startAlpha = image.color.a;
         float duration = Mathf.Max(0.01f, fadeDuration);
         float timer = 0f;
 
         while (timer < duration)
         {
             timer += GetDeltaTime();
-            SetImageAlpha(Mathf.Lerp(startAlpha, targetAlpha, timer / duration));
+            SetImageAlpha(image, Mathf.Lerp(startAlpha, targetAlpha, timer / duration));
             yield return null;
         }
 
-        SetImageAlpha(targetAlpha);
+        SetImageAlpha(image, targetAlpha);
     }
 
     private IEnumerator FadePanel(float targetAlpha)
@@ -255,28 +252,59 @@ public class CartoonPanelController : MonoBehaviour, IPointerClickHandler
         panelCanvasGroup.alpha = targetAlpha;
     }
 
-    private void SetPicture(int index, float alpha)
+    private void SetAllPicturesAlpha(float alpha)
     {
-        if (cartoonImage == null || pictures == null || index < 0 || index >= pictures.Length)
+        if (pictureImages == null)
         {
             return;
         }
 
-        cartoonImage.sprite = pictures[index];
-        cartoonImage.preserveAspect = preserveImageAspect;
-        SetImageAlpha(alpha);
+        for (int i = 0; i < pictureImages.Length; i++)
+        {
+            SetImageAlpha(pictureImages[i], alpha);
+        }
     }
 
-    private void SetImageAlpha(float alpha)
+    private void SetImageAlpha(Image image, float alpha)
     {
-        if (cartoonImage == null)
+        if (image == null)
         {
             return;
         }
 
-        Color color = cartoonImage.color;
+        Color color = image.color;
         color.a = Mathf.Clamp01(alpha);
-        cartoonImage.color = color;
+        image.color = color;
+    }
+
+    private void CachePictureTargetAlphas()
+    {
+        if (pictureImages == null)
+        {
+            pictureTargetAlphas = null;
+            return;
+        }
+
+        if (pictureTargetAlphas != null && pictureTargetAlphas.Length == pictureImages.Length)
+        {
+            return;
+        }
+
+        pictureTargetAlphas = new float[pictureImages.Length];
+        for (int i = 0; i < pictureImages.Length; i++)
+        {
+            pictureTargetAlphas[i] = pictureImages[i] != null ? pictureImages[i].color.a : 1f;
+        }
+    }
+
+    private float GetPictureTargetAlpha(int index)
+    {
+        if (pictureTargetAlphas == null || index < 0 || index >= pictureTargetAlphas.Length)
+        {
+            return 1f;
+        }
+
+        return pictureTargetAlphas[index];
     }
 
     private void LockPlayerInput()
@@ -325,11 +353,6 @@ public class CartoonPanelController : MonoBehaviour, IPointerClickHandler
         if (panelCanvasGroup == null)
         {
             panelCanvasGroup = panelRoot.AddComponent<CanvasGroup>();
-        }
-
-        if (cartoonImage == null)
-        {
-            cartoonImage = panelRoot.GetComponentInChildren<Image>(true);
         }
 
         if (startGameButton == null)

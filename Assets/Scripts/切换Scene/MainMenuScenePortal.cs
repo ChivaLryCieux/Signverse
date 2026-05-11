@@ -48,7 +48,7 @@ public class MainMenuScenePortal : MonoBehaviour
 }
     void Update()
     {
-        if (Keyboard.current.escapeKey.wasPressedThisFrame)
+        if (Keyboard.current.qKey.wasPressedThisFrame)
         {
             Application.Quit();
             Debug.Log("已退出游戏！");
