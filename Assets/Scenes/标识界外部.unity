@@ -17570,6 +17570,37 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 358542446}
   m_Mesh: {fileID: 3956641430154956442, guid: 92989c4f87242964b874f370a3afcd72, type: 3}
+--- !u!1 &358923710
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 358923711}
+  m_Layer: 0
+  m_Name: ====PICKUPS====
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &358923711
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 358923710}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 201.43489, y: 10.481671, z: -0.29680848}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &359622633
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -44997,6 +45028,56 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 821848905}
   m_Mesh: {fileID: 2314011402202377718, guid: d0d20cdcfdfc9fe4a888e49822f28204, type: 3}
+--- !u!21 &822130256
+Material:
+  serializedVersion: 8
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: Height Fog Global
+  m_Shader: {fileID: 4800000, guid: 3a7ef1b66bafb7a448a880ef76d2e6e6, type: 3}
+  m_Parent: {fileID: 0}
+  m_ModifiedSerializedProperties: 0
+  m_ValidKeywords: []
+  m_InvalidKeywords:
+  - _RECEIVESHADOWS_OFF
+  - _SURFACE_TYPE_TRANSPARENT
+  m_LightmapFlags: 4
+  m_EnableInstancingVariants: 0
+  m_DoubleSidedGI: 0
+  m_CustomRenderQueue: 3001
+  stringTagMap: {}
+  disabledShaderPasses: []
+  m_LockedProperties: 
+  m_SavedProperties:
+    serializedVersion: 3
+    m_TexEnvs:
+    - unity_Lightmaps:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - unity_LightmapsInd:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - unity_ShadowMasks:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    m_Ints: []
+    m_Floats:
+    - _AlphaCutoff: 0.5
+    - _Banner: 1
+    - _FogCameraMode: 0
+    - _HeightFogGlobal: 1
+    - _IsHeightFogShader: 1
+    - _QueueControl: -1
+    - _QueueOffset: 0
+    - _ReceiveShadows: 0
+    m_Colors:
+    - _EmissionColor: {r: 1, g: 1, b: 1, a: 1}
+  m_BuildTextureStacks: []
 --- !u!1 &827886078
 GameObject:
   m_ObjectHideFlags: 0
@@ -50957,7 +51038,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 1033942194}
+  - {fileID: 822130256}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -51139,6 +51220,37 @@ PrefabInstance:
       insertIndex: -1
       addedObject: {fileID: 1277496130}
   m_SourcePrefab: {fileID: 100100000, guid: 58fe1d9b162171c3dbd1cc3f190d9d4a, type: 3}
+--- !u!1 &945334700
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 945334701}
+  m_Layer: 0
+  m_Name: ====CKPTS====
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &945334701
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 945334700}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 201.43489, y: 10.481671, z: -0.29680848}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &947588444
 GameObject:
   m_ObjectHideFlags: 0
@@ -55851,56 +55963,6 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1032281656}
   m_Mesh: {fileID: 4182194990573046341, guid: b492aeaf4ee084342818337c4a343d8b, type: 3}
---- !u!21 &1033942194
-Material:
-  serializedVersion: 8
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_Name: Height Fog Global
-  m_Shader: {fileID: 4800000, guid: 3a7ef1b66bafb7a448a880ef76d2e6e6, type: 3}
-  m_Parent: {fileID: 0}
-  m_ModifiedSerializedProperties: 0
-  m_ValidKeywords: []
-  m_InvalidKeywords:
-  - _RECEIVESHADOWS_OFF
-  - _SURFACE_TYPE_TRANSPARENT
-  m_LightmapFlags: 4
-  m_EnableInstancingVariants: 0
-  m_DoubleSidedGI: 0
-  m_CustomRenderQueue: 3001
-  stringTagMap: {}
-  disabledShaderPasses: []
-  m_LockedProperties: 
-  m_SavedProperties:
-    serializedVersion: 3
-    m_TexEnvs:
-    - unity_Lightmaps:
-        m_Texture: {fileID: 0}
-        m_Scale: {x: 1, y: 1}
-        m_Offset: {x: 0, y: 0}
-    - unity_LightmapsInd:
-        m_Texture: {fileID: 0}
-        m_Scale: {x: 1, y: 1}
-        m_Offset: {x: 0, y: 0}
-    - unity_ShadowMasks:
-        m_Texture: {fileID: 0}
-        m_Scale: {x: 1, y: 1}
-        m_Offset: {x: 0, y: 0}
-    m_Ints: []
-    m_Floats:
-    - _AlphaCutoff: 0.5
-    - _Banner: 1
-    - _FogCameraMode: 0
-    - _HeightFogGlobal: 1
-    - _IsHeightFogShader: 1
-    - _QueueControl: -1
-    - _QueueOffset: 0
-    - _ReceiveShadows: 0
-    m_Colors:
-    - _EmissionColor: {r: 1, g: 1, b: 1, a: 1}
-  m_BuildTextureStacks: []
 --- !u!1 &1034673584
 GameObject:
   m_ObjectHideFlags: 0
@@ -72248,6 +72310,37 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1278539762}
   m_Mesh: {fileID: 5386889098701397442, guid: afafbf3ddc6c4ed40889ed84180ac439, type: 3}
+--- !u!1 &1281909688
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1281909689}
+  m_Layer: 0
+  m_Name: ====PLAYER====
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1281909689
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1281909688}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -28.470573, y: 30.552654, z: 33.289997}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!4 &1285647058 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 103e2570af37b5b4fb24bab577d87016,
@@ -116134,6 +116227,37 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2054002086}
   m_Mesh: {fileID: 6405055333489277325, guid: 29cd71a8595e49a42945f1bf4f8c548b, type: 3}
+--- !u!1 &2054034323
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2054034324}
+  m_Layer: 0
+  m_Name: ====UI====
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &2054034324
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2054034323}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -28.470573, y: 30.552654, z: 33.289997}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &2055203953
 GameObject:
   m_ObjectHideFlags: 0
@@ -117933,7 +118057,7 @@ GameObject:
   m_Component:
   - component: {fileID: 2084479461}
   m_Layer: 0
-  m_Name: ====Chapter-1====
+  m_Name: ====ENVIRONMENT====
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -134802,19 +134926,24 @@ SceneRoots:
   m_ObjectHideFlags: 0
   m_Roots:
   - {fileID: 1618158683}
-  - {fileID: 1698571898}
   - {fileID: 7364823810459562213}
   - {fileID: 3888220871528288563}
   - {fileID: 1955279906}
-  - {fileID: 1696663502}
   - {fileID: 1043118280}
   - {fileID: 1661530709}
   - {fileID: 1802205044}
   - {fileID: 527597953}
   - {fileID: 338133416}
+  - {fileID: 2085450413}
+  - {fileID: 1281909689}
+  - {fileID: 1055176319}
+  - {fileID: 1698571898}
+  - {fileID: 2054034324}
+  - {fileID: 1228013827}
   - {fileID: 2084479461}
-  - {fileID: 1898640286}
+  - {fileID: 1696663502}
   - {fileID: 18703171}
+  - {fileID: 1898640286}
   - {fileID: 644080958}
   - {fileID: 1982205903}
   - {fileID: 783138723}
@@ -134830,26 +134959,6 @@ SceneRoots:
   - {fileID: 344741554}
   - {fileID: 1537272977}
   - {fileID: 341266829}
-  - {fileID: 934752232}
-  - {fileID: 2063603033}
-  - {fileID: 1703949524}
-  - {fileID: 384574988}
-  - {fileID: 1723498078}
-  - {fileID: 1173343399}
-  - {fileID: 1228013827}
-  - {fileID: 3714607}
-  - {fileID: 1975437441}
-  - {fileID: 1489146461}
-  - {fileID: 198653541}
-  - {fileID: 221191058}
-  - {fileID: 819175492}
-  - {fileID: 203156385}
-  - {fileID: 1349177984}
-  - {fileID: 438631600}
-  - {fileID: 252079688}
-  - {fileID: 168104120}
-  - {fileID: 370830937}
-  - {fileID: 961850822}
   - {fileID: 1895890118}
   - {fileID: 798617163}
   - {fileID: 2060642171}
@@ -134875,5 +134984,24 @@ SceneRoots:
   - {fileID: 591960135}
   - {fileID: 1795127835}
   - {fileID: 1431599120}
-  - {fileID: 1055176319}
-  - {fileID: 2085450413}
+  - {fileID: 358923711}
+  - {fileID: 934752232}
+  - {fileID: 2063603033}
+  - {fileID: 1703949524}
+  - {fileID: 384574988}
+  - {fileID: 1723498078}
+  - {fileID: 1173343399}
+  - {fileID: 168104120}
+  - {fileID: 370830937}
+  - {fileID: 961850822}
+  - {fileID: 945334701}
+  - {fileID: 3714607}
+  - {fileID: 1975437441}
+  - {fileID: 1489146461}
+  - {fileID: 198653541}
+  - {fileID: 221191058}
+  - {fileID: 819175492}
+  - {fileID: 203156385}
+  - {fileID: 1349177984}
+  - {fileID: 438631600}
+  - {fileID: 252079688}
