@@ -78,7 +78,7 @@ public class PausePanelController : MonoBehaviour
 
     private void Update()
     {
-        if (PickupUIController.BlocksPauseEscape)
+        if (PickupUIController.BlocksPauseEscape || CartoonPanelController.IsPlaying)
         {
             return;
         }
