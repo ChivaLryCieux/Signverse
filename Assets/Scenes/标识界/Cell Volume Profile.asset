@@ -79,7 +79,7 @@ MonoBehaviour:
     m_Value: 1
   silhouetteShadowColor:
     m_OverrideState: 1
-    m_Value: {r: 0.0037907113, g: 0.041293576, b: 0.14465404, a: 1}
+    m_Value: {r: 0.03602395, g: 0.12443329, b: 0.3542977, a: 1}
   silhouetteMidColor:
     m_OverrideState: 1
     m_Value: {r: 32, g: 0, b: 0, a: 1}
@@ -113,39 +113,9 @@ MonoBehaviour:
   lineColor:
     m_OverrideState: 1
     m_Value: {r: 0.00784313, g: 0.29411766, b: 0.2208139, a: 1}
-  lineFadeStart:
-    m_OverrideState: 1
-    m_Value: 5
-  lineFadeEnd:
-    m_OverrideState: 1
+  depthFalloff:
+    m_OverrideState: 0
     m_Value: 50
-  lineWiggleIntensity:
-    m_OverrideState: 1
-    m_Value: 0
-  lineWiggleSpeed:
-    m_OverrideState: 1
-    m_Value: 12
-  enableSpeedLines:
-    m_OverrideState: 1
-    m_Value: 0
-  speedLineMode:
-    m_OverrideState: 1
-    m_Value: 2
-  speedLineIntensity:
-    m_OverrideState: 1
-    m_Value: 0.5
-  speedLineDensity:
-    m_OverrideState: 1
-    m_Value: 20
-  speedLineSpeed:
-    m_OverrideState: 1
-    m_Value: 10
-  speedLineWidth:
-    m_OverrideState: 1
-    m_Value: 0.5
-  speedLineColor:
-    m_OverrideState: 1
-    m_Value: {r: 0, g: 0, b: 0, a: 1}
   patternType:
     m_OverrideState: 1
     m_Value: 0
@@ -185,12 +155,6 @@ MonoBehaviour:
   pixelSize:
     m_OverrideState: 1
     m_Value: 4
-  pixelColorCount:
-    m_OverrideState: 1
-    m_Value: 8
-  pixelDitherIntensity:
-    m_OverrideState: 1
-    m_Value: 0.5
   enableRetroCRT:
     m_OverrideState: 1
     m_Value: 0
@@ -355,39 +319,9 @@ MonoBehaviour:
   lineColor:
     m_OverrideState: 1
     m_Value: {r: 0.011627091, g: 0.29979026, b: 0.23787032, a: 1}
-  lineFadeStart:
-    m_OverrideState: 0
-    m_Value: 5
-  lineFadeEnd:
+  depthFalloff:
     m_OverrideState: 0
     m_Value: 50
-  lineWiggleIntensity:
-    m_OverrideState: 0
-    m_Value: 0
-  lineWiggleSpeed:
-    m_OverrideState: 0
-    m_Value: 12
-  enableSpeedLines:
-    m_OverrideState: 0
-    m_Value: 0
-  speedLineMode:
-    m_OverrideState: 0
-    m_Value: 2
-  speedLineIntensity:
-    m_OverrideState: 0
-    m_Value: 0.5
-  speedLineDensity:
-    m_OverrideState: 0
-    m_Value: 20
-  speedLineSpeed:
-    m_OverrideState: 0
-    m_Value: 10
-  speedLineWidth:
-    m_OverrideState: 0
-    m_Value: 0.5
-  speedLineColor:
-    m_OverrideState: 0
-    m_Value: {r: 0, g: 0, b: 0, a: 1}
   patternType:
     m_OverrideState: 1
     m_Value: 0
@@ -427,12 +361,6 @@ MonoBehaviour:
   pixelSize:
     m_OverrideState: 1
     m_Value: 4.4
-  pixelColorCount:
-    m_OverrideState: 0
-    m_Value: 8
-  pixelDitherIntensity:
-    m_OverrideState: 0
-    m_Value: 0.5
   enableRetroCRT:
     m_OverrideState: 1
     m_Value: 0
