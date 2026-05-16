@@ -327,29 +327,40 @@ public class AnimatorStateDebugger : MonoBehaviour
         //                (Mathf.Abs(playerMove.x) > 0.1f );
 
         // SetBoolIfExists(hasRun, "Run", running);
-        if (HasEquippedSkill("10-StdMove") || HasEquippedSkill("12-mj") || HasEquippedSkill("13-md") || HasEquippedSkill("14-mh"))
+        if (HasEquippedSkill("10-StdMove") || HasEquippedSkill("12-mj")  ||HasEquippedSkill("13-md") ||  HasEquippedSkill("14-mh"))
         {
             if(currentPosture == Posture.Grounded)
             {
                 
                 if (Mathf.Abs(move.x) > 0.01f)
                 {
-                    animator.SetBool("Run", true);
+                    if (HasEquippedSkill("10-StdMove") || HasEquippedSkill("12-mj")  || HasEquippedSkill("14-mh"))
+                    {
+                        animator.SetBool("Run", true);
+                    }
+                    if(HasEquippedSkill("13-md"))
+                    {
+                        animator.SetBool("FastRun", true);
+                    }
                 }
                 else
                 {
                     animator.SetBool("Run", false);
+                    animator.SetBool("FastRun", false);
                 }
             }
             else
             {
                 animator.SetBool("Run", false);
+                animator.SetBool("FastRun", false);
             }
         
         }
+        
         else
         {
             animator.SetBool("Run", false);
+            animator.SetBool("FastRun", false);
         }
         
     }
