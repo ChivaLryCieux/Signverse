@@ -7,6 +7,7 @@ using System;
 [RequireComponent(typeof(PlayerDeath))]
 public class PlayerCC : MonoBehaviour
 {
+    private const int SurfaceHitBufferSize = 16;
     public bool isClimbInvincible = false;
     private const float MinClimbExitUpInputLockDuration = 3f;
     public AudioSource audioSource;
@@ -27,7 +28,9 @@ public class PlayerCC : MonoBehaviour
     [Header("核心引用")]
     public CharacterController cc;
     private PlayerControls controls; 
+    private PlayerControls.PlayerActions playerActions;
     private PlayerDeath playerDeath;
+    private CloakEffectController cloakEffect;
     private CharacterController controlProxy;
     private Transform controlProxyTransform;
     private readonly List<Collider> disabledOwnerCollidersForProxy = new List<Collider>();
@@ -121,6 +124,8 @@ public class PlayerCC : MonoBehaviour
 
     public SkillDatabase masterDatabase; 
     private readonly List<SkillBase> skillUpdateBuffer = new List<SkillBase>();
+    private readonly HashSet<SkillBase> skillUpdateSet = new HashSet<SkillBase>();
+    private readonly RaycastHit[] skillLoadoutSurfaceHitBuffer = new RaycastHit[SurfaceHitBufferSize];
     private bool hasExplicitEquippedSkills;
 
     [Header("地面检测调试")]
@@ -144,7 +149,7 @@ public class PlayerCC : MonoBehaviour
     public Transform GetControlTransform() => controlProxyTransform != null ? controlProxyTransform : transform;
     public Vector2 GetRawMoveInput()
     {
-        return controls.Player.Move.ReadValue<Vector2>();
+        return playerActions.Move.ReadValue<Vector2>();
     }
 
     public Vector2 GetMoveInput()
@@ -159,17 +164,17 @@ public class PlayerCC : MonoBehaviour
     }
     
     // 供蓄力跳检测：空格是否正被按住
-    public bool IsJumpPressed() => CurrentPosture != Posture.Climbing && controls.Player.Jump.IsPressed();
-    public bool WasJumpPressed() => CurrentPosture != Posture.Climbing && controls.Player.Jump.WasPressedThisFrame();
+    public bool IsJumpPressed() => CurrentPosture != Posture.Climbing && playerActions.Jump.IsPressed();
+    public bool WasJumpPressed() => CurrentPosture != Posture.Climbing && playerActions.Jump.WasPressedThisFrame();
     
     // 供技能检测：空格是否在这一帧松开
-    public bool WasJumpReleased() => CurrentPosture != Posture.Climbing && controls.Player.Jump.WasReleasedThisFrame();
+    public bool WasJumpReleased() => CurrentPosture != Posture.Climbing && playerActions.Jump.WasReleasedThisFrame();
 
-    public bool IsDashPressed() => CurrentPosture != Posture.Climbing && controls.Player.Dash.IsPressed();
-    public bool WasDashPressed() => CurrentPosture != Posture.Climbing && controls.Player.Dash.WasPressedThisFrame();
+    public bool IsDashPressed() => CurrentPosture != Posture.Climbing && playerActions.Dash.IsPressed();
+    public bool WasDashPressed() => CurrentPosture != Posture.Climbing && playerActions.Dash.WasPressedThisFrame();
 
-    public bool IsHidePressed() => controls.Player.Hide.IsPressed();
-    public bool WasHidePressed() => controls.Player.Hide.WasPressedThisFrame();
+    public bool IsHidePressed() => playerActions.Hide.IsPressed();
+    public bool WasHidePressed() => playerActions.Hide.WasPressedThisFrame();
 
     public Vector3 GetFacing() => facingDirection;
     public bool IsDead => playerDeath != null && playerDeath.IsDead;
@@ -213,11 +218,11 @@ public class PlayerCC : MonoBehaviour
 
         if (enabled)
         {
-            controls.Player.Enable();
+            playerActions.Enable();
         }
         else
         {
-            controls.Player.Disable();
+            playerActions.Disable();
         }
     }
     public void EnableInput()
@@ -717,7 +722,11 @@ public class PlayerCC : MonoBehaviour
         ResolveDeathSign();
         if (deathSign != null)
         {
-            audioSource.PlayOneShot(deathSFX);
+            if (visible && audioSource != null && deathSFX != null)
+            {
+                audioSource.PlayOneShot(deathSFX);
+            }
+
             deathSign.gameObject.SetActive(visible);
         }
     }
@@ -802,6 +811,8 @@ public class PlayerCC : MonoBehaviour
         }
 
         controls = new PlayerControls();
+        playerActions = controls.Player;
+        cloakEffect = GetComponent<CloakEffectController>();
         ResolveDeathSign();
         if (hideDeathSignOnAwake)
         {
@@ -818,7 +829,7 @@ public class PlayerCC : MonoBehaviour
     {
         if (controls != null)
         {
-            controls.Player.Enable();
+            playerActions.Enable();
         }
     }
 
@@ -826,7 +837,16 @@ public class PlayerCC : MonoBehaviour
     {
         if (controls != null)
         {
-            controls.Player.Disable();
+            playerActions.Disable();
+        }
+    }
+
+    void OnDestroy()
+    {
+        if (controls != null)
+        {
+            controls.Dispose();
+            controls = null;
         }
     }
 
@@ -837,34 +857,47 @@ public class PlayerCC : MonoBehaviour
             return;
         }
 
+        TickMovementLocks(Time.deltaTime);
+        RefreshPosture();
+        RefreshCloakState(false);
+        HandleIntrinsicFacing();
+        UpdateActiveSkills();
+        UpdateClimbExitMove();
+        RefreshCloakState();
+        HandleGravityMove();
+    }
+
+    private void TickMovementLocks(float deltaTime)
+    {
         if (moveXDisableTimer > 0f)
         {
-            moveXDisableTimer -= Time.deltaTime;
+            moveXDisableTimer -= deltaTime;
         }
 
-        if (climbExitUpAnimationLock)
+        if (!climbExitUpAnimationLock)
         {
-            climbExitUpAnimationLockTimer -= Time.deltaTime;
-            if (climbExitUpAnimationLockTimer <= 0f)
-            {
-                FinishClimbExitUpAnimationLock();
-            }
+            return;
         }
 
-        RefreshPosture();
-        RefreshCloakState();
+        climbExitUpAnimationLockTimer -= deltaTime;
+        if (climbExitUpAnimationLockTimer <= 0f)
+        {
+            FinishClimbExitUpAnimationLock();
+        }
+    }
 
-        HandleIntrinsicFacing();
-
+    private void UpdateActiveSkills()
+    {
         IList<SkillBase> activeSkills = GetActiveSkillsForUpdate();
         skillUpdateBuffer.Clear();
+        skillUpdateSet.Clear();
 
         if (activeSkills != null)
         {
             for (int i = 0; i < activeSkills.Count; i++)
             {
                 SkillBase skill = activeSkills[i];
-                if (skill != null && !skillUpdateBuffer.Contains(skill))
+                if (skill != null && skillUpdateSet.Add(skill))
                 {
                     skillUpdateBuffer.Add(skill);
                 }
@@ -881,15 +914,20 @@ public class PlayerCC : MonoBehaviour
 
             skill.OnUpdate(gameObject, this, CurrentPosture);
         }
+    }
 
-        UpdateClimbExitMove();
-
-        RefreshCloakState();
-
+    private void HandleGravityMove()
+    {
         HandleGravity();
 
         Vector3 gravityDelta = new Vector3(0, verticalVelocity, 0) * Time.deltaTime;
-        CollisionFlags gravityFlags = GetCharacterController().Move(gravityDelta);
+        CharacterController activeController = GetCharacterController();
+        if (activeController == null)
+        {
+            return;
+        }
+
+        CollisionFlags gravityFlags = activeController.Move(gravityDelta);
         HandleMoveCollisionFlags(gravityFlags, gravityDelta);
     }
 
@@ -958,16 +996,6 @@ public class PlayerCC : MonoBehaviour
         }
 
         return Mathf.Abs(delta.x) > 0.0001f && Mathf.Abs(delta.y) <= 0.0001f;
-    }
-
-    private Vector2 ApplyDirectionalMoveBlock(Vector2 input)
-    {
-        if (IsMoveDirectionBlocked(input.x))
-        {
-            input.x = 0f;
-        }
-
-        return input;
     }
 
     private Vector3 ApplyDirectionalMoveBlock(Vector3 delta)
@@ -1099,6 +1127,7 @@ public class PlayerCC : MonoBehaviour
 
         verticalVelocity = ceilingHitFallVelocity < 0f ? ceilingHitFallVelocity : -0.5f;
     }
+
     private bool IsStandingOnAnyTaggedSurface(List<string> requiredTags)
     {
         if (requiredTags == null || requiredTags.Count == 0)
@@ -1106,46 +1135,16 @@ public class PlayerCC : MonoBehaviour
             return true;
         }
 
-        CharacterController activeController = GetCharacterController();
-        if (activeController == null || skillLoadoutSurfaceMask.value == 0)
-        {
-            return false;
-        }
-
-        Vector3 worldCenter = activeController.transform.TransformPoint(activeController.center);
-        float bottomOffset = Mathf.Max(0f, activeController.height * 0.5f - activeController.radius);
-
-        Vector3 sphereOrigin =
-            worldCenter +
-            Vector3.down * bottomOffset +
-            Vector3.up * 0.05f;
-
-        float radius = Mathf.Max(0.01f, activeController.radius * 0.9f);
-
-        float distance =
-            Mathf.Max(0.01f, skillLoadoutSurfaceCheckDistance + 0.05f);
-
-        RaycastHit[] hits = Physics.SphereCastAll(
-            sphereOrigin,
-            radius,
-            Vector3.down,
-            distance,
-            skillLoadoutSurfaceMask,
-            QueryTriggerInteraction.Ignore);
-
-        return HasAnyTaggedSurfaceHit(hits, requiredTags);
+        int hitCount = GetSkillLoadoutSurfaceHits();
+        return HasAnyTaggedSurfaceHit(skillLoadoutSurfaceHitBuffer, hitCount, requiredTags);
     }
-    private bool IsStandingOnTaggedSurface(string requiredTag)
-    {
-        if (string.IsNullOrWhiteSpace(requiredTag))
-        {
-            return true;
-        }
 
+    private int GetSkillLoadoutSurfaceHits()
+    {
         CharacterController activeController = GetCharacterController();
         if (activeController == null || skillLoadoutSurfaceMask.value == 0)
         {
-            return false;
+            return 0;
         }
 
         Vector3 worldCenter = activeController.transform.TransformPoint(activeController.center);
@@ -1154,25 +1153,25 @@ public class PlayerCC : MonoBehaviour
         float radius = Mathf.Max(0.01f, activeController.radius * 0.9f);
         float distance = Mathf.Max(0.01f, skillLoadoutSurfaceCheckDistance + 0.05f);
 
-        RaycastHit[] hits = Physics.SphereCastAll(
+        return Physics.SphereCastNonAlloc(
             sphereOrigin,
             radius,
             Vector3.down,
+            skillLoadoutSurfaceHitBuffer,
             distance,
             skillLoadoutSurfaceMask,
             QueryTriggerInteraction.Ignore);
-
-        return HasAnyTaggedSurfaceHit(hits, requiredTag);
     }
 
-    private bool HasAnyTaggedSurfaceHit(RaycastHit[] hits, List<string> requiredTags)
+    private bool HasAnyTaggedSurfaceHit(RaycastHit[] hits, int hitCount, List<string> requiredTags)
     {
         if (hits == null || requiredTags == null)
         {
             return false;
         }
 
-        for (int i = 0; i < hits.Length; i++)
+        int safeHitCount = Mathf.Min(hitCount, hits.Length);
+        for (int i = 0; i < safeHitCount; i++)
         {
             Collider hitCollider = hits[i].collider;
             if (hitCollider == null)
@@ -1186,25 +1185,6 @@ public class PlayerCC : MonoBehaviour
                 {
                     return true;
                 }
-            }
-        }
-
-        return false;
-    }
-
-    private bool HasAnyTaggedSurfaceHit(RaycastHit[] hits, string requiredTag)
-    {
-        if (hits == null)
-        {
-            return false;
-        }
-
-        for (int i = 0; i < hits.Length; i++)
-        {
-            Collider hitCollider = hits[i].collider;
-            if (hitCollider != null && HasTagInParents(hitCollider.transform, requiredTag))
-            {
-                return true;
             }
         }
 
@@ -1232,9 +1212,13 @@ public class PlayerCC : MonoBehaviour
         return false;
     }
 
-    private void RefreshCloakState()
+    private void RefreshCloakState(bool resolveIfMissing = true)
     {
-        CloakEffectController cloakEffect = GetComponent<CloakEffectController>();
+        if (cloakEffect == null && resolveIfMissing)
+        {
+            cloakEffect = GetComponent<CloakEffectController>();
+        }
+
         isCloaked = cloakEffect != null && cloakEffect.IsCloaked;
     }
 
@@ -1247,6 +1231,7 @@ public class PlayerCC : MonoBehaviour
 
         return unlockedSkills;
     }
+
     private void HandleGravity()
     {
         if (gravitySuppressedFrame == Time.frameCount)
