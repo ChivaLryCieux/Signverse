@@ -1,5 +1,7 @@
+using TMPro;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.Serialization;
 
 [RequireComponent(typeof(Collider))]
 public class PickupCollectible : MonoBehaviour
@@ -9,9 +11,10 @@ public class PickupCollectible : MonoBehaviour
     [SerializeField] private string playerTag = "Player";
     [SerializeField] private bool destroyAfterPickup = true;
 
-    [Header("提示")]
-    [SerializeField] private GameObject skillPrompt;
-    [SerializeField] private string skillPromptName = "SkillPrompt";
+    [Header("提示 Panel")]
+    [SerializeField, FormerlySerializedAs("skillPrompt")] private GameObject skillPromptPanel;
+    [SerializeField] private string skillPromptName = "SkillPromptPanel";
+    [SerializeField] private string legacySkillPromptName = "SkillPrompt";
 
     [Header("可选：同步到 PlayerCC 技能")]
     [Tooltip("不为空时，拾取后会调用 PlayerCC.UnlockNewSkill(skillId)。")]
@@ -39,10 +42,10 @@ public class PickupCollectible : MonoBehaviour
     private void Awake()
     {
         ConfigureTriggerCollider();
-        ResolvePrompt();
-        if (skillPrompt != null)
+        ResolvePromptPanel();
+        if (skillPromptPanel != null)
         {
-            skillPrompt.SetActive(false);
+            skillPromptPanel.SetActive(false);
         }
 
         // 如果没有手动指定 AudioSource，尝试从当前物体获取或添加
@@ -170,14 +173,14 @@ public class PickupCollectible : MonoBehaviour
             return;
         }
 
-        ResolvePrompt();
-        if (skillPrompt == null)
+        ResolvePromptPanel();
+        if (skillPromptPanel == null)
         {
             return;
         }
 
         promptShown = true;
-        skillPrompt.SetActive(true);
+        skillPromptPanel.SetActive(true);
     }
 
     private void HidePrompt()
@@ -188,23 +191,40 @@ public class PickupCollectible : MonoBehaviour
         }
 
         promptShown = false;
-        if (skillPrompt != null)
+        if (skillPromptPanel != null)
         {
-            skillPrompt.SetActive(false);
+            skillPromptPanel.SetActive(false);
         }
     }
 
-    private void ResolvePrompt()
+    private void ResolvePromptPanel()
     {
-        if (skillPrompt != null || string.IsNullOrWhiteSpace(skillPromptName))
+        skillPromptPanel = NormalizePromptPanel(skillPromptPanel);
+        if (skillPromptPanel != null)
         {
             return;
         }
 
-        skillPrompt = GameObject.Find(skillPromptName);
-        if (skillPrompt != null)
+        skillPromptPanel = NormalizePromptPanel(FindPromptObject(skillPromptName));
+        if (skillPromptPanel != null)
         {
             return;
+        }
+
+        skillPromptPanel = NormalizePromptPanel(FindPromptObject(legacySkillPromptName));
+    }
+
+    private GameObject FindPromptObject(string promptName)
+    {
+        if (string.IsNullOrWhiteSpace(promptName))
+        {
+            return null;
+        }
+
+        GameObject promptObject = GameObject.Find(promptName);
+        if (promptObject != null)
+        {
+            return promptObject;
         }
 
         GameObject[] allObjects = Resources.FindObjectsOfTypeAll<GameObject>();
@@ -212,14 +232,31 @@ public class PickupCollectible : MonoBehaviour
         {
             GameObject candidate = allObjects[i];
             if (candidate != null &&
-                candidate.name == skillPromptName &&
+                candidate.name == promptName &&
                 candidate.scene.IsValid() &&
                 candidate.scene.isLoaded)
             {
-                skillPrompt = candidate;
-                return;
+                return candidate;
             }
         }
+
+        return null;
+    }
+
+    private GameObject NormalizePromptPanel(GameObject promptObject)
+    {
+        if (promptObject == null)
+        {
+            return null;
+        }
+
+        if (promptObject.GetComponent<TMP_Text>() == null)
+        {
+            return promptObject;
+        }
+
+        Transform parent = promptObject.transform.parent;
+        return parent != null ? parent.gameObject : promptObject;
     }
 
     private void ConfigureTriggerCollider()

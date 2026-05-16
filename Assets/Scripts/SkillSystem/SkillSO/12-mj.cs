@@ -134,7 +134,7 @@ namespace Skills
             }
 
             Vector3 moveDelta = new Vector3(horizontal * moveSpeed, 0f, 0f) * Time.deltaTime;
-            controller.MoveWithGroundProtection(moveDelta);
+            controller.MoveCharacter(moveDelta);
         }
 
         // 判断是否满足从地面或边缘进入攀爬的条件。

@@ -112,7 +112,7 @@ namespace Skills
             controller.SetUltraDashActive(UsesUltraDashAnimation);
 
             Vector3 dashDelta = dashDirection * DashSpeed * Time.deltaTime;
-            CollisionFlags flags = controller.MoveWithGroundProtection(dashDelta);
+            CollisionFlags flags = controller.MoveCharacter(dashDelta);
 
             if ((flags & (CollisionFlags.Sides | CollisionFlags.Above)) != 0)
             {

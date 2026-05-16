@@ -95,7 +95,7 @@ namespace Skills
             }
 
             Vector3 moveDelta = moveDirection.normalized * airForwardSpeed * Time.deltaTime;
-            CollisionFlags collisionFlags = controller.MoveWithGroundProtection(moveDelta);
+            CollisionFlags collisionFlags = controller.MoveCharacter(moveDelta);
             Debug.DrawRay(user.transform.position, moveDelta * 10f, Color.red);
 
             if ((collisionFlags & CollisionFlags.Sides) != 0 || posture == PlayerCC.Posture.Climbing)
