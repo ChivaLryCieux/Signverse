@@ -1,9 +1,10 @@
 using UnityEngine;
+using UnityEngine.Serialization;
 using System.Collections.Generic;
 using Skills; 
 using System;
 
-// ===== PlayerCC 12大功能分区总览 =====
+// ===== PlayerCC 12大功能分区总览（部分技能相关已迁移） =====
 // 01. 基础配置、引用与运行时缓存
 // 02. 技能脚本访问接口
 // 03. 技能拥有、装备与装配限制
@@ -19,11 +20,11 @@ using System;
 
 [RequireComponent(typeof(CharacterController))]
 [RequireComponent(typeof(PlayerDeath))]
+[RequireComponent(typeof(SkillController))]
 public class PlayerCC : MonoBehaviour
 {
     // ===== 01. 基础配置、引用与运行时缓存 =====
 
-    private const int SurfaceHitBufferSize = 16;
     public bool isClimbInvincible = false;
     private const float MinClimbExitUpInputLockDuration = 3f;
     public AudioSource audioSource;
@@ -39,13 +40,18 @@ public class PlayerCC : MonoBehaviour
         Climbing
     }
 
-    public event Action<SkillBase> SkillUnlocked;
+    public event Action<SkillBase> SkillUnlocked
+    {
+        add => EnsureSkillController().SkillUnlocked += value;
+        remove => EnsureSkillController().SkillUnlocked -= value;
+    }
 
     [Header("核心引用")]
     public CharacterController cc;
     private PlayerControls controls; 
     private PlayerControls.PlayerActions playerActions;
     private PlayerDeath playerDeath;
+    private SkillController skillController;
     private CloakEffectController cloakEffect;
     private CharacterController controlProxy;
     private Transform controlProxyTransform;
@@ -99,7 +105,7 @@ public class PlayerCC : MonoBehaviour
     public float ClimbInput { get; private set; }
     public bool IsCloaked => isCloaked;
     public bool IsClimbExitMoveActive => climbExitMoveActive;
-    public bool UsesEquippedSkillLoadout => hasExplicitEquippedSkills || (equippedSkills != null && equippedSkills.Count > 0);
+    public bool UsesEquippedSkillLoadout => EnsureSkillController().UsesEquippedSkillLoadout;
     public bool IsInClimbTransitionTrigger => climbTransitionTriggerCount > 0;
     public ClimbTransitionTrigger ActiveClimbTransitionTrigger { get; private set; }
     public bool IsInClimbVolume => ActiveClimbTransitionTrigger != null && ActiveClimbTransitionTrigger.ActsAsClimbVolume;
@@ -112,32 +118,29 @@ public class PlayerCC : MonoBehaviour
     private Vector2 queuedClimbExitUpForcedOffset;
     private float queuedClimbExitUpForcedMoveDuration;
 
-    [Header("技能系统 (Slot-Based)")]
-    [Tooltip("可选：调试或特殊关卡开局自带技能。正式流程可留空，移动/跳跃/冲刺由拾取和 UI 解锁。")]
-    public List<SkillBase> startingSkills = new List<SkillBase>();
-
-    public List<SkillBase> unlockedSkills = new List<SkillBase>();
-
-    public List<SkillBase> equippedSkills = new List<SkillBase>();
-
-    public SkillDatabase masterDatabase; 
-    private readonly List<SkillBase> skillUpdateBuffer = new List<SkillBase>();
-    private readonly HashSet<SkillBase> skillUpdateSet = new HashSet<SkillBase>();
-    private readonly RaycastHit[] skillLoadoutSurfaceHitBuffer = new RaycastHit[SurfaceHitBufferSize];
-    private bool hasExplicitEquippedSkills;
+    [SerializeField, HideInInspector, FormerlySerializedAs("startingSkills")]
+    private List<SkillBase> legacyStartingSkills = new List<SkillBase>();
+    [SerializeField, HideInInspector, FormerlySerializedAs("unlockedSkills")]
+    private List<SkillBase> legacyUnlockedSkills = new List<SkillBase>();
+    [SerializeField, HideInInspector, FormerlySerializedAs("equippedSkills")]
+    private List<SkillBase> legacyEquippedSkills = new List<SkillBase>();
+    [SerializeField, HideInInspector, FormerlySerializedAs("masterDatabase")]
+    private SkillDatabase legacyMasterDatabase;
 
     [Header("地面检测调试")]
     [SerializeField] private bool drawGroundedGizmo = true;
     [SerializeField] private float groundedGizmoOffsetY;
 
-    [Header("技能装配限制")]
-    [SerializeField] private List<string> skillLoadoutSurfaceTags = new List<string>()
+    [SerializeField, HideInInspector, FormerlySerializedAs("skillLoadoutSurfaceTags")]
+    private List<string> legacySkillLoadoutSurfaceTags = new List<string>()
     {
         "Nature",
         "Water"
     };
-    [SerializeField] private LayerMask skillLoadoutSurfaceMask = ~0;
-    [SerializeField] private float skillLoadoutSurfaceCheckDistance = 0.25f;
+    [SerializeField, HideInInspector, FormerlySerializedAs("skillLoadoutSurfaceMask")]
+    private LayerMask legacySkillLoadoutSurfaceMask = ~0;
+    [SerializeField, HideInInspector, FormerlySerializedAs("skillLoadoutSurfaceCheckDistance")]
+    private float legacySkillLoadoutSurfaceCheckDistance = 0.25f;
 
     [Header("攀爬翻越")]
     [SerializeField] private float climbExitUpInputLockDuration = 3f;
@@ -232,107 +235,98 @@ public class PlayerCC : MonoBehaviour
 
     // ===== 03. 技能拥有、装备与装配限制 =====
 
+    public List<SkillBase> startingSkills
+    {
+        get => EnsureSkillController().StartingSkills;
+        set => EnsureSkillController().StartingSkills = value;
+    }
+
+    public List<SkillBase> unlockedSkills
+    {
+        get => EnsureSkillController().UnlockedSkills;
+        set => EnsureSkillController().UnlockedSkills = value;
+    }
+
+    public List<SkillBase> equippedSkills
+    {
+        get => EnsureSkillController().EquippedSkills;
+        set => EnsureSkillController().EquippedSkills = value;
+    }
+
+    public SkillDatabase masterDatabase
+    {
+        get => EnsureSkillController().MasterDatabase;
+        set => EnsureSkillController().MasterDatabase = value;
+    }
+
     public bool HasUnlockedSkill(string id)
     {
-        if (string.IsNullOrEmpty(id))
-        {
-            return false;
-        }
-
-        for (int i = 0; i < unlockedSkills.Count; i++)
-        {
-            SkillBase skill = unlockedSkills[i];
-            if (skill != null && skill.skillID == id)
-            {
-                return true;
-            }
-        }
-
-        return false;
+        return EnsureSkillController().HasUnlockedSkill(id);
     }
 
     public bool HasUnlockedSkill<T>() where T : SkillBase
     {
-        for (int i = 0; i < unlockedSkills.Count; i++)
-        {
-            if (unlockedSkills[i] is T)
-            {
-                return true;
-            }
-        }
-
-        return false;
+        return EnsureSkillController().HasUnlockedSkill<T>();
     }
+
     public bool HasEquippedSkill(string id)
     {
-        if (string.IsNullOrEmpty(id))
-        {
-            return false;
-        }
-
-        for (int i = 0; i < equippedSkills.Count; i++)
-        {
-            SkillBase skill = equippedSkills[i];
-            if (skill != null && skill.skillID == id)
-            {
-                return true;
-            }
-        }
-
-        return false;
+        return EnsureSkillController().HasEquippedSkill(id);
     }
 
     public bool HasEquippedSkill<T>() where T : SkillBase
     {
-        for (int i = 0; i < equippedSkills.Count; i++)
-        {
-            if (equippedSkills[i] is T)
-            {
-                return true;
-            }
-        }
-
-        return false;
+        return EnsureSkillController().HasEquippedSkill<T>();
     }
 
     public bool CanModifySkillLoadout()
     {
-        return IsStandingOnAnyTaggedSurface(skillLoadoutSurfaceTags);
+        return EnsureSkillController().CanModifySkillLoadout(this);
     }
 
     public void SetEquippedSkills(IList<SkillBase> skills)
     {
-        hasExplicitEquippedSkills = true;
+        EnsureSkillController().SetEquippedSkills(skills);
+    }
 
-        if (equippedSkills == null)
+    private SkillController EnsureSkillController()
+    {
+        if (skillController == null)
         {
-            equippedSkills = new List<SkillBase>();
+            skillController = GetComponent<SkillController>();
         }
 
-        equippedSkills.Clear();
+        if (skillController == null)
+        {
+            skillController = gameObject.AddComponent<SkillController>();
+        }
 
-        if (skills == null)
+        MigrateLegacySkillData();
+        return skillController;
+    }
+
+    private void MigrateLegacySkillData()
+    {
+        if (skillController == null)
         {
             return;
         }
 
-        for (int i = 0; i < skills.Count; i++)
-        {
-            SkillBase skill = skills[i];
-            if (skill != null && !equippedSkills.Contains(skill))
-            {
-                equippedSkills.Add(skill);
-            }
-        }
+        skillController.InitializeFromLegacy(
+            legacyStartingSkills,
+            legacyUnlockedSkills,
+            legacyEquippedSkills,
+            legacyMasterDatabase,
+            legacySkillLoadoutSurfaceTags,
+            legacySkillLoadoutSurfaceMask,
+            legacySkillLoadoutSurfaceCheckDistance);
     }
 
     // ===== 04. 技能解锁、朝向、检查点、死亡与调试绘制 =====
 
     public void UnlockNewSkill(string id)
     {
-        if (masterDatabase == null) return;
-        SkillBase newSkill = masterDatabase.GetSkillByID(id);
-        UnlockSkill(newSkill);
+        EnsureSkillController().UnlockNewSkill(id);
     }
 
     private void HandleIntrinsicFacing()
@@ -359,32 +353,12 @@ public class PlayerCC : MonoBehaviour
 
     public void UnlockSkill(SkillBase skill)
     {
-        if (skill != null && !unlockedSkills.Contains(skill))
-        {
-            unlockedSkills.Add(skill);
-            SkillUnlocked?.Invoke(skill);
-        }
+        EnsureSkillController().UnlockSkill(skill);
     }
 
     private void InitializeStartingSkills()
     {
-        if (unlockedSkills == null)
-        {
-            unlockedSkills = new List<SkillBase>();
-        }
-
-        if (equippedSkills == null)
-        {
-            equippedSkills = new List<SkillBase>();
-        }
-
-        if (startingSkills != null)
-        {
-            for (int i = 0; i < startingSkills.Count; i++)
-            {
-                UnlockSkill(startingSkills[i]);
-            }
-        }
+        EnsureSkillController().InitializeStartingSkills();
     }
 
     public void SetCheckpoint(Vector3 checkpointPosition)
@@ -433,89 +407,7 @@ public class PlayerCC : MonoBehaviour
 
     // ===== 05. 技能装配地面检测 =====
 
-    private bool IsStandingOnAnyTaggedSurface(List<string> requiredTags)
-    {
-        if (requiredTags == null || requiredTags.Count == 0)
-        {
-            return true;
-        }
-
-        int hitCount = GetSkillLoadoutSurfaceHits();
-        return HasAnyTaggedSurfaceHit(skillLoadoutSurfaceHitBuffer, hitCount, requiredTags);
-    }
-
-    private int GetSkillLoadoutSurfaceHits()
-    {
-        CharacterController activeController = GetCharacterController();
-        if (activeController == null || skillLoadoutSurfaceMask.value == 0)
-        {
-            return 0;
-        }
-
-        Vector3 worldCenter = activeController.transform.TransformPoint(activeController.center);
-        float bottomOffset = Mathf.Max(0f, activeController.height * 0.5f - activeController.radius);
-        Vector3 sphereOrigin = worldCenter + Vector3.down * bottomOffset + Vector3.up * 0.05f;
-        float radius = Mathf.Max(0.01f, activeController.radius * 0.9f);
-        float distance = Mathf.Max(0.01f, skillLoadoutSurfaceCheckDistance + 0.05f);
-
-        return Physics.SphereCastNonAlloc(
-            sphereOrigin,
-            radius,
-            Vector3.down,
-            skillLoadoutSurfaceHitBuffer,
-            distance,
-            skillLoadoutSurfaceMask,
-            QueryTriggerInteraction.Ignore);
-    }
-
-    private bool HasAnyTaggedSurfaceHit(RaycastHit[] hits, int hitCount, List<string> requiredTags)
-    {
-        if (hits == null || requiredTags == null)
-        {
-            return false;
-        }
-
-        int safeHitCount = Mathf.Min(hitCount, hits.Length);
-        for (int i = 0; i < safeHitCount; i++)
-        {
-            Collider hitCollider = hits[i].collider;
-            if (hitCollider == null)
-            {
-                continue;
-            }
-
-            for (int j = 0; j < requiredTags.Count; j++)
-            {
-                if (HasTagInParents(hitCollider.transform, requiredTags[j]))
-                {
-                    return true;
-                }
-            }
-        }
-
-        return false;
-    }
-
-    private bool HasTagInParents(Transform target, string requiredTag)
-    {
-        if (target == null || string.IsNullOrWhiteSpace(requiredTag))
-        {
-            return false;
-        }
-
-        Transform current = target;
-        while (current != null)
-        {
-            if (string.Equals(current.gameObject.tag, requiredTag, StringComparison.OrdinalIgnoreCase))
-            {
-                return true;
-            }
-
-            current = current.parent;
-        }
-
-        return false;
-    }
+    // 地面检测实现已迁移到 SkillController，PlayerCC 通过 CanModifySkillLoadout 保留统一入口。
 
     // ===== 06. 朝向、移动与控制代理 =====
 
@@ -818,16 +710,6 @@ public class PlayerCC : MonoBehaviour
         isCloaked = cloakEffect != null && cloakEffect.IsCloaked;
     }
 
-    private IList<SkillBase> GetActiveSkillsForUpdate()
-    {
-        if (UsesEquippedSkillLoadout)
-        {
-            return equippedSkills;
-        }
-
-        return unlockedSkills;
-    }
-
     private void HandleGravity()
     {
         if (gravitySuppressedFrame == Time.frameCount)
@@ -1004,6 +886,21 @@ public class PlayerCC : MonoBehaviour
 
     // ===== 11. Unity 生命周期与主循环 =====
 
+    private void OnValidate()
+    {
+        if (skillController == null)
+        {
+            skillController = GetComponent<SkillController>();
+        }
+
+        if (skillController == null && gameObject != null)
+        {
+            skillController = gameObject.AddComponent<SkillController>();
+        }
+
+        MigrateLegacySkillData();
+    }
+
     void Awake()
     {
         cc = GetComponent<CharacterController>();
@@ -1013,6 +910,7 @@ public class PlayerCC : MonoBehaviour
         {
             playerDeath = gameObject.AddComponent<PlayerDeath>();
         }
+        skillController = EnsureSkillController();
 
         controls = new PlayerControls();
         playerActions = controls.Player;
@@ -1094,32 +992,7 @@ public class PlayerCC : MonoBehaviour
 
     private void UpdateActiveSkills()
     {
-        IList<SkillBase> activeSkills = GetActiveSkillsForUpdate();
-        skillUpdateBuffer.Clear();
-        skillUpdateSet.Clear();
-
-        if (activeSkills != null)
-        {
-            for (int i = 0; i < activeSkills.Count; i++)
-            {
-                SkillBase skill = activeSkills[i];
-                if (skill != null && skillUpdateSet.Add(skill))
-                {
-                    skillUpdateBuffer.Add(skill);
-                }
-            }
-        }
-
-        for (int i = 0; i < skillUpdateBuffer.Count; i++)
-        {
-            SkillBase skill = skillUpdateBuffer[i];
-            if (skill == null)
-            {
-                continue;
-            }
-
-            skill.OnUpdate(gameObject, this, CurrentPosture);
-        }
+        EnsureSkillController().UpdateSkills(gameObject, this, CurrentPosture);
     }
 
     private void HandleGravityMove()
