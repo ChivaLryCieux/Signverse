@@ -838,8 +838,8 @@ public class AnimatorStateDebugger : MonoBehaviour
             delta.z = 0f;
             if (controller != null)
             {
-                // Root Motion 也走 PlayerCC 的移动保护，避免动画横向位移把角色从平台边缘挤下去。
-                controller.MoveWithGroundProtection(delta);
+                // Root Motion 也走 PlayerCC 的统一移动入口，保持方向阻挡和碰撞处理一致。
+                controller.MoveCharacter(delta);
                 return;
             }
 
