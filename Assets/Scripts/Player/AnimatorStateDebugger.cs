@@ -11,9 +11,22 @@ public class AnimatorStateDebugger : MonoBehaviour
     private float cachedGravity;
 
     [Header("Jump Charge")]
-    [SerializeField] private float maxJumpChargeTime = 1.5f;
+    
 
-    private bool isChargingJump;
+    public string legChargeLayerName = "Leg Charge";
+
+    // 最大蓄力到满层权重所需时间
+    public float maxChargeAnimTime = 1.5f;
+
+    public float chargeReleaseReturnTime = 0.08f;
+
+    // 当前层权重
+    private float currentChargeLayerWeight = 0f;
+
+    // Layer Index缓存
+    public int legChargeLayerIndex = -1;
+
+    private bool isChargingJump = false;
     private float jumpChargeNormalized;
     // 标记是否已经缓存过重力，防止重复调用时把 0 当成原始重力。
     private bool hasCachedGravity;
@@ -137,6 +150,7 @@ public class AnimatorStateDebugger : MonoBehaviour
         {
             animator = GetComponent<Animator>();
         }
+        legChargeLayerIndex = animator.GetLayerIndex(legChargeLayerName);
 
         // Lry的修改：自动向父级查找 PlayerCC，因为当前项目里 PlayerCC 通常挂在 Player 根节点，Animator 在子模型节点上。
         if (controller == null)
@@ -409,6 +423,7 @@ public class AnimatorStateDebugger : MonoBehaviour
         // 1️⃣ 判断是否在空中 → 控制 Jump Bool
         if(currentPosture == Posture.Airborne)
         {
+            isChargingJump = false;
             animator.SetBool("Jump", true);
             animator.SetFloat("VerticalVelocity", controller.VerticalVelocity);
 
@@ -423,15 +438,19 @@ public class AnimatorStateDebugger : MonoBehaviour
         {
             animator.SetBool("Jump", false);
         }
+
         if(currentPosture == Posture.Grounded)
         {
             
             bool jumpPressed = jumpAxis > 0f;
             
+
+
             if (HasEquippedSkill("20-StdJump")  || HasEquippedSkill("22-jj"))
             {
                 if(currentPosture == Posture.Grounded && jumpPressed && !wasJumpPressed)
                 {
+                    
                     audioSource.Stop();
                     audioSource.PlayOneShot(jumpSFX);
                     
@@ -440,7 +459,7 @@ public class AnimatorStateDebugger : MonoBehaviour
             }
             else if (HasEquippedSkill("21-jm") || HasEquippedSkill("22-jj") || HasEquippedSkill("23-jd"))
             {
-
+                isChargingJump = false;
                 //========================
                 // 按下瞬间（短按起跳音）
                 //========================
@@ -463,17 +482,21 @@ public class AnimatorStateDebugger : MonoBehaviour
                     float holdTime = Time.time - jumpPressStartTime;
 
                     //========================
-                    // 长按检测（蓄力音）
+                    // 长按检测成功
                     //========================
-                    if (holdTime >= longPressThreshold && !hasTriggeredChargeSFX)
+                    if (holdTime >= longPressThreshold)
                     {
-                        hasTriggeredChargeSFX = true;
+                        isChargingJump = true;
 
-                        if (jumpHoldSFX != null)
+                        if (!hasTriggeredChargeSFX)
                         {
-                            audioSource.PlayOneShot(jumpHoldSFX);
+                            hasTriggeredChargeSFX = true;
+
+                            if (jumpHoldSFX != null)
+                            {
+                                audioSource.PlayOneShot(jumpHoldSFX);
+                            }
                         }
-                        
                     }
                 }
 
@@ -484,6 +507,7 @@ public class AnimatorStateDebugger : MonoBehaviour
                     !jumpPressed &&
                     wasJumpPressed)
                 {
+                    isChargingJump = false;
                     float holdTime = Time.time - jumpPressStartTime;
 
                     if (holdTime >= longPressThreshold)
@@ -496,22 +520,49 @@ public class AnimatorStateDebugger : MonoBehaviour
                 }
 
                 wasJumpPressed = jumpPressed;
+                                
+                
             }
             
         }
+        // 蓄力动画 Layer Weight 控制
+                //====================================
+
+                float targetWeight = isChargingJump ? 1f : 0f;
+
+                //==============================
+                // 上升：正常蓄力速度
+                //==============================
+                float chargeUpSpeed = 1f / maxChargeAnimTime;
+
+                //==============================
+                // 下降：松手瞬间快速恢复
+                //==============================
+                float chargeDownSpeed = 1f / chargeReleaseReturnTime;
+
+                // 根据当前状态选择速度
+                float currentSpeed = isChargingJump
+                    ? chargeUpSpeed
+                    : chargeDownSpeed;
+
+                // 平滑移动
+                currentChargeLayerWeight = Mathf.MoveTowards(
+                    currentChargeLayerWeight,
+                    targetWeight,
+                    currentSpeed * Time.deltaTime
+                );
+
+                // 应用到 Animator Layer
+                if (legChargeLayerIndex >= 0)
+                {
+                    animator.SetLayerWeight(
+                        legChargeLayerIndex,
+                        currentChargeLayerWeight
+                    );
+                }
             // todo:还需要大小跳，得在CC中实现它
-        // SetFloatImmediateIfExists(hasVerticalVelocity, "VerticalVelocity", controller.VerticalVelocity);
-        // SetFloatImmediateIfExists(hasJump, "Jump", controller.VerticalVelocity);
-        // SetIntIfExists(hasJumpType, "JumpType", controller.JumpType);
-        // SetBoolIfExists(hasIsGrounded, "IsGrounded", controller.CurrentPosture == PlayerCC.Posture.Grounded);
+
     }
-
-        
-
-
-
-
-
 
     // Lry的修改：DashPosture 是技能层输出的 0-1 姿态权重，适合驱动 BlendTree 或过渡条件；Dash Bool 同步为兼容旧状态机参数。
     void HandleDashFromPlayerCC()
