@@ -5,6 +5,7 @@ public class BoltPickupTipController : MonoBehaviour
 {
     public static BoltPickupTipController Instance { get; private set; }
 
+    [SerializeField] private GameObject promptPanel;
     [SerializeField] private TMP_Text promptText;
 
     private int showRequestCount;
@@ -54,9 +55,22 @@ public class BoltPickupTipController : MonoBehaviour
 
     private void SetVisible(bool visible)
     {
-        if (promptText != null)
+        ResolvePromptPanel();
+
+        if (promptPanel != null)
         {
-            promptText.gameObject.SetActive(visible);
+            promptPanel.SetActive(visible);
         }
+    }
+
+    private void ResolvePromptPanel()
+    {
+        if (promptPanel != null || promptText == null)
+        {
+            return;
+        }
+
+        Transform parent = promptText.transform.parent;
+        promptPanel = parent != null && parent != transform ? parent.gameObject : promptText.gameObject;
     }
 }

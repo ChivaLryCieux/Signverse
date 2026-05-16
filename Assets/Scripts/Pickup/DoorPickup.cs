@@ -1,31 +1,30 @@
+using TMPro;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 public class DoorPickup : MonoBehaviour
 {
     private bool playerInside;
     private PlayerCC currentPlayer;
 
-    [Header("进入Trigger时显示的物体")]
-    public GameObject objectToShow;
+    [Header("进入 Trigger 时显示的提示 Panel")]
+    [SerializeField, FormerlySerializedAs("objectToShow")] private GameObject promptPanel;
 
     void Update()
     {
-        // 只有玩家在Trigger内部并且有PlayerCC才处理按键
         if (!playerInside || currentPlayer == null)
+        {
             return;
+        }
 
-        // 按E拾取
         if (!CartoonPanelController.IsPlaying && Input.GetKeyDown(KeyCode.E))
         {
             currentPlayer.hasDoorPickup = true;
             Debug.Log("picked door");
 
-            // 拾取后隐藏Pickup
             gameObject.SetActive(false);
 
-            // 拾取后可选择隐藏显示物体
-            if (objectToShow != null)
-                objectToShow.SetActive(false);
+            SetPromptPanelVisible(false);
         }
     }
 
@@ -39,9 +38,7 @@ public class DoorPickup : MonoBehaviour
         playerInside = true;
         currentPlayer = player;
 
-        // 进入Trigger时立即显示物体
-        if (objectToShow != null)
-            objectToShow.SetActive(true);
+        SetPromptPanelVisible(true);
     }
 
     private void OnTriggerExit(Collider other)
@@ -54,8 +51,29 @@ public class DoorPickup : MonoBehaviour
         playerInside = false;
         currentPlayer = null;
 
-        // 离开Trigger时可隐藏物体
-        if (objectToShow != null)
-            objectToShow.SetActive(false);
+        SetPromptPanelVisible(false);
+    }
+
+    private void SetPromptPanelVisible(bool visible)
+    {
+        ResolvePromptPanel();
+        if (promptPanel != null)
+        {
+            promptPanel.SetActive(visible);
+        }
+    }
+
+    private void ResolvePromptPanel()
+    {
+        if (promptPanel == null || promptPanel.GetComponent<TMP_Text>() == null)
+        {
+            return;
+        }
+
+        Transform parent = promptPanel.transform.parent;
+        if (parent != null)
+        {
+            promptPanel = parent.gameObject;
+        }
     }
 }

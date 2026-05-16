@@ -1,14 +1,15 @@
-using Unity.VisualScripting;
+using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.Serialization;
 
 public class TriggerScenePortal : MonoBehaviour
 {
     [Header("切换目标 Scene Index")]
     public int targetSceneIndex = 1;
 
-    [Header("进入 Trigger 时显示的物体")]
-    public GameObject objectToShow;
+    [Header("进入 Trigger 时显示的提示 Panel")]
+    [SerializeField, FormerlySerializedAs("objectToShow")] private GameObject promptPanel;
 
     public AudioSource audioSource;
 
@@ -45,11 +46,7 @@ public class TriggerScenePortal : MonoBehaviour
 
         playerInside = true;
 
-        // 显示提示物体
-        if (objectToShow != null)
-        {
-            objectToShow.SetActive(true);
-        }
+        SetPromptPanelVisible(true);
     }
 
     // ------------------------
@@ -65,11 +62,7 @@ public class TriggerScenePortal : MonoBehaviour
 
         playerInside = false;
 
-        // 隐藏提示物体
-        if (objectToShow != null)
-        {
-            objectToShow.SetActive(false);
-        }
+        SetPromptPanelVisible(false);
     }
 
     // ------------------------
@@ -83,8 +76,31 @@ public class TriggerScenePortal : MonoBehaviour
         {
             AudioSFXManager.Instance.StopAllAudioImmediately();
         }
-        objectToShow.gameObject.SetActive(false);
+        SetPromptPanelVisible(false);
 
         SceneManager.LoadScene(targetSceneIndex);
+    }
+
+    private void SetPromptPanelVisible(bool visible)
+    {
+        ResolvePromptPanel();
+        if (promptPanel != null)
+        {
+            promptPanel.SetActive(visible);
+        }
+    }
+
+    private void ResolvePromptPanel()
+    {
+        if (promptPanel == null || promptPanel.GetComponent<TMP_Text>() == null)
+        {
+            return;
+        }
+
+        Transform parent = promptPanel.transform.parent;
+        if (parent != null)
+        {
+            promptPanel = parent.gameObject;
+        }
     }
 }
