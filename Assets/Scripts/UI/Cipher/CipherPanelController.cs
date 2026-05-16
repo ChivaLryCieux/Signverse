@@ -34,7 +34,7 @@ public class CipherPanelController : MonoBehaviour
     [SerializeField] private bool closeOnSuccess = true;
     [SerializeField] private bool keepOpenOnFailure = true;
 
-    [Header("Trigger 提示")]
+    [Header("Trigger 提示 Panel")]
     [SerializeField] private GameObject promptRoot;
     [SerializeField] private TMP_Text promptText;
 
@@ -73,7 +73,7 @@ public class CipherPanelController : MonoBehaviour
         panelRoot = gameObject;
         confirmButton = GetComponentInChildren<Button>(true);
         promptText = GetComponentInChildren<TMP_Text>(true);
-        promptRoot = promptText != null ? promptText.gameObject : null;
+        ResolvePromptRoot();
     }
 
     private void Awake()
@@ -133,6 +133,8 @@ public class CipherPanelController : MonoBehaviour
 
     public void ShowPrompt(bool visible)
     {
+        ResolvePromptRoot();
+
         if (promptRoot != null)
         {
             promptRoot.SetActive(visible && !unlocked && !IsOpen);
@@ -195,6 +197,8 @@ public class CipherPanelController : MonoBehaviour
             panelRoot = gameObject;
         }
 
+        ResolvePromptRoot();
+
         if (keys == null)
         {
             keys = Array.Empty<CipherKey>();
@@ -212,6 +216,17 @@ public class CipherPanelController : MonoBehaviour
                 keys[i].image = keys[i].button.GetComponent<Image>();
             }
         }
+    }
+
+    private void ResolvePromptRoot()
+    {
+        if (promptRoot != null || promptText == null)
+        {
+            return;
+        }
+
+        Transform parent = promptText.transform.parent;
+        promptRoot = parent != null && parent != transform ? parent.gameObject : promptText.gameObject;
     }
 
     private void RegisterButtonListeners()
