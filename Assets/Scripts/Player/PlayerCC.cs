@@ -7,6 +7,7 @@ using System;
 [RequireComponent(typeof(PlayerDeath))]
 public class PlayerCC : MonoBehaviour
 {
+    private const int SurfaceHitBufferSize = 16;
     public bool isClimbInvincible = false;
     private const float MinClimbExitUpInputLockDuration = 3f;
     public AudioSource audioSource;
@@ -27,7 +28,9 @@ public class PlayerCC : MonoBehaviour
     [Header("核心引用")]
     public CharacterController cc;
     private PlayerControls controls; 
+    private PlayerControls.PlayerActions playerActions;
     private PlayerDeath playerDeath;
+    private CloakEffectController cloakEffect;
     private CharacterController controlProxy;
     private Transform controlProxyTransform;
     private readonly List<Collider> disabledOwnerCollidersForProxy = new List<Collider>();
@@ -50,17 +53,7 @@ public class PlayerCC : MonoBehaviour
     public float fallMultiplier = 1.6f;
     [SerializeField] private float turnInputThreshold = 0.1f;
 
-    [Header("防挤出平台")]
-    [SerializeField] private bool preventSideCollisionPushOffGround = true;
-    [SerializeField] private LayerMask groundSafetyMask = ~0;
-    [SerializeField] private float groundSafetyCheckDistance = 0.35f;
-    [SerializeField] private float groundSafetyRadiusPadding = 0.03f;
-    [SerializeField] private bool drawGroundSafetyCheck;
     [SerializeField] private float ceilingHitFallVelocity = -0.5f;
-
-    [Header("前方 Trigger 移动阻挡")]
-    [SerializeField] private LayerMask directionalMoveBlockMask = ~0;
-    [SerializeField] private bool drawDirectionalMoveBlock;
 
     private float verticalVelocity;
     private Vector3 facingDirection = Vector3.right;
@@ -71,7 +64,6 @@ public class PlayerCC : MonoBehaviour
     private Vector3 climbExitMoveVelocity;
     private LayerMask climbExitGroundMask;
     private float climbExitGroundSnapDistance;
-    private readonly List<DirectionalMoveBlockContact> directionalMoveBlockContacts = new List<DirectionalMoveBlockContact>();
 
     [Header("状态监控")]
     public bool isGrounded;
@@ -104,12 +96,6 @@ public class PlayerCC : MonoBehaviour
     private Vector2 queuedClimbExitUpForcedOffset;
     private float queuedClimbExitUpForcedMoveDuration;
 
-    private struct DirectionalMoveBlockContact
-    {
-        public Collider other;
-        public Transform trigger;
-    }
-
     [Header("技能系统 (Slot-Based)")]
     [Tooltip("可选：调试或特殊关卡开局自带技能。正式流程可留空，移动/跳跃/冲刺由拾取和 UI 解锁。")]
     public List<SkillBase> startingSkills = new List<SkillBase>();
@@ -121,6 +107,8 @@ public class PlayerCC : MonoBehaviour
 
     public SkillDatabase masterDatabase; 
     private readonly List<SkillBase> skillUpdateBuffer = new List<SkillBase>();
+    private readonly HashSet<SkillBase> skillUpdateSet = new HashSet<SkillBase>();
+    private readonly RaycastHit[] skillLoadoutSurfaceHitBuffer = new RaycastHit[SurfaceHitBufferSize];
     private bool hasExplicitEquippedSkills;
 
     [Header("地面检测调试")]
@@ -144,7 +132,7 @@ public class PlayerCC : MonoBehaviour
     public Transform GetControlTransform() => controlProxyTransform != null ? controlProxyTransform : transform;
     public Vector2 GetRawMoveInput()
     {
-        return controls.Player.Move.ReadValue<Vector2>();
+        return playerActions.Move.ReadValue<Vector2>();
     }
 
     public Vector2 GetMoveInput()
@@ -159,17 +147,17 @@ public class PlayerCC : MonoBehaviour
     }
     
     // 供蓄力跳检测：空格是否正被按住
-    public bool IsJumpPressed() => CurrentPosture != Posture.Climbing && controls.Player.Jump.IsPressed();
-    public bool WasJumpPressed() => CurrentPosture != Posture.Climbing && controls.Player.Jump.WasPressedThisFrame();
+    public bool IsJumpPressed() => CurrentPosture != Posture.Climbing && playerActions.Jump.IsPressed();
+    public bool WasJumpPressed() => CurrentPosture != Posture.Climbing && playerActions.Jump.WasPressedThisFrame();
     
     // 供技能检测：空格是否在这一帧松开
-    public bool WasJumpReleased() => CurrentPosture != Posture.Climbing && controls.Player.Jump.WasReleasedThisFrame();
+    public bool WasJumpReleased() => CurrentPosture != Posture.Climbing && playerActions.Jump.WasReleasedThisFrame();
 
-    public bool IsDashPressed() => CurrentPosture != Posture.Climbing && controls.Player.Dash.IsPressed();
-    public bool WasDashPressed() => CurrentPosture != Posture.Climbing && controls.Player.Dash.WasPressedThisFrame();
+    public bool IsDashPressed() => CurrentPosture != Posture.Climbing && playerActions.Dash.IsPressed();
+    public bool WasDashPressed() => CurrentPosture != Posture.Climbing && playerActions.Dash.WasPressedThisFrame();
 
-    public bool IsHidePressed() => controls.Player.Hide.IsPressed();
-    public bool WasHidePressed() => controls.Player.Hide.WasPressedThisFrame();
+    public bool IsHidePressed() => playerActions.Hide.IsPressed();
+    public bool WasHidePressed() => playerActions.Hide.WasPressedThisFrame();
 
     public Vector3 GetFacing() => facingDirection;
     public bool IsDead => playerDeath != null && playerDeath.IsDead;
@@ -201,7 +189,6 @@ public class PlayerCC : MonoBehaviour
         climbExitUpAnimationLock = false;
         climbExitUpAnimationLockTimer = 0f;
         hasQueuedClimbExitUpForcedMove = false;
-        directionalMoveBlockContacts.Clear();
     }
 
     public void SetInputEnabled(bool enabled)
@@ -213,11 +200,11 @@ public class PlayerCC : MonoBehaviour
 
         if (enabled)
         {
-            controls.Player.Enable();
+            playerActions.Enable();
         }
         else
         {
-            controls.Player.Disable();
+            playerActions.Disable();
         }
     }
     public void EnableInput()
@@ -476,46 +463,7 @@ public class PlayerCC : MonoBehaviour
         GetControlTransform().forward = dir.normalized;
     }
 
-    public void EnterDirectionalMoveBlockTrigger(Collider other, Transform trigger)
-    {
-        if (!CanUseDirectionalMoveBlockContact(other, trigger))
-        {
-            return;
-        }
-
-        int index = FindDirectionalMoveBlockContact(other, trigger);
-        if (index >= 0)
-        {
-            return;
-        }
-
-        directionalMoveBlockContacts.Add(new DirectionalMoveBlockContact
-        {
-            other = other,
-            trigger = trigger
-        });
-    }
-
-    public void ExitDirectionalMoveBlockTrigger(Collider other, Transform trigger)
-    {
-        int index = FindDirectionalMoveBlockContact(other, trigger);
-        if (index >= 0)
-        {
-            directionalMoveBlockContacts.RemoveAt(index);
-        }
-    }
-
-    public bool CanUseDirectionalMoveBlockContact(Collider other, Transform trigger)
-    {
-        if (other == null || trigger == null || other.transform.IsChildOf(transform))
-        {
-            return false;
-        }
-
-        return (directionalMoveBlockMask.value & (1 << other.gameObject.layer)) != 0;
-    }
-
-    public CollisionFlags MoveWithGroundProtection(Vector3 delta)
+    public CollisionFlags MoveCharacter(Vector3 delta)
     {
         CharacterController activeController = GetCharacterController();
         if (activeController == null)
@@ -523,33 +471,9 @@ public class PlayerCC : MonoBehaviour
             return CollisionFlags.None;
         }
 
-        delta = ApplyDirectionalMoveBlock(delta);
-
-        if (!ShouldProtectGroundedSideMove(delta, activeController))
-        {
-            CollisionFlags moveFlags = activeController.Move(delta);
-            HandleMoveCollisionFlags(moveFlags, delta);
-            return moveFlags;
-        }
-
-        Transform activeTransform = GetControlTransform();
-        Vector3 positionBeforeMove = activeTransform.position;
-        bool hadGroundSupport = HasGroundSupport(activeController);
-        CollisionFlags flags = activeController.Move(delta);
-        HandleMoveCollisionFlags(flags, delta);
-
-        if (!hadGroundSupport || (flags & CollisionFlags.Sides) == 0 || HasGroundSupport(activeController))
-        {
-            return flags;
-        }
-
-        bool wasEnabled = activeController.enabled;
-        activeController.enabled = false;
-        activeTransform.position = positionBeforeMove;
-        activeController.enabled = wasEnabled;
-        verticalVelocity = Mathf.Min(verticalVelocity, 0f);
-
-        return flags;
+        CollisionFlags moveFlags = activeController.Move(delta);
+        HandleMoveCollisionFlags(moveFlags, delta);
+        return moveFlags;
     }
 
     public void BeginClimbExitMove(Vector2 offset, float duration)
@@ -717,7 +641,11 @@ public class PlayerCC : MonoBehaviour
         ResolveDeathSign();
         if (deathSign != null)
         {
-            audioSource.PlayOneShot(deathSFX);
+            if (visible && audioSource != null && deathSFX != null)
+            {
+                audioSource.PlayOneShot(deathSFX);
+            }
+
             deathSign.gameObject.SetActive(visible);
         }
     }
@@ -802,6 +730,8 @@ public class PlayerCC : MonoBehaviour
         }
 
         controls = new PlayerControls();
+        playerActions = controls.Player;
+        cloakEffect = GetComponent<CloakEffectController>();
         ResolveDeathSign();
         if (hideDeathSignOnAwake)
         {
@@ -818,7 +748,7 @@ public class PlayerCC : MonoBehaviour
     {
         if (controls != null)
         {
-            controls.Player.Enable();
+            playerActions.Enable();
         }
     }
 
@@ -826,7 +756,16 @@ public class PlayerCC : MonoBehaviour
     {
         if (controls != null)
         {
-            controls.Player.Disable();
+            playerActions.Disable();
+        }
+    }
+
+    void OnDestroy()
+    {
+        if (controls != null)
+        {
+            controls.Dispose();
+            controls = null;
         }
     }
 
@@ -837,34 +776,47 @@ public class PlayerCC : MonoBehaviour
             return;
         }
 
+        TickMovementLocks(Time.deltaTime);
+        RefreshPosture();
+        RefreshCloakState(false);
+        HandleIntrinsicFacing();
+        UpdateActiveSkills();
+        UpdateClimbExitMove();
+        RefreshCloakState();
+        HandleGravityMove();
+    }
+
+    private void TickMovementLocks(float deltaTime)
+    {
         if (moveXDisableTimer > 0f)
         {
-            moveXDisableTimer -= Time.deltaTime;
+            moveXDisableTimer -= deltaTime;
         }
 
-        if (climbExitUpAnimationLock)
+        if (!climbExitUpAnimationLock)
         {
-            climbExitUpAnimationLockTimer -= Time.deltaTime;
-            if (climbExitUpAnimationLockTimer <= 0f)
-            {
-                FinishClimbExitUpAnimationLock();
-            }
+            return;
         }
 
-        RefreshPosture();
-        RefreshCloakState();
+        climbExitUpAnimationLockTimer -= deltaTime;
+        if (climbExitUpAnimationLockTimer <= 0f)
+        {
+            FinishClimbExitUpAnimationLock();
+        }
+    }
 
-        HandleIntrinsicFacing();
-
+    private void UpdateActiveSkills()
+    {
         IList<SkillBase> activeSkills = GetActiveSkillsForUpdate();
         skillUpdateBuffer.Clear();
+        skillUpdateSet.Clear();
 
         if (activeSkills != null)
         {
             for (int i = 0; i < activeSkills.Count; i++)
             {
                 SkillBase skill = activeSkills[i];
-                if (skill != null && !skillUpdateBuffer.Contains(skill))
+                if (skill != null && skillUpdateSet.Add(skill))
                 {
                     skillUpdateBuffer.Add(skill);
                 }
@@ -881,15 +833,20 @@ public class PlayerCC : MonoBehaviour
 
             skill.OnUpdate(gameObject, this, CurrentPosture);
         }
+    }
 
-        UpdateClimbExitMove();
-
-        RefreshCloakState();
-
+    private void HandleGravityMove()
+    {
         HandleGravity();
 
         Vector3 gravityDelta = new Vector3(0, verticalVelocity, 0) * Time.deltaTime;
-        CollisionFlags gravityFlags = GetCharacterController().Move(gravityDelta);
+        CharacterController activeController = GetCharacterController();
+        if (activeController == null)
+        {
+            return;
+        }
+
+        CollisionFlags gravityFlags = activeController.Move(gravityDelta);
         HandleMoveCollisionFlags(gravityFlags, gravityDelta);
     }
 
@@ -903,7 +860,7 @@ public class PlayerCC : MonoBehaviour
         float step = Mathf.Min(Time.deltaTime, climbExitMoveTimer);
         SetVerticalVelocity(0f);
         SetClimbState(true, 0f);
-        MoveWithGroundProtection(climbExitMoveVelocity * step);
+        MoveCharacter(climbExitMoveVelocity * step);
 
         climbExitMoveTimer -= step;
         if (climbExitMoveTimer > 0f)
@@ -945,146 +902,6 @@ public class PlayerCC : MonoBehaviour
         cc.enabled = wasEnabled;
     }
 
-    private bool ShouldProtectGroundedSideMove(Vector3 delta, CharacterController activeController)
-    {
-        if (!preventSideCollisionPushOffGround || activeController == null)
-        {
-            return false;
-        }
-
-        if (CurrentPosture != Posture.Grounded)
-        {
-            return false;
-        }
-
-        return Mathf.Abs(delta.x) > 0.0001f && Mathf.Abs(delta.y) <= 0.0001f;
-    }
-
-    private Vector2 ApplyDirectionalMoveBlock(Vector2 input)
-    {
-        if (IsMoveDirectionBlocked(input.x))
-        {
-            input.x = 0f;
-        }
-
-        return input;
-    }
-
-    private Vector3 ApplyDirectionalMoveBlock(Vector3 delta)
-    {
-        if (IsMoveDirectionBlocked(delta.x))
-        {
-            delta.x = 0f;
-        }
-
-        return delta;
-    }
-
-    private bool IsMoveDirectionBlocked(float x)
-    {
-        if (Mathf.Abs(x) <= 0.0001f)
-        {
-            return false;
-        }
-
-        PruneDirectionalMoveBlockContacts();
-        float moveDirection = Mathf.Sign(x);
-        for (int i = 0; i < directionalMoveBlockContacts.Count; i++)
-        {
-            if (Mathf.Sign(GetDirectionalMoveBlockSign(directionalMoveBlockContacts[i].other)) == moveDirection)
-            {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    private void PruneDirectionalMoveBlockContacts()
-    {
-        for (int i = directionalMoveBlockContacts.Count - 1; i >= 0; i--)
-        {
-            DirectionalMoveBlockContact contact = directionalMoveBlockContacts[i];
-            if (contact.other == null || contact.trigger == null || !contact.other.enabled || !CanUseDirectionalMoveBlockContact(contact.other, contact.trigger))
-            {
-                directionalMoveBlockContacts.RemoveAt(i);
-            }
-        }
-    }
-
-    private int FindDirectionalMoveBlockContact(Collider other, Transform trigger)
-    {
-        for (int i = 0; i < directionalMoveBlockContacts.Count; i++)
-        {
-            DirectionalMoveBlockContact contact = directionalMoveBlockContacts[i];
-            if (contact.other == other && contact.trigger == trigger)
-            {
-                return i;
-            }
-        }
-
-        return -1;
-    }
-
-    private float GetDirectionalMoveBlockSign(Collider other)
-    {
-        Transform activeTransform = GetControlTransform();
-        float direction = 0f;
-        if (other != null && activeTransform != null)
-        {
-            Vector3 playerPosition = activeTransform.position;
-            Vector3 closestPoint = other.ClosestPoint(playerPosition);
-            direction = closestPoint.x - playerPosition.x;
-
-            if (Mathf.Abs(direction) <= 0.0001f)
-            {
-                direction = other.bounds.center.x - playerPosition.x;
-            }
-        }
-
-        if (Mathf.Abs(direction) > 0.0001f)
-        {
-            return Mathf.Sign(direction);
-        }
-
-        return facingDirection.x >= 0f ? 1f : -1f;
-    }
-
-    private bool HasGroundSupport(CharacterController activeController)
-    {
-        if (activeController == null || groundSafetyMask.value == 0)
-        {
-            return false;
-        }
-
-        Vector3 worldCenter = activeController.transform.TransformPoint(activeController.center);
-        float bottomOffset = Mathf.Max(0f, activeController.height * 0.5f - activeController.radius);
-        Vector3 origin = worldCenter + Vector3.down * bottomOffset + Vector3.up * 0.05f;
-        float radius = Mathf.Max(0.01f, activeController.radius - Mathf.Max(0f, groundSafetyRadiusPadding));
-        float distance = Mathf.Max(0.01f, groundSafetyCheckDistance);
-        bool hitGround = Physics.SphereCast(
-            origin,
-            radius,
-            Vector3.down,
-            out _,
-            distance,
-            groundSafetyMask,
-            QueryTriggerInteraction.Ignore
-        );
-
-        if (drawGroundSafetyCheck)
-        {
-            Color color = hitGround ? Color.green : Color.red;
-            Debug.DrawRay(origin, Vector3.down * distance, color);
-            Debug.DrawRay(origin + Vector3.right * radius, Vector3.down * distance, color);
-            Debug.DrawRay(origin + Vector3.left * radius, Vector3.down * distance, color);
-            Debug.DrawRay(origin + Vector3.forward * radius, Vector3.down * distance, color);
-            Debug.DrawRay(origin + Vector3.back * radius, Vector3.down * distance, color);
-        }
-
-        return hitGround;
-    }
-
     private void HandleMoveCollisionFlags(CollisionFlags flags, Vector3 attemptedMove)
     {
         if ((flags & CollisionFlags.Above) == 0)
@@ -1099,6 +916,7 @@ public class PlayerCC : MonoBehaviour
 
         verticalVelocity = ceilingHitFallVelocity < 0f ? ceilingHitFallVelocity : -0.5f;
     }
+
     private bool IsStandingOnAnyTaggedSurface(List<string> requiredTags)
     {
         if (requiredTags == null || requiredTags.Count == 0)
@@ -1106,46 +924,16 @@ public class PlayerCC : MonoBehaviour
             return true;
         }
 
-        CharacterController activeController = GetCharacterController();
-        if (activeController == null || skillLoadoutSurfaceMask.value == 0)
-        {
-            return false;
-        }
-
-        Vector3 worldCenter = activeController.transform.TransformPoint(activeController.center);
-        float bottomOffset = Mathf.Max(0f, activeController.height * 0.5f - activeController.radius);
-
-        Vector3 sphereOrigin =
-            worldCenter +
-            Vector3.down * bottomOffset +
-            Vector3.up * 0.05f;
-
-        float radius = Mathf.Max(0.01f, activeController.radius * 0.9f);
-
-        float distance =
-            Mathf.Max(0.01f, skillLoadoutSurfaceCheckDistance + 0.05f);
-
-        RaycastHit[] hits = Physics.SphereCastAll(
-            sphereOrigin,
-            radius,
-            Vector3.down,
-            distance,
-            skillLoadoutSurfaceMask,
-            QueryTriggerInteraction.Ignore);
-
-        return HasAnyTaggedSurfaceHit(hits, requiredTags);
+        int hitCount = GetSkillLoadoutSurfaceHits();
+        return HasAnyTaggedSurfaceHit(skillLoadoutSurfaceHitBuffer, hitCount, requiredTags);
     }
-    private bool IsStandingOnTaggedSurface(string requiredTag)
-    {
-        if (string.IsNullOrWhiteSpace(requiredTag))
-        {
-            return true;
-        }
 
+    private int GetSkillLoadoutSurfaceHits()
+    {
         CharacterController activeController = GetCharacterController();
         if (activeController == null || skillLoadoutSurfaceMask.value == 0)
         {
-            return false;
+            return 0;
         }
 
         Vector3 worldCenter = activeController.transform.TransformPoint(activeController.center);
@@ -1154,25 +942,25 @@ public class PlayerCC : MonoBehaviour
         float radius = Mathf.Max(0.01f, activeController.radius * 0.9f);
         float distance = Mathf.Max(0.01f, skillLoadoutSurfaceCheckDistance + 0.05f);
 
-        RaycastHit[] hits = Physics.SphereCastAll(
+        return Physics.SphereCastNonAlloc(
             sphereOrigin,
             radius,
             Vector3.down,
+            skillLoadoutSurfaceHitBuffer,
             distance,
             skillLoadoutSurfaceMask,
             QueryTriggerInteraction.Ignore);
-
-        return HasAnyTaggedSurfaceHit(hits, requiredTag);
     }
 
-    private bool HasAnyTaggedSurfaceHit(RaycastHit[] hits, List<string> requiredTags)
+    private bool HasAnyTaggedSurfaceHit(RaycastHit[] hits, int hitCount, List<string> requiredTags)
     {
         if (hits == null || requiredTags == null)
         {
             return false;
         }
 
-        for (int i = 0; i < hits.Length; i++)
+        int safeHitCount = Mathf.Min(hitCount, hits.Length);
+        for (int i = 0; i < safeHitCount; i++)
         {
             Collider hitCollider = hits[i].collider;
             if (hitCollider == null)
@@ -1186,25 +974,6 @@ public class PlayerCC : MonoBehaviour
                 {
                     return true;
                 }
-            }
-        }
-
-        return false;
-    }
-
-    private bool HasAnyTaggedSurfaceHit(RaycastHit[] hits, string requiredTag)
-    {
-        if (hits == null)
-        {
-            return false;
-        }
-
-        for (int i = 0; i < hits.Length; i++)
-        {
-            Collider hitCollider = hits[i].collider;
-            if (hitCollider != null && HasTagInParents(hitCollider.transform, requiredTag))
-            {
-                return true;
             }
         }
 
@@ -1232,9 +1001,13 @@ public class PlayerCC : MonoBehaviour
         return false;
     }
 
-    private void RefreshCloakState()
+    private void RefreshCloakState(bool resolveIfMissing = true)
     {
-        CloakEffectController cloakEffect = GetComponent<CloakEffectController>();
+        if (cloakEffect == null && resolveIfMissing)
+        {
+            cloakEffect = GetComponent<CloakEffectController>();
+        }
+
         isCloaked = cloakEffect != null && cloakEffect.IsCloaked;
     }
 
@@ -1247,6 +1020,7 @@ public class PlayerCC : MonoBehaviour
 
         return unlockedSkills;
     }
+
     private void HandleGravity()
     {
         if (gravitySuppressedFrame == Time.frameCount)
@@ -1291,22 +1065,6 @@ public class PlayerCC : MonoBehaviour
         // 2.5D 锁定 Z 轴
         Transform activeTransform = GetControlTransform();
         activeTransform.position = new Vector3(activeTransform.position.x, activeTransform.position.y, 0);
-
-        if (drawDirectionalMoveBlock)
-        {
-            DrawDirectionalMoveBlockDebug();
-        }
-    }
-
-    private void DrawDirectionalMoveBlockDebug()
-    {
-        PruneDirectionalMoveBlockContacts();
-        Vector3 origin = GetControlTransform().position + Vector3.up * 0.5f;
-        for (int i = 0; i < directionalMoveBlockContacts.Count; i++)
-        {
-            float direction = Mathf.Sign(GetDirectionalMoveBlockSign(directionalMoveBlockContacts[i].other));
-            Debug.DrawRay(origin, Vector3.right * direction * 0.75f, Color.yellow);
-        }
     }
 
     public void UnlockNewSkill(string id)

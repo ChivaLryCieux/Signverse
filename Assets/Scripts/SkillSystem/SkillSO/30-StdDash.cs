@@ -130,7 +130,7 @@ namespace Skills
             controller.SetDashPosture(posture);
 
             Vector3 dashDelta = dashDirection * (DashDistance * posture / (dashCurveArea * actualDuration)) * step;
-            CollisionFlags flags = controller.MoveWithGroundProtection(dashDelta);
+            CollisionFlags flags = controller.MoveCharacter(dashDelta);
 
             if ((flags & (CollisionFlags.Sides | CollisionFlags.Above)) != 0 || dashTimer <= 0f)
             {
