@@ -34,6 +34,13 @@ public class PickupUIController : MonoBehaviour
     [SerializeField] private AudioClip mimicSuccessSfx;
     [SerializeField] private AudioClip mimicExitSfx;
     [SerializeField, Range(0f, 1f)] private float mimicSfxVolume = 1f;
+
+    [Header("技能装卸音效")]
+    [SerializeField] private AudioClip unlockedSkillSelectSfx;
+    [SerializeField] private AudioClip equipSuccessSfx;
+    [SerializeField] private AudioClip equippedSkillSelectSfx;
+    [SerializeField, Range(0f, 1f)] private float skillLoadoutSfxVolume = 1f;
+
     [SerializeField] private AudioSource fallbackAudioSource;
     [SerializeField] private AudioSource constantSoundAudioSource;
 
@@ -330,6 +337,7 @@ public class PickupUIController : MonoBehaviour
         hasSelectedUnlockItem = true;
         selectedUnlockItem = id;
         selectingMimicTarget = false;
+        PlaySkillLoadoutSfx(unlockedSkillSelectSfx);
         RefreshUnlockedSlots();
     }
 
@@ -421,6 +429,7 @@ public class PickupUIController : MonoBehaviour
         RefreshEquippedSlots();
         SyncBoltSpend();
         SyncLinkedSkills();
+        PlaySkillLoadoutSfx(equipSuccessSfx);
 
         if (replacedExistingItem)
         {
@@ -449,6 +458,7 @@ public class PickupUIController : MonoBehaviour
         RefreshEquippedSlots();
         SyncBoltSpend();
         SyncLinkedSkills();
+        PlaySkillLoadoutSfx(equippedSkillSelectSfx);
 
         ItemUnequipped?.Invoke(removedItem);
     }
@@ -1076,6 +1086,7 @@ public class PickupUIController : MonoBehaviour
         }
 
         RefreshUnlockedSlots();
+        PlaySkillLoadoutSfx(unlockedSkillSelectSfx);
         if (constantSoundAudioSource != null)
         {
             constantSoundAudioSource.Play();
@@ -1228,6 +1239,16 @@ public class PickupUIController : MonoBehaviour
 
     private void PlayMimicSfx(AudioClip clip)
     {
+        PlaySfx(clip, mimicSfxVolume);
+    }
+
+    private void PlaySkillLoadoutSfx(AudioClip clip)
+    {
+        PlaySfx(clip, skillLoadoutSfxVolume);
+    }
+
+    private void PlaySfx(AudioClip clip, float volume)
+    {
         if (clip == null)
         {
             return;
@@ -1235,15 +1256,13 @@ public class PickupUIController : MonoBehaviour
 
         if (AudioManager.Instance != null)
         {
-            AudioManager.Instance.PlaySFX(clip, mimicSfxVolume);
+            AudioManager.Instance.PlaySFX(clip, volume);
             return;
         }
 
-        
-
         if (fallbackAudioSource != null)
         {
-            fallbackAudioSource.PlayOneShot(clip, mimicSfxVolume);
+            fallbackAudioSource.PlayOneShot(clip, volume);
         }
     }
 
