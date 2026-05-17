@@ -1178,6 +1178,7 @@ GameObject:
   - component: {fileID: 8099910956880292930}
   - component: {fileID: 5808384779531851192}
   - component: {fileID: 8882600513980720076}
+  - component: {fileID: 4103031361305090154}
   m_Layer: 0
   m_Name: DecayModel
   m_TagString: Player
@@ -1264,6 +1265,7 @@ MonoBehaviour:
   maxChargeAnimTime: 1.5
   chargeReleaseReturnTime: 0.08
   legChargeLayerIndex: -1
+  jumpBoostVFX: {fileID: 0}
   animator: {fileID: 359811786432039953}
   audioSource: {fileID: 0}
   controller: {fileID: 8099910956880292930}
@@ -1338,19 +1340,20 @@ MonoBehaviour:
   isClimbing: 1
   isCloaked: 0
   currentPosture: 0
-  startingSkills: []
-  unlockedSkills: []
-  equippedSkills: []
-  masterDatabase: {fileID: 11400000, guid: 6c7fa50fa25f9d569a8378dc6b3967b9, type: 2}
+  legacyStartingSkills: []
+  legacyUnlockedSkills: []
+  legacyEquippedSkills: []
+  legacyMasterDatabase: {fileID: 11400000, guid: 6c7fa50fa25f9d569a8378dc6b3967b9,
+    type: 2}
   drawGroundedGizmo: 1
   groundedGizmoOffsetY: 0
-  skillLoadoutSurfaceTags:
+  legacySkillLoadoutSurfaceTags:
   - Nature
   - Water
-  skillLoadoutSurfaceMask:
+  legacySkillLoadoutSurfaceMask:
     serializedVersion: 2
     m_Bits: 4294967295
-  skillLoadoutSurfaceCheckDistance: 0.25
+  legacySkillLoadoutSurfaceCheckDistance: 0.25
   climbExitUpInputLockDuration: 3
 --- !u!114 &5808384779531851192
 MonoBehaviour:
@@ -1468,6 +1471,30 @@ AudioSource:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
+--- !u!114 &4103031361305090154
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2687800596344445724}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ca2ef686984a0b947a028da35d5f2f0a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  startingSkills: []
+  unlockedSkills: []
+  equippedSkills: []
+  masterDatabase: {fileID: 11400000, guid: 6c7fa50fa25f9d569a8378dc6b3967b9, type: 2}
+  skillLoadoutSurfaceTags:
+  - Nature
+  - Water
+  skillLoadoutSurfaceMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  skillLoadoutSurfaceCheckDistance: 0.25
+  legacyDataInitialized: 1
 --- !u!1 &2786335902035478571
 GameObject:
   m_ObjectHideFlags: 0
@@ -2019,6 +2046,7 @@ GameObject:
   - component: {fileID: 7353563168885746291}
   - component: {fileID: 5764564251497338212}
   - component: {fileID: 89015116638231456}
+  - component: {fileID: 1312733765536490765}
   m_Layer: 0
   m_Name: Player
   m_TagString: Player
@@ -2118,12 +2146,36 @@ MonoBehaviour:
   isClimbing: 0
   isCloaked: 0
   currentPosture: 0
+  legacyStartingSkills: []
+  legacyUnlockedSkills: []
+  legacyEquippedSkills: []
+  legacyMasterDatabase: {fileID: 0}
+  drawGroundedGizmo: 1
+  groundedGizmoOffsetY: 0
+  legacySkillLoadoutSurfaceTags:
+  - Nature
+  - Water
+  legacySkillLoadoutSurfaceMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  legacySkillLoadoutSurfaceCheckDistance: 0.25
+  climbExitUpInputLockDuration: 3
+--- !u!114 &1312733765536490765
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3805017572852080990}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ca2ef686984a0b947a028da35d5f2f0a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
   startingSkills: []
   unlockedSkills: []
   equippedSkills: []
   masterDatabase: {fileID: 0}
-  drawGroundedGizmo: 1
-  groundedGizmoOffsetY: 0
   skillLoadoutSurfaceTags:
   - Nature
   - Water
@@ -2131,7 +2183,7 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 4294967295
   skillLoadoutSurfaceCheckDistance: 0.25
-  climbExitUpInputLockDuration: 3
+  legacyDataInitialized: 1
 --- !u!1 &3831665606344423985
 GameObject:
   m_ObjectHideFlags: 0
@@ -3616,6 +3668,7 @@ GameObject:
   - component: {fileID: 7364074838065889184}
   - component: {fileID: 9172042815699925319}
   - component: {fileID: 1380367126800733036}
+  - component: {fileID: 1138459020899808343}
   m_Layer: 0
   m_Name: PlayerModel
   m_TagString: Player
@@ -3646,7 +3699,6 @@ Transform:
   - {fileID: 6857656062440738244}
   - {fileID: 6868645524866886648}
   - {fileID: 8653007443121196638}
-  - {fileID: 1762838203808501147}
   m_Father: {fileID: 3153870217061099823}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!95 &555050154619810132
@@ -3756,6 +3808,7 @@ MonoBehaviour:
   maxChargeAnimTime: 0.5
   chargeReleaseReturnTime: 0.08
   legChargeLayerIndex: -1
+  jumpBoostVFX: {fileID: 1934465609626109907}
   animator: {fileID: 555050154619810132}
   audioSource: {fileID: 9172042815699925319}
   controller: {fileID: 6853003824039800259}
@@ -3830,19 +3883,20 @@ MonoBehaviour:
   isClimbing: 1
   isCloaked: 0
   currentPosture: 0
-  startingSkills: []
-  unlockedSkills: []
-  equippedSkills: []
-  masterDatabase: {fileID: 11400000, guid: 6c7fa50fa25f9d569a8378dc6b3967b9, type: 2}
+  legacyStartingSkills: []
+  legacyUnlockedSkills: []
+  legacyEquippedSkills: []
+  legacyMasterDatabase: {fileID: 11400000, guid: 6c7fa50fa25f9d569a8378dc6b3967b9,
+    type: 2}
   drawGroundedGizmo: 1
   groundedGizmoOffsetY: 0
-  skillLoadoutSurfaceTags:
+  legacySkillLoadoutSurfaceTags:
   - Nature
   - Water
-  skillLoadoutSurfaceMask:
+  legacySkillLoadoutSurfaceMask:
     serializedVersion: 2
     m_Bits: 4294967295
-  skillLoadoutSurfaceCheckDistance: 0.25
+  legacySkillLoadoutSurfaceCheckDistance: 0.25
   climbExitUpInputLockDuration: 3
 --- !u!114 &7364074838065889184
 MonoBehaviour:
@@ -3978,6 +4032,30 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 8
   invincibleTime: 0.2
+--- !u!114 &1138459020899808343
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6293583864384828309}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ca2ef686984a0b947a028da35d5f2f0a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  startingSkills: []
+  unlockedSkills: []
+  equippedSkills: []
+  masterDatabase: {fileID: 11400000, guid: 6c7fa50fa25f9d569a8378dc6b3967b9, type: 2}
+  skillLoadoutSurfaceTags:
+  - Nature
+  - Water
+  skillLoadoutSurfaceMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  skillLoadoutSurfaceCheckDistance: 0.25
+  legacyDataInitialized: 1
 --- !u!1 &6320597122609296268
 GameObject:
   m_ObjectHideFlags: 0
@@ -5657,6 +5735,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1367204774176385455}
+  - {fileID: 1762838203808501147}
   m_Father: {fileID: 1565009877110444193}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!33 &3647037167067947011
@@ -7160,7 +7239,7 @@ PrefabInstance:
   serializedVersion: 2
   m_Modification:
     serializedVersion: 3
-    m_TransformParent: {fileID: 7521985838853448051}
+    m_TransformParent: {fileID: 48139012039125993}
     m_Modifications:
     - target: {fileID: 1113205305641416, guid: 71f1c689ace2e87418ed6d2aca865456, type: 3}
       propertyPath: m_Name
@@ -7168,43 +7247,43 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4940884351362868, guid: 71f1c689ace2e87418ed6d2aca865456, type: 3}
       propertyPath: m_LocalScale.x
-      value: 0.24021208
+      value: 0.5
       objectReference: {fileID: 0}
     - target: {fileID: 4940884351362868, guid: 71f1c689ace2e87418ed6d2aca865456, type: 3}
       propertyPath: m_LocalScale.y
-      value: 0.24021208
+      value: 0.5
       objectReference: {fileID: 0}
     - target: {fileID: 4940884351362868, guid: 71f1c689ace2e87418ed6d2aca865456, type: 3}
       propertyPath: m_LocalScale.z
-      value: 0.24021208
+      value: 0.15
       objectReference: {fileID: 0}
     - target: {fileID: 4940884351362868, guid: 71f1c689ace2e87418ed6d2aca865456, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -0.027
+      value: -0.088
       objectReference: {fileID: 0}
     - target: {fileID: 4940884351362868, guid: 71f1c689ace2e87418ed6d2aca865456, type: 3}
       propertyPath: m_LocalPosition.y
-      value: -0.33
+      value: 0.0017
       objectReference: {fileID: 0}
     - target: {fileID: 4940884351362868, guid: 71f1c689ace2e87418ed6d2aca865456, type: 3}
       propertyPath: m_LocalPosition.z
-      value: -0.282
+      value: -0.253
       objectReference: {fileID: 0}
     - target: {fileID: 4940884351362868, guid: 71f1c689ace2e87418ed6d2aca865456, type: 3}
       propertyPath: m_LocalRotation.w
-      value: 0.6912364
+      value: -0.096094325
       objectReference: {fileID: 0}
     - target: {fileID: 4940884351362868, guid: 71f1c689ace2e87418ed6d2aca865456, type: 3}
       propertyPath: m_LocalRotation.x
-      value: 0.7226288
+      value: 0.9953723
       objectReference: {fileID: 0}
     - target: {fileID: 4940884351362868, guid: 71f1c689ace2e87418ed6d2aca865456, type: 3}
       propertyPath: m_LocalRotation.y
-      value: -0
+      value: -3.6460958e-19
       objectReference: {fileID: 0}
     - target: {fileID: 4940884351362868, guid: 71f1c689ace2e87418ed6d2aca865456, type: 3}
       propertyPath: m_LocalRotation.z
-      value: -0
+      value: -1.6421855e-17
       objectReference: {fileID: 0}
     - target: {fileID: 4940884351362868, guid: 71f1c689ace2e87418ed6d2aca865456, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x
@@ -7218,6 +7297,31 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 198100719057022332, guid: 71f1c689ace2e87418ed6d2aca865456,
+        type: 3}
+      propertyPath: ColorModule.gradient.maxGradient.key1.a
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 198100719057022332, guid: 71f1c689ace2e87418ed6d2aca865456,
+        type: 3}
+      propertyPath: ColorModule.gradient.maxGradient.key2.a
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 198100719057022332, guid: 71f1c689ace2e87418ed6d2aca865456,
+        type: 3}
+      propertyPath: ColorModule.gradient.minGradient.key1.b
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 198100719057022332, guid: 71f1c689ace2e87418ed6d2aca865456,
+        type: 3}
+      propertyPath: ColorModule.gradient.minGradient.key1.g
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 198100719057022332, guid: 71f1c689ace2e87418ed6d2aca865456,
+        type: 3}
+      propertyPath: ColorModule.gradient.minGradient.key1.r
+      value: 1
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -7226,6 +7330,12 @@ PrefabInstance:
 --- !u!4 &1762838203808501147 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 4940884351362868, guid: 71f1c689ace2e87418ed6d2aca865456,
+    type: 3}
+  m_PrefabInstance: {fileID: 1758464017054952111}
+  m_PrefabAsset: {fileID: 0}
+--- !u!198 &1934465609626109907 stripped
+ParticleSystem:
+  m_CorrespondingSourceObject: {fileID: 198100719057022332, guid: 71f1c689ace2e87418ed6d2aca865456,
     type: 3}
   m_PrefabInstance: {fileID: 1758464017054952111}
   m_PrefabAsset: {fileID: 0}

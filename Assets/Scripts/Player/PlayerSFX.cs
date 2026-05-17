@@ -31,7 +31,10 @@ public class PlayerSFX : MonoBehaviour
 
     [Header("水面")]
     public List<AudioClip> waterStepClip = new List<AudioClip>();
-
+    [Header("攀爬触碰音效")]
+    public AudioClip climbClip;
+    public AudioClip vaultClip;
+    
     [Header("AudioSource")]
     public AudioSource audioSource;
 
@@ -179,7 +182,20 @@ public class PlayerSFX : MonoBehaviour
     }
 
 
-
+    public void PlayClimbingSFX()
+    {
+        if (audioSource == null)
+            return;
+        audioSource.pitch = Random.Range(minPitch, maxPitch);
+        audioSource.PlayOneShot(climbClip);
+    }
+    public void PlayVautingSFX()
+    {
+        if (audioSource == null)
+            return;
+        audioSource.pitch = Random.Range(minPitch, maxPitch);
+        audioSource.PlayOneShot(vaultClip);
+    }
 
     
     void OnDrawGizmos()

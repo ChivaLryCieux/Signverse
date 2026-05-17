@@ -28,6 +28,8 @@ public class AnimatorStateDebugger : MonoBehaviour
 
     private bool isChargingJump = false;
     private float jumpChargeNormalized;
+    [Header("Jump FX")]
+    public ParticleSystem jumpBoostVFX;
     // 标记是否已经缓存过重力，防止重复调用时把 0 当成原始重力。
     private bool hasCachedGravity;
     [Header("核心引用")]
@@ -525,7 +527,18 @@ public class AnimatorStateDebugger : MonoBehaviour
                     {
                         audioSource.Stop();
                         audioSource.PlayOneShot(jumpSFX);
-                        if(HasEquippedSkill("23-jd"))  audioSource.PlayOneShot(jumpBoostSFX);
+                        if (HasEquippedSkill("23-jd"))
+                        {
+                            audioSource.PlayOneShot(jumpBoostSFX);
+
+                            // 重播粒子
+                            if (jumpBoostVFX != null)
+                            {
+                                jumpBoostVFX.Stop();
+                                jumpBoostVFX.Play();
+                                
+                            }
+                        }
                         
                     }
                 }
