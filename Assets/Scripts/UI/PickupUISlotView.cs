@@ -53,6 +53,33 @@ public class PickupUISlotView : MonoBehaviour, IPointerClickHandler, IPointerEnt
         SetHighlight(selected);
     }
 
+    public void SetIconVisualVisible(bool visible)
+    {
+        if (iconImage == null)
+        {
+            return;
+        }
+
+        Color color = iconImage.color;
+        color.a = visible && iconImage.sprite != null ? 1f : 0f;
+        iconImage.color = color;
+    }
+
+    public Vector2 GetIconSize()
+    {
+        if (iconImage != null)
+        {
+            return iconImage.rectTransform.rect.size;
+        }
+
+        if (transform is RectTransform rectTransform)
+        {
+            return rectTransform.rect.size;
+        }
+
+        return new Vector2(64f, 64f);
+    }
+
     public void InitializeUnlockSlot(PickupUIController controller, PickupItemId id, Sprite icon)
     {
         owner = controller;
