@@ -5969,8 +5969,8 @@ MonoBehaviour:
   m_fontMaterials: []
   m_fontColor32:
     serializedVersion: 2
-    rgba: 855638015
-  m_fontColor: {r: 1, g: 1, b: 1, a: 0.19607843}
+    rgba: 4286282619
+  m_fontColor: {r: 0.48235294, g: 0.48235294, b: 0.48235294, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
   m_fontColorGradient:
@@ -14760,8 +14760,8 @@ RectTransform:
   m_GameObject: {fileID: 4615826480310852851}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
+  m_LocalScale: {x: 1.7, y: 1.7, z: 1.7}
+  m_ConstrainProportionsScale: 1
   m_Children:
   - {fileID: 218731796747901566}
   - {fileID: 8619389996000384202}
@@ -14769,7 +14769,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0}
   m_AnchorMax: {x: 0.5, y: 0}
-  m_AnchoredPosition: {x: 0, y: 75}
+  m_AnchoredPosition: {x: 0, y: 700}
   m_SizeDelta: {x: 500, y: 50}
   m_Pivot: {x: 0.5, y: 0}
 --- !u!114 &7437719088351521930
@@ -16771,9 +16771,11 @@ MonoBehaviour:
   mimicSuccessSfx: {fileID: 8300000, guid: 513801042f4f7d54aaaa7fef1c56d26c, type: 3}
   mimicExitSfx: {fileID: 8300000, guid: 8e0c242d07639b24bb5e124367d2f38a, type: 3}
   mimicSfxVolume: 1
-  unlockedSkillSelectSfx: {fileID: 8300000, guid: 39b98d6a988a08443a55050a7afffbee, type: 3}
+  unlockedSkillSelectSfx: {fileID: 8300000, guid: 39b98d6a988a08443a55050a7afffbee,
+    type: 3}
   equipSuccessSfx: {fileID: 8300000, guid: f71f88c37647cb7449a764f4eafa2c0a, type: 3}
-  equippedSkillSelectSfx: {fileID: 8300000, guid: 1b05ec2378232f5468fcee2c74f7457a, type: 3}
+  equippedSkillSelectSfx: {fileID: 8300000, guid: 1b05ec2378232f5468fcee2c74f7457a,
+    type: 3}
   skillLoadoutSfxVolume: 1
   fallbackAudioSource: {fileID: 7038460784475958489}
   constantSoundAudioSource: {fileID: 7078103907198919223}
@@ -19913,7 +19915,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "\u63A5\u53D7\u7B26\u53F7\u5316\uFF1F"
+  m_text: "\u63A5\u53D7\u7B26\u53F7\u5316\uFF1F\n\nE"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 963813e632be4e74889a579c74a7fd5d, type: 2}
   m_sharedMaterial: {fileID: -6314658405176644751, guid: 963813e632be4e74889a579c74a7fd5d,
@@ -23910,7 +23912,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &4958917530101904684
 RectTransform:
   m_ObjectHideFlags: 0
