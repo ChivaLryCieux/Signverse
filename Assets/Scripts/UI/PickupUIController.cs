@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Skills;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.UI;
 
 public class PickupUIController : MonoBehaviour
 {
@@ -34,6 +35,13 @@ public class PickupUIController : MonoBehaviour
     [SerializeField] private AudioClip mimicSuccessSfx;
     [SerializeField] private AudioClip mimicExitSfx;
     [SerializeField, Range(0f, 1f)] private float mimicSfxVolume = 1f;
+
+    [Header("技能装卸音效")]
+    [SerializeField] private AudioClip unlockedSkillSelectSfx;
+    [SerializeField] private AudioClip equipSuccessSfx;
+    [SerializeField] private AudioClip equippedSkillSelectSfx;
+    [SerializeField, Range(0f, 1f)] private float skillLoadoutSfxVolume = 1f;
+
     [SerializeField] private AudioSource fallbackAudioSource;
     [SerializeField] private AudioSource constantSoundAudioSource;
 
@@ -92,6 +100,11 @@ public class PickupUIController : MonoBehaviour
     private PickupItemId currentDetailItem;
     private GameObject activeDetailPanel;
     private int detailPanelClosedFrame = -1;
+    private RectTransform floatingSelectedIcon;
+    private Image floatingSelectedIconImage;
+    private PickupUISlotView selectedUnlockSlotView;
+    private int selectionStartedFrame = -1;
+    private int lastSkillUiClickFrame = -1;
 
     // Lry的修改：装备槽组合后真正生效的 SkillBase 快照。它会同步到 PlayerCC.equippedSkills，供动画层读取当前 loadout。
     private readonly List<SkillBase> equippedSkillSnapshot = new List<SkillBase>();
@@ -158,6 +171,8 @@ public class PickupUIController : MonoBehaviour
 
     private void OnDestroy()
     {
+        StopSelectedIconFollow();
+
         if (toggleHudAction != null)
         {
             toggleHudAction.performed -= OnToggleHudPerformed;
@@ -255,8 +270,20 @@ public class PickupUIController : MonoBehaviour
         }
     }
 
+    private void Update()
+    {
+        UpdateSelectedIconFollow();
+    }
+
+    private void LateUpdate()
+    {
+        CancelSelectedSkillWhenClickingElsewhere();
+    }
+
     public void OnUnlockSlotClicked(PickupItemId id, int clickCount)
     {
+        lastSkillUiClickFrame = Time.frameCount;
+
         if (!unlockedItems.Contains(id) || IsEquipped(id))
         {
             return;
@@ -330,19 +357,25 @@ public class PickupUIController : MonoBehaviour
         hasSelectedUnlockItem = true;
         selectedUnlockItem = id;
         selectingMimicTarget = false;
+        PlaySkillLoadoutSfx(unlockedSkillSelectSfx);
         RefreshUnlockedSlots();
+        StartSelectedIconFollow(entry);
     }
 
     public void OnEquippedSlotClicked(int equippedIndex, int clickCount = 1)
     {
+        lastSkillUiClickFrame = Time.frameCount;
+
         if (!IsValidEquippedIndex(equippedIndex))
         {
+            CancelSelectedUnlockItem();
             return;
         }
 
         if (!IsEquippedSlotUnlocked(equippedIndex))
         {
             Debug.Log("左上角第 5 个技能槽尚未解锁，需要先拾取对应道具。", this);
+            CancelSelectedUnlockItem();
             return;
         }
 
@@ -360,7 +393,11 @@ public class PickupUIController : MonoBehaviour
 
         if (hasSelectedUnlockItem)
         {
-            EquipSelectedAt(equippedIndex);
+            if (!EquipSelectedAt(equippedIndex))
+            {
+                CancelSelectedUnlockItem();
+            }
+
             return;
         }
 
@@ -370,35 +407,35 @@ public class PickupUIController : MonoBehaviour
         }
     }
 
-    private void EquipSelectedAt(int equippedIndex)
+    private bool EquipSelectedAt(int equippedIndex)
     {
         if (!hasSelectedUnlockItem || !IsValidEquippedIndex(equippedIndex))
         {
-            return;
+            return false;
         }
 
         if (!IsEquippedSlotUnlocked(equippedIndex))
         {
             Debug.Log("左上角第 5 个技能槽尚未解锁，需要先拾取对应道具。", this);
-            return;
+            return false;
         }
 
         if (!CanModifySkillLoadout())
         {
-            return;
+            return false;
         }
 
         PickupItemId itemToEquip = selectedUnlockItem;
         if (!unlockedItems.Contains(itemToEquip) || IsEquipped(itemToEquip))
         {
             ClearSelectedUnlockItem();
-            return;
+            return false;
         }
 
         if (!CanEquipItemAtSlot(itemToEquip, equippedIndex))
         {
             Debug.Log("左上角第 5 个技能槽只能装备 10、20、30、40 系列的基础技能。", this);
-            return;
+            return false;
         }
 
         bool replacedExistingItem = equippedSlotOccupied[equippedIndex];
@@ -411,7 +448,7 @@ public class PickupUIController : MonoBehaviour
         {
             boltPanel.ShowInsufficient();
             RefreshUnlockedSlots();
-            return;
+            return false;
         }
 
         equippedSlotItems[equippedIndex] = itemToEquip;
@@ -421,6 +458,7 @@ public class PickupUIController : MonoBehaviour
         RefreshEquippedSlots();
         SyncBoltSpend();
         SyncLinkedSkills();
+        PlaySkillLoadoutSfx(equipSuccessSfx);
 
         if (replacedExistingItem)
         {
@@ -428,6 +466,7 @@ public class PickupUIController : MonoBehaviour
         }
 
         ItemEquipped?.Invoke(itemToEquip);
+        return true;
     }
 
     public void UnequipAt(int equippedIndex)
@@ -449,6 +488,7 @@ public class PickupUIController : MonoBehaviour
         RefreshEquippedSlots();
         SyncBoltSpend();
         SyncLinkedSkills();
+        PlaySkillLoadoutSfx(equippedSkillSelectSfx);
 
         ItemUnequipped?.Invoke(removedItem);
     }
@@ -1056,6 +1096,7 @@ public class PickupUIController : MonoBehaviour
     private void ClearSelectedUnlockItem()
     {
         hasSelectedUnlockItem = false;
+        StopSelectedIconFollow();
         ResolveBoltPanel();
         if (boltPanel != null)
         {
@@ -1065,9 +1106,120 @@ public class PickupUIController : MonoBehaviour
         RefreshUnlockedSlots();
     }
 
+    private void CancelSelectedUnlockItem()
+    {
+        if (!hasSelectedUnlockItem)
+        {
+            return;
+        }
+
+        ClearSelectedUnlockItem();
+    }
+
+    private void StartSelectedIconFollow(PickupUiEntry entry)
+    {
+        StopSelectedIconFollow();
+
+        Sprite followSprite = GetUnlockIcon(entry);
+        if (entry == null || entry.unlockSlot == null || followSprite == null)
+        {
+            return;
+        }
+
+        Canvas canvas = GetComponentInParent<Canvas>();
+        if (canvas == null)
+        {
+            return;
+        }
+
+        RectTransform canvasRect = canvas.transform as RectTransform;
+        if (canvasRect == null)
+        {
+            return;
+        }
+
+        GameObject followObject = new GameObject("Selected Skill Follow Icon", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
+        followObject.transform.SetParent(canvas.transform, false);
+        followObject.transform.SetAsLastSibling();
+
+        floatingSelectedIcon = followObject.GetComponent<RectTransform>();
+        floatingSelectedIconImage = followObject.GetComponent<Image>();
+        floatingSelectedIconImage.sprite = followSprite;
+        floatingSelectedIconImage.raycastTarget = false;
+        floatingSelectedIconImage.preserveAspect = true;
+
+        Vector2 iconSize = entry.unlockSlot.GetIconSize();
+        if (iconSize.x <= 0f || iconSize.y <= 0f)
+        {
+            iconSize = new Vector2(64f, 64f);
+        }
+
+        floatingSelectedIcon.sizeDelta = iconSize;
+        selectedUnlockSlotView = entry.unlockSlot;
+        selectedUnlockSlotView.SetIconVisualVisible(false);
+        selectionStartedFrame = Time.frameCount;
+        UpdateSelectedIconFollow();
+    }
+
+    private void StopSelectedIconFollow()
+    {
+        if (selectedUnlockSlotView != null)
+        {
+            selectedUnlockSlotView.SetIconVisualVisible(true);
+            selectedUnlockSlotView = null;
+        }
+
+        if (floatingSelectedIcon != null)
+        {
+            Destroy(floatingSelectedIcon.gameObject);
+            floatingSelectedIcon = null;
+            floatingSelectedIconImage = null;
+        }
+
+        selectionStartedFrame = -1;
+    }
+
+    private void UpdateSelectedIconFollow()
+    {
+        if (!hasSelectedUnlockItem || floatingSelectedIcon == null || Mouse.current == null)
+        {
+            return;
+        }
+
+        Canvas canvas = floatingSelectedIcon.GetComponentInParent<Canvas>();
+        RectTransform canvasRect = canvas != null ? canvas.transform as RectTransform : null;
+        if (canvas == null || canvasRect == null)
+        {
+            return;
+        }
+
+        Camera eventCamera = canvas.renderMode == RenderMode.ScreenSpaceOverlay ? null : canvas.worldCamera;
+        Vector2 screenPosition = Mouse.current.position.ReadValue();
+        if (RectTransformUtility.ScreenPointToLocalPointInRectangle(canvasRect, screenPosition, eventCamera, out Vector2 localPosition))
+        {
+            floatingSelectedIcon.anchoredPosition = localPosition;
+        }
+    }
+
+    private void CancelSelectedSkillWhenClickingElsewhere()
+    {
+        if (!hasSelectedUnlockItem || Mouse.current == null || !Mouse.current.leftButton.wasReleasedThisFrame)
+        {
+            return;
+        }
+
+        if (Time.frameCount <= selectionStartedFrame || lastSkillUiClickFrame == Time.frameCount)
+        {
+            return;
+        }
+
+        CancelSelectedUnlockItem();
+    }
+
     private void BeginMimicTargetSelection()
     {
         hasSelectedUnlockItem = false;
+        StopSelectedIconFollow();
         selectingMimicTarget = true;
         ResolveBoltPanel();
         if (boltPanel != null)
@@ -1076,6 +1228,7 @@ public class PickupUIController : MonoBehaviour
         }
 
         RefreshUnlockedSlots();
+        PlaySkillLoadoutSfx(unlockedSkillSelectSfx);
         if (constantSoundAudioSource != null)
         {
             constantSoundAudioSource.Play();
@@ -1228,6 +1381,16 @@ public class PickupUIController : MonoBehaviour
 
     private void PlayMimicSfx(AudioClip clip)
     {
+        PlaySfx(clip, mimicSfxVolume);
+    }
+
+    private void PlaySkillLoadoutSfx(AudioClip clip)
+    {
+        PlaySfx(clip, skillLoadoutSfxVolume);
+    }
+
+    private void PlaySfx(AudioClip clip, float volume)
+    {
         if (clip == null)
         {
             return;
@@ -1235,15 +1398,13 @@ public class PickupUIController : MonoBehaviour
 
         if (AudioManager.Instance != null)
         {
-            AudioManager.Instance.PlaySFX(clip, mimicSfxVolume);
+            AudioManager.Instance.PlaySFX(clip, volume);
             return;
         }
 
-        
-
         if (fallbackAudioSource != null)
         {
-            fallbackAudioSource.PlayOneShot(clip, mimicSfxVolume);
+            fallbackAudioSource.PlayOneShot(clip, volume);
         }
     }
 

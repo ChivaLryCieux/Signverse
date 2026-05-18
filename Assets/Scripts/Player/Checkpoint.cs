@@ -30,12 +30,18 @@ public class Checkpoint : MonoBehaviour
             return;
         }
 
-        player.SetCheckpoint(transform.position + respawnOffset);
+        player.SetCheckpoint(GetRespawnPosition());
     }
 
     private void OnDrawGizmos()
     {
         Gizmos.color = Color.cyan;
-        Gizmos.DrawWireCube(transform.position + respawnOffset, new Vector3(0.5f, 1.5f, 0.5f));
+        Gizmos.DrawWireCube(GetRespawnPosition(), new Vector3(0.5f, 1.5f, 0.5f));
+    }
+
+    private Vector3 GetRespawnPosition()
+    {
+        Transform respawnPoint = transform.childCount > 0 ? transform.GetChild(0) : transform;
+        return respawnPoint.position + respawnOffset;
     }
 }
