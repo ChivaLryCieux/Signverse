@@ -36,9 +36,21 @@ MonoBehaviour:
   stencilRef:
     m_OverrideState: 1
     m_Value: 1
+  preFilterMode:
+    m_OverrideState: 0
+    m_Value: 0
   kuwaharaRadius:
     m_OverrideState: 1
-    m_Value: 0
+    m_Value: 1
+  bilateralColorSigma:
+    m_OverrideState: 0
+    m_Value: 0.1
+  bilateralSpatialSigma:
+    m_OverrideState: 0
+    m_Value: 2
+  enableColorMapping:
+    m_OverrideState: 0
+    m_Value: 1
   useRampMap:
     m_OverrideState: 1
     m_Value: 0
@@ -46,6 +58,12 @@ MonoBehaviour:
     m_OverrideState: 1
     m_Value: {fileID: 0}
     dimension: 1
+  celSteps:
+    m_OverrideState: 0
+    m_Value: 3
+  celStepSmoothness:
+    m_OverrideState: 0
+    m_Value: 0.02
   shadowThreshold:
     m_OverrideState: 1
     m_Value: 0.45
@@ -88,6 +106,9 @@ MonoBehaviour:
   silhouetteThreshold2:
     m_OverrideState: 1
     m_Value: 0.272
+  enableMangaLines:
+    m_OverrideState: 0
+    m_Value: 1
   lineIntensity:
     m_OverrideState: 1
     m_Value: 0.8
@@ -100,6 +121,9 @@ MonoBehaviour:
   normalThreshold:
     m_OverrideState: 1
     m_Value: 0.3
+  colorThreshold:
+    m_OverrideState: 0
+    m_Value: 0.2
   lineColor:
     m_OverrideState: 1
     m_Value: {r: 0.05, g: 0.04, b: 0.08, a: 1}
@@ -124,6 +148,9 @@ MonoBehaviour:
   patternLumaThreshold:
     m_OverrideState: 1
     m_Value: 0.5
+  enableColorGrading:
+    m_OverrideState: 0
+    m_Value: 1
   finalSaturation:
     m_OverrideState: 1
     m_Value: 1.61
@@ -133,15 +160,9 @@ MonoBehaviour:
   shadowTint:
     m_OverrideState: 1
     m_Value: {r: 0, g: 0, b: 0.04, a: 1}
-  highlightTint:
-    m_OverrideState: 1
-    m_Value: {r: 0.04, g: 0.02, b: 0, a: 1}
   shadowInfluence:
     m_OverrideState: 1
     m_Value: 0.507
-  highlightInfluence:
-    m_OverrideState: 1
-    m_Value: 0.2
   enablePixelate:
     m_OverrideState: 1
     m_Value: 0
@@ -166,3 +187,22 @@ MonoBehaviour:
   vignetteIntensity:
     m_OverrideState: 1
     m_Value: 1.5
+  enableVaporwave:
+    m_OverrideState: 0
+    m_Value: 0
+  noiseTex:
+    m_OverrideState: 0
+    m_Value: {fileID: 0}
+    dimension: 1
+  glitchFrequency:
+    m_OverrideState: 0
+    m_Value: 0.5
+  glitchSpeed:
+    m_OverrideState: 0
+    m_Value: 1
+  glitchIntensity:
+    m_OverrideState: 0
+    m_Value: 0.02
+  filmGrainIntensity:
+    m_OverrideState: 0
+    m_Value: 0.05
