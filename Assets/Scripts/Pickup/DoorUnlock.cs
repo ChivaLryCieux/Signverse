@@ -2,13 +2,19 @@ using UnityEngine;
 
 public class DoorUnlock : MonoBehaviour
 {
-    private Collider doorCollider;
 
+    Animator doorAnimator;
+    public AudioClip openDoor;
+    AudioSource audioSource;
+    [Range (0 , 1)]
+    public float volume;
+    
     private bool unlocked;
 
     void Awake()
     {
-        doorCollider = GetComponent<Collider>();
+        audioSource = GetComponent<AudioSource>();
+        doorAnimator = GetComponent<Animator>();
     }
 
     void OnTriggerEnter(Collider other)
@@ -29,7 +35,9 @@ public class DoorUnlock : MonoBehaviour
         {
             unlocked = true;
 
-            doorCollider.enabled = false;
+            doorAnimator.SetBool("HasKey" , true);
+            audioSource.PlayOneShot(openDoor , volume);
+            
         }
     }
 }
