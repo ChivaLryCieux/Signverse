@@ -42,6 +42,9 @@ public class PickupUIController : MonoBehaviour
     [SerializeField] private AudioClip equippedSkillSelectSfx;
     [SerializeField, Range(0f, 1f)] private float skillLoadoutSfxVolume = 1f;
 
+    [Header("技能图标跟随")]
+    [SerializeField, Min(0f)] private float selectedIconFollowSpeedOffset;
+
     [SerializeField] private AudioSource fallbackAudioSource;
     [SerializeField] private AudioSource constantSoundAudioSource;
 
@@ -1197,7 +1200,14 @@ public class PickupUIController : MonoBehaviour
         Vector2 screenPosition = Mouse.current.position.ReadValue();
         if (RectTransformUtility.ScreenPointToLocalPointInRectangle(canvasRect, screenPosition, eventCamera, out Vector2 localPosition))
         {
-            floatingSelectedIcon.anchoredPosition = localPosition;
+            if (selectedIconFollowSpeedOffset <= 0f)
+            {
+                floatingSelectedIcon.anchoredPosition = localPosition;
+                return;
+            }
+
+            float followT = 1f - Mathf.Exp(-selectedIconFollowSpeedOffset * Time.unscaledDeltaTime);
+            floatingSelectedIcon.anchoredPosition = Vector2.Lerp(floatingSelectedIcon.anchoredPosition, localPosition, followT);
         }
     }
 
