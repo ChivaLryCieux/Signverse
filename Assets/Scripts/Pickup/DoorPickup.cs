@@ -7,9 +7,17 @@ public class DoorPickup : MonoBehaviour
     private bool playerInside;
     private PlayerCC currentPlayer;
 
+    public AudioClip doorCardAchieved;
+    [Range (0 ,1)]
+    public float volume;
+
     [Header("进入 Trigger 时显示的提示 Panel")]
     [SerializeField, FormerlySerializedAs("objectToShow")] private GameObject promptPanel;
 
+    void Awake()
+    {
+
+    }
     void Update()
     {
         if (!playerInside || currentPlayer == null)
@@ -25,6 +33,7 @@ public class DoorPickup : MonoBehaviour
             gameObject.SetActive(false);
 
             SetPromptPanelVisible(false);
+            AudioSFXManager.Instance.PlaySFX(doorCardAchieved , volume);
         }
     }
 
