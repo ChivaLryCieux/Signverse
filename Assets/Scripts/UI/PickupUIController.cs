@@ -1161,7 +1161,7 @@ public class PickupUIController : MonoBehaviour
         selectedUnlockSlotView = entry.unlockSlot;
         selectedUnlockSlotView.SetIconVisualVisible(false);
         selectionStartedFrame = Time.frameCount;
-        UpdateSelectedIconFollow();
+        UpdateSelectedIconFollow(true);
     }
 
     private void StopSelectedIconFollow()
@@ -1182,7 +1182,7 @@ public class PickupUIController : MonoBehaviour
         selectionStartedFrame = -1;
     }
 
-    private void UpdateSelectedIconFollow()
+    private void UpdateSelectedIconFollow(bool snapToMouse = false)
     {
         if (!hasSelectedUnlockItem || floatingSelectedIcon == null || Mouse.current == null)
         {
@@ -1200,7 +1200,7 @@ public class PickupUIController : MonoBehaviour
         Vector2 screenPosition = Mouse.current.position.ReadValue();
         if (RectTransformUtility.ScreenPointToLocalPointInRectangle(canvasRect, screenPosition, eventCamera, out Vector2 localPosition))
         {
-            if (selectedIconFollowSpeedOffset <= 0f)
+            if (snapToMouse || selectedIconFollowSpeedOffset <= 0f)
             {
                 floatingSelectedIcon.anchoredPosition = localPosition;
                 return;
