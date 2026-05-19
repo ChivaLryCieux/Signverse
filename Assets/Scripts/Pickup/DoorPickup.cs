@@ -1,5 +1,6 @@
 using TMPro;
 using UnityEngine;
+using UnityEngine.InputSystem;
 using UnityEngine.Serialization;
 
 public class DoorPickup : MonoBehaviour
@@ -12,7 +13,9 @@ public class DoorPickup : MonoBehaviour
     public float volume;
 
     [Header("进入 Trigger 时显示的提示 Panel")]
-    [SerializeField, FormerlySerializedAs("objectToShow")] private GameObject promptPanel;
+    [SerializeField, FormerlySerializedAs("objectToShow")]
+    private GameObject promptPanel;
+    public GameObject showUIObject;
 
     void Awake()
     {
@@ -20,21 +23,9 @@ public class DoorPickup : MonoBehaviour
     }
     void Update()
     {
-        if (!playerInside || currentPlayer == null)
-        {
-            return;
-        }
+        
 
-        if (!CartoonPanelController.IsPlaying && Input.GetKeyDown(KeyCode.E))
-        {
-            currentPlayer.hasDoorPickup = true;
-            Debug.Log("picked door");
-
-            gameObject.SetActive(false);
-
-            SetPromptPanelVisible(false);
-            AudioSFXManager.Instance.PlaySFX(doorCardAchieved , volume);
-        }
+        
     }
 
     private void OnTriggerEnter(Collider other)
@@ -48,6 +39,30 @@ public class DoorPickup : MonoBehaviour
         currentPlayer = player;
 
         SetPromptPanelVisible(true);
+
+        
+        
+    }
+
+    void OnTriggerStay(Collider other)
+    {
+        if (Input.GetKeyDown(KeyCode.E) || Keyboard.current.eKey.wasPressedThisFrame)
+        {
+            
+            currentPlayer.hasDoorPickup = true;
+            Debug.Log("picked door");
+            if(showUIObject != null)
+            { 
+                Debug.Log("获得开门标识！");
+                showUIObject.SetActive(true);
+            }
+
+            SetPromptPanelVisible(false);
+            AudioSFXManager.Instance.PlaySFX(doorCardAchieved , volume);
+
+
+            gameObject.SetActive(false);
+        }
     }
 
     private void OnTriggerExit(Collider other)

@@ -41,7 +41,7 @@ public class ElectricFloor : MonoBehaviour
     void Start()
     {
         targetRenderer = GetComponent<Renderer>();
-        audioSource = GetComponent<AudioSource>();
+        audioSource = GetComponentInChildren<AudioSource>();
 
         // 保存所有原始材质
         defaultMats = targetRenderer.materials;

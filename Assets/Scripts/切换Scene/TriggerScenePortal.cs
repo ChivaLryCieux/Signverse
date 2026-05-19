@@ -1,5 +1,6 @@
 using TMPro;
 using UnityEngine;
+using UnityEngine.InputSystem;
 using UnityEngine.SceneManagement;
 using UnityEngine.Serialization;
 
@@ -27,7 +28,7 @@ public class TriggerScenePortal : MonoBehaviour
         }
 
         // 按下 E 切换场景
-        if (!CartoonPanelController.IsPlaying && Input.GetKeyDown(KeyCode.E))
+        if ( Input.GetKeyDown(KeyCode.E) || Keyboard.current.eKey.wasPressedThisFrame)
         {
             ChangeScene();
         }

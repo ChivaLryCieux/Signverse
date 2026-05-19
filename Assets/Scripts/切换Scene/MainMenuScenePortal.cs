@@ -22,88 +22,110 @@ public class MainMenuScenePortal : MonoBehaviour
     [Header("全屏遮罩 Image")]
     public Image fadeImage;
 
-    [Header("全屏遮罩 Image")]
+    [Header("音效")]
     public AudioSource audioSource;
+
     public List<AudioClip> startGameSFX = new List<AudioClip>();
 
     private bool isPlayingSFX = false;
-    private bool isChangingScene;
 
-    // ------------------------
-    // 点击物体
-    // ------------------------
+    private bool isChangingScene = false;
+
+    private Camera mainCamera;
 
     void Awake()
-{
-    // 停止全局 SFX
-    if (AudioSFXManager.Instance != null)
     {
-        AudioSFXManager.Instance.StopAllAudioImmediately();
-    }
+        mainCamera = Camera.main;
 
-    if(audioSource == null)
-    {
-        audioSource = GetComponent<AudioSource>();
-    }
-}
-    void Update()
-    {
-        if (Keyboard.current.qKey.wasPressedThisFrame)
+        if (AudioSFXManager.Instance != null)
         {
-            Application.Quit();
-            Debug.Log("已退出游戏！");
+            AudioSFXManager.Instance.StopAllAudioImmediately();
+        }
+
+        if (audioSource == null)
+        {
+            audioSource = GetComponent<AudioSource>();
         }
     }
-    private void OnMouseDown()
-    {
-        if (isChangingScene)
-            return;
 
-        ChangeScene();
+    void Update()
+    {
+        // Q退出
+        if (Keyboard.current != null &&
+            Keyboard.current.qKey.wasPressedThisFrame)
+        {
+            Application.Quit();
+
+            Debug.Log("已退出游戏！");
+        }
+
+        // 鼠标左键点击
+        if (Mouse.current != null &&
+            Mouse.current.leftButton.wasPressedThisFrame)
+        {
+            DetectClick();
+        }
     }
 
-    // ------------------------
-    // 切换场景
-    // ------------------------
+    void DetectClick()
+    {
+        if (isChangingScene)
+        {
+            return;
+        }
+
+        Ray ray =
+            mainCamera.ScreenPointToRay(
+                Mouse.current.position.ReadValue()
+            );
+
+        RaycastHit hit;
+
+        if (Physics.Raycast(ray, out hit))
+        {
+            Debug.Log("Clicked : " + hit.collider.name);
+
+            // 判断是不是点到了自己
+            if (hit.collider.gameObject == gameObject)
+            {
+                Debug.Log("Portal Clicked!");
+
+                ChangeScene();
+            }
+        }
+    }
 
     public void ChangeScene()
     {
         StartCoroutine(ChangeSceneCoroutine());
     }
 
-    // ------------------------
-    // 场景切换协程
-    // ------------------------
-
     IEnumerator ChangeSceneCoroutine()
     {
-        
         isChangingScene = true;
-        if(!isPlayingSFX)
+
+        if (!isPlayingSFX)
         {
             foreach (AudioClip clip in startGameSFX)
-{
-            if (clip != null)
             {
-                audioSource.PlayOneShot(clip);
+                if (clip != null)
+                {
+                    audioSource.PlayOneShot(clip);
+                }
             }
-}
+
             isPlayingSFX = true;
         }
 
         fadeImage.gameObject.SetActive(true);
 
-        // 初始透明
         Color startColor = firstColor;
+
         startColor.a = 0f;
 
         fadeImage.color = startColor;
 
-        // ========================
-        // 第一阶段：
-        // 透明 -> 红色
-        // ========================
-
+        // 第一阶段
         float timer = 0f;
 
         while (timer < fadeDuration)
@@ -124,11 +146,7 @@ public class MainMenuScenePortal : MonoBehaviour
 
         fadeImage.color = firstColor;
 
-        // ========================
-        // 第二阶段：
-        // 红色 -> 黑色
-        // ========================
-
+        // 第二阶段
         timer = 0f;
 
         while (timer < fadeDuration)
@@ -148,10 +166,6 @@ public class MainMenuScenePortal : MonoBehaviour
         }
 
         fadeImage.color = secondColor;
-
-        // ========================
-        // 切换场景
-        // ========================
 
         SceneManager.LoadScene(targetSceneIndex);
     }
