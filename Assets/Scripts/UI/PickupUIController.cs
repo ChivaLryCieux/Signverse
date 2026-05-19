@@ -1283,6 +1283,13 @@ public class PickupUIController : MonoBehaviour
         mimicTargetComboCode = null;
         selectingMimicTarget = false;
         hasSelectedUnlockItem = false;
+        StopSelectedIconFollow();
+
+        ResolveBoltPanel();
+        if (boltPanel != null)
+        {
+            boltPanel.ClearPreview();
+        }
 
         RefreshUnlockedSlots();
         RefreshEquippedSlots();
