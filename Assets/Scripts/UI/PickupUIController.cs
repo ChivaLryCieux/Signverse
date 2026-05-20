@@ -67,6 +67,10 @@ public class PickupUIController : MonoBehaviour
     [Header("技能详情")]
     [SerializeField] private GameObject detailPanel;
 
+    [Header("技能装卸警告")]
+    [SerializeField] private GameObject warnPanel;
+    [SerializeField, Min(0f)] private float warnPanelVisibleDuration = 2f;
+
     [Header("联动技能")]
     [SerializeField] private PlayerCC player;
     [SerializeField] private SkillDatabase skillDatabase;
@@ -103,6 +107,7 @@ public class PickupUIController : MonoBehaviour
     private PickupItemId currentDetailItem;
     private GameObject activeDetailPanel;
     private int detailPanelClosedFrame = -1;
+    private float warnPanelTimer;
     private RectTransform floatingSelectedIcon;
     private Image floatingSelectedIconImage;
     private PickupUISlotView selectedUnlockSlotView;
@@ -134,9 +139,11 @@ public class PickupUIController : MonoBehaviour
         InitializeDetailInput();
         ResolveHudPanels();
         ResolveDetailPanel();
+        ResolveWarnPanel();
         isHudVisible = true;
         ApplyHudVisibility();
         HideDetailPanel();
+        HideWarnPanel();
         ResolveSkillReferences();
         ResolveBoltPanel();
         RefreshAllSlots();
@@ -276,6 +283,7 @@ public class PickupUIController : MonoBehaviour
     private void Update()
     {
         UpdateSelectedIconFollow();
+        TickWarnPanel();
     }
 
     private void LateUpdate()
@@ -651,6 +659,14 @@ public class PickupUIController : MonoBehaviour
         }
     }
 
+    private void ResolveWarnPanel()
+    {
+        if (warnPanel == null)
+        {
+            warnPanel = FindHudPanel("WarnPanel");
+        }
+    }
+
     private GameObject FindHudPanel(string panelName)
     {
         Transform searchRoot = transform.root != null ? transform.root : transform;
@@ -687,6 +703,42 @@ public class PickupUIController : MonoBehaviour
         if (panel != null && panel.activeSelf != active)
         {
             panel.SetActive(active);
+        }
+    }
+
+    private void ShowWarnPanel()
+    {
+        ResolveWarnPanel();
+        warnPanelTimer = warnPanelVisibleDuration;
+
+        if (warnPanel != null && !warnPanel.activeSelf)
+        {
+            warnPanel.SetActive(true);
+        }
+    }
+
+    private void HideWarnPanel()
+    {
+        warnPanelTimer = 0f;
+        ResolveWarnPanel();
+
+        if (warnPanel != null && warnPanel.activeSelf)
+        {
+            warnPanel.SetActive(false);
+        }
+    }
+
+    private void TickWarnPanel()
+    {
+        if (warnPanel == null || warnPanelTimer <= 0f)
+        {
+            return;
+        }
+
+        warnPanelTimer -= Time.unscaledDeltaTime;
+        if (warnPanelTimer <= 0f)
+        {
+            HideWarnPanel();
         }
     }
 
@@ -1369,6 +1421,7 @@ public class PickupUIController : MonoBehaviour
             return true;
         }
 
+        ShowWarnPanel();
         Debug.Log("只有站在 Nature 标签的物体上时，才能装备或卸下技能。", this);
         return false;
     }
