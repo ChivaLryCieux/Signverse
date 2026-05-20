@@ -6,7 +6,7 @@ public class SpawnSpot : MonoBehaviour
 
     public GameObject spawnSpotObject;
 
-    void Start()
+   void Awake()
     {
         if (player == null)
         {
@@ -20,7 +20,13 @@ public class SpawnSpot : MonoBehaviour
 
         if (player != null && spawnSpotObject != null)
         {
+            // 如果玩家有 CharacterController，先禁用再移动
+            var cc = player.GetComponent<CharacterController>();
+            if (cc != null) cc.enabled = false;
+
             player.transform.position = spawnSpotObject.transform.position;
+
+            if (cc != null) cc.enabled = true;
         }
     }
 }
