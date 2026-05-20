@@ -308,11 +308,13 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   panelRoot: {fileID: 108749084}
+  tipPanel: {fileID: 0}
   hideOnStart: 1
   pauseGameWhenOpen: 1
   controlCursor: 1
   playerDeath: {fileID: 0}
   mainMenuSceneName: "\u5F00\u59CB\u754C\u9762"
+  canvasAudio: {fileID: 0}
   rewindImage: {fileID: 0}
   continueImage: {fileID: 0}
   exitImage: {fileID: 0}
@@ -758,6 +760,10 @@ MonoBehaviour:
   boltPanel: {fileID: 0}
   destroyAfterPickup: 1
   tipController: {fileID: 0}
+  extraTipObject: {fileID: 0}
+  objectToDisappear: {fileID: 0}
+  pickupSound: {fileID: 0}
+  audioSource: {fileID: 0}
 --- !u!65 &399865624
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -1044,12 +1050,12 @@ PrefabInstance:
     - target: {fileID: 438725774190904866, guid: 952714e7bb2884601b12a31e89faf900,
         type: 3}
       propertyPath: m_LocalPosition.x
-      value: -0.16755603
+      value: -1.827556
       objectReference: {fileID: 0}
     - target: {fileID: 438725774190904866, guid: 952714e7bb2884601b12a31e89faf900,
         type: 3}
       propertyPath: m_LocalPosition.y
-      value: 10.531354
+      value: 10.531353
       objectReference: {fileID: 0}
     - target: {fileID: 438725774190904866, guid: 952714e7bb2884601b12a31e89faf900,
         type: 3}
@@ -1122,7 +1128,7 @@ PrefabInstance:
     - target: {fileID: 8583969942435311213, guid: 139d39dea1e7a4a4c9256cec7cd0c499,
         type: 3}
       propertyPath: m_LocalPosition.x
-      value: 0
+      value: -1.66
       objectReference: {fileID: 0}
     - target: {fileID: 8583969942435311213, guid: 139d39dea1e7a4a4c9256cec7cd0c499,
         type: 3}
@@ -2407,18 +2413,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1308835017 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 4836575747308322632, guid: 139d39dea1e7a4a4c9256cec7cd0c499,
-    type: 3}
-  m_PrefabInstance: {fileID: 600557422}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d32f1993a53126c3a998c1d879d477f6, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!1 &1350320631
 GameObject:
   m_ObjectHideFlags: 0
@@ -2939,6 +2933,10 @@ MonoBehaviour:
   boltPanel: {fileID: 0}
   destroyAfterPickup: 1
   tipController: {fileID: 0}
+  extraTipObject: {fileID: 0}
+  objectToDisappear: {fileID: 0}
+  pickupSound: {fileID: 0}
+  audioSource: {fileID: 0}
 --- !u!65 &1484555833
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -3008,6 +3006,10 @@ MonoBehaviour:
   boltPanel: {fileID: 0}
   destroyAfterPickup: 1
   tipController: {fileID: 0}
+  extraTipObject: {fileID: 0}
+  objectToDisappear: {fileID: 0}
+  pickupSound: {fileID: 0}
+  audioSource: {fileID: 0}
 --- !u!65 &1549923438
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -3278,6 +3280,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bfbd9f738d3a6414cb7feebd3c1d5f99, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  promptPanel: {fileID: 0}
   promptText: {fileID: 1350320633}
 --- !u!1 &1917960223
 GameObject:
@@ -3343,6 +3346,10 @@ MonoBehaviour:
   boltPanel: {fileID: 0}
   destroyAfterPickup: 1
   tipController: {fileID: 0}
+  extraTipObject: {fileID: 0}
+  objectToDisappear: {fileID: 0}
+  pickupSound: {fileID: 0}
+  audioSource: {fileID: 0}
 --- !u!65 &1948546322
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -4751,7 +4758,7 @@ PrefabInstance:
         type: 3}
       propertyPath: player
       value: 
-      objectReference: {fileID: 1308835017}
+      objectReference: {fileID: 138250044}
     - target: {fileID: 7930556482060909779, guid: 161888dbaa9a7c24591e658043e312d3,
         type: 3}
       propertyPath: leftPanel
