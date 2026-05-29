@@ -8523,17 +8523,17 @@ PrefabInstance:
         type: 3}
       propertyPath: playerForwardCamera
       value: 
-      objectReference: {fileID: 0}
+      objectReference: {fileID: 856915869}
     - target: {fileID: 6954878285581742650, guid: 33c9fcba9b8a081438a42835cd599420,
         type: 3}
       propertyPath: playerBackwardCamera
       value: 
-      objectReference: {fileID: 0}
+      objectReference: {fileID: 2093710459}
     - target: {fileID: 6954878285581742650, guid: 33c9fcba9b8a081438a42835cd599420,
         type: 3}
       propertyPath: playerCloseShotCamera
       value: 
-      objectReference: {fileID: 0}
+      objectReference: {fileID: 761766405}
     - target: {fileID: 6982742806252294938, guid: 33c9fcba9b8a081438a42835cd599420,
         type: 3}
       propertyPath: m_LocalPosition.x
@@ -19238,6 +19238,12 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 1eda58fc527c02d46b147aa47eb3a507, type: 3}
+--- !u!1 &257900407 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 1751272025071436575, guid: 6f401fb4b2a37b9419d6be7db9f064f7,
+    type: 3}
+  m_PrefabInstance: {fileID: 821348997}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &257919244
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -36859,6 +36865,56 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 5fce860bace6b3d47bf834c34137c91b, type: 3}
+--- !u!21 &493980749
+Material:
+  serializedVersion: 8
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: Height Fog Global
+  m_Shader: {fileID: 4800000, guid: 3a7ef1b66bafb7a448a880ef76d2e6e6, type: 3}
+  m_Parent: {fileID: 0}
+  m_ModifiedSerializedProperties: 0
+  m_ValidKeywords: []
+  m_InvalidKeywords:
+  - _RECEIVESHADOWS_OFF
+  - _SURFACE_TYPE_TRANSPARENT
+  m_LightmapFlags: 4
+  m_EnableInstancingVariants: 0
+  m_DoubleSidedGI: 0
+  m_CustomRenderQueue: 3001
+  stringTagMap: {}
+  disabledShaderPasses: []
+  m_LockedProperties: 
+  m_SavedProperties:
+    serializedVersion: 3
+    m_TexEnvs:
+    - unity_Lightmaps:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - unity_LightmapsInd:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - unity_ShadowMasks:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    m_Ints: []
+    m_Floats:
+    - _AlphaCutoff: 0.5
+    - _Banner: 1
+    - _FogCameraMode: 0
+    - _HeightFogGlobal: 1
+    - _IsHeightFogShader: 1
+    - _QueueControl: -1
+    - _QueueOffset: 0
+    - _ReceiveShadows: 0
+    m_Colors:
+    - _EmissionColor: {r: 1, g: 1, b: 1, a: 1}
+  m_BuildTextureStacks: []
 --- !u!1001 &494362971
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -43885,17 +43941,17 @@ PrefabInstance:
         type: 3}
       propertyPath: playerForwardCamera
       value: 
-      objectReference: {fileID: 0}
+      objectReference: {fileID: 856915869}
     - target: {fileID: 6954878285581742650, guid: 33c9fcba9b8a081438a42835cd599420,
         type: 3}
       propertyPath: playerBackwardCamera
       value: 
-      objectReference: {fileID: 0}
+      objectReference: {fileID: 2093710459}
     - target: {fileID: 6954878285581742650, guid: 33c9fcba9b8a081438a42835cd599420,
         type: 3}
       propertyPath: playerCloseShotCamera
       value: 
-      objectReference: {fileID: 0}
+      objectReference: {fileID: 761766405}
     - target: {fileID: 6982742806252294938, guid: 33c9fcba9b8a081438a42835cd599420,
         type: 3}
       propertyPath: m_LocalPosition.x
@@ -45869,6 +45925,12 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 1eda58fc527c02d46b147aa47eb3a507, type: 3}
+--- !u!1 &611981541 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 275347344402107508, guid: 6f401fb4b2a37b9419d6be7db9f064f7,
+    type: 3}
+  m_PrefabInstance: {fileID: 821348997}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &612478776
 GameObject:
   m_ObjectHideFlags: 0
@@ -53145,6 +53207,18 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 1eda58fc527c02d46b147aa47eb3a507, type: 3}
+--- !u!114 &701677069 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 6853003824039800259, guid: 573a449587bd46c4995590d7a86af321,
+    type: 3}
+  m_PrefabInstance: {fileID: 1618646993}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d32f1993a53126c3a998c1d879d477f6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1001 &702070124
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -58194,6 +58268,18 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 758384298}
   m_Mesh: {fileID: 2237167428214565825, guid: d0d20cdcfdfc9fe4a888e49822f28204, type: 3}
+--- !u!114 &761766405 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 1296775618954111532, guid: 573a449587bd46c4995590d7a86af321,
+    type: 3}
+  m_PrefabInstance: {fileID: 1618646993}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 45e653bab7fb20e499bda25e1b646fea, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &762627998
 GameObject:
   m_ObjectHideFlags: 0
@@ -59637,17 +59723,17 @@ PrefabInstance:
         type: 3}
       propertyPath: playerForwardCamera
       value: 
-      objectReference: {fileID: 0}
+      objectReference: {fileID: 856915869}
     - target: {fileID: 6954878285581742650, guid: 33c9fcba9b8a081438a42835cd599420,
         type: 3}
       propertyPath: playerBackwardCamera
       value: 
-      objectReference: {fileID: 0}
+      objectReference: {fileID: 2093710459}
     - target: {fileID: 6954878285581742650, guid: 33c9fcba9b8a081438a42835cd599420,
         type: 3}
       propertyPath: playerCloseShotCamera
       value: 
-      objectReference: {fileID: 0}
+      objectReference: {fileID: 761766405}
     - target: {fileID: 6982742806252294938, guid: 33c9fcba9b8a081438a42835cd599420,
         type: 3}
       propertyPath: m_LocalPosition.x
@@ -62873,9 +62959,34 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5944482627229877958, guid: 6f401fb4b2a37b9419d6be7db9f064f7,
         type: 3}
+      propertyPath: player
+      value: 
+      objectReference: {fileID: 701677069}
+    - target: {fileID: 5944482627229877958, guid: 6f401fb4b2a37b9419d6be7db9f064f7,
+        type: 3}
+      propertyPath: leftPanel
+      value: 
+      objectReference: {fileID: 1138233122}
+    - target: {fileID: 5944482627229877958, guid: 6f401fb4b2a37b9419d6be7db9f064f7,
+        type: 3}
+      propertyPath: rightPanel
+      value: 
+      objectReference: {fileID: 257900407}
+    - target: {fileID: 5944482627229877958, guid: 6f401fb4b2a37b9419d6be7db9f064f7,
+        type: 3}
+      propertyPath: boltHudPanel
+      value: 
+      objectReference: {fileID: 611981541}
+    - target: {fileID: 5944482627229877958, guid: 6f401fb4b2a37b9419d6be7db9f064f7,
+        type: 3}
       propertyPath: equipSuccessSfx
       value: 
       objectReference: {fileID: 8300000, guid: d68c5f0edb8b7bb46aa1806215b5629a, type: 3}
+    - target: {fileID: 5944482627229877958, guid: 6f401fb4b2a37b9419d6be7db9f064f7,
+        type: 3}
+      propertyPath: allowPrefixFallback
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 5944482627229877958, guid: 6f401fb4b2a37b9419d6be7db9f064f7,
         type: 3}
       propertyPath: unlockedSkillSelectSfx
@@ -62980,7 +63091,7 @@ PrefabInstance:
         type: 3}
       propertyPath: playerDeath
       value: 
-      objectReference: {fileID: 0}
+      objectReference: {fileID: 1759788727}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -65495,6 +65606,18 @@ Transform:
     type: 3}
   m_PrefabInstance: {fileID: 216277904}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &856915869 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 7544444761072779407, guid: 573a449587bd46c4995590d7a86af321,
+    type: 3}
+  m_PrefabInstance: {fileID: 1618646993}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 45e653bab7fb20e499bda25e1b646fea, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &857078170
 GameObject:
   m_ObjectHideFlags: 0
@@ -65926,17 +66049,17 @@ PrefabInstance:
         type: 3}
       propertyPath: playerForwardCamera
       value: 
-      objectReference: {fileID: 0}
+      objectReference: {fileID: 856915869}
     - target: {fileID: 6954878285581742650, guid: 33c9fcba9b8a081438a42835cd599420,
         type: 3}
       propertyPath: playerBackwardCamera
       value: 
-      objectReference: {fileID: 0}
+      objectReference: {fileID: 2093710459}
     - target: {fileID: 6954878285581742650, guid: 33c9fcba9b8a081438a42835cd599420,
         type: 3}
       propertyPath: playerCloseShotCamera
       value: 
-      objectReference: {fileID: 0}
+      objectReference: {fileID: 761766405}
     - target: {fileID: 6982742806252294938, guid: 33c9fcba9b8a081438a42835cd599420,
         type: 3}
       propertyPath: m_LocalPosition.x
@@ -71533,7 +71656,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 1766026818}
+  - {fileID: 493980749}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -86507,6 +86630,12 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1136227548}
   m_Mesh: {fileID: -4349352302294835015, guid: 214545de91960ac4c968b7c603124f17, type: 3}
+--- !u!1 &1138233122 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 7200189204609348025, guid: 6f401fb4b2a37b9419d6be7db9f064f7,
+    type: 3}
+  m_PrefabInstance: {fileID: 821348997}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1139581279
 GameObject:
   m_ObjectHideFlags: 0
@@ -87288,17 +87417,17 @@ PrefabInstance:
         type: 3}
       propertyPath: playerForwardCamera
       value: 
-      objectReference: {fileID: 0}
+      objectReference: {fileID: 856915869}
     - target: {fileID: 6954878285581742650, guid: 33c9fcba9b8a081438a42835cd599420,
         type: 3}
       propertyPath: playerBackwardCamera
       value: 
-      objectReference: {fileID: 0}
+      objectReference: {fileID: 2093710459}
     - target: {fileID: 6954878285581742650, guid: 33c9fcba9b8a081438a42835cd599420,
         type: 3}
       propertyPath: playerCloseShotCamera
       value: 
-      objectReference: {fileID: 0}
+      objectReference: {fileID: 761766405}
     - target: {fileID: 6982742806252294938, guid: 33c9fcba9b8a081438a42835cd599420,
         type: 3}
       propertyPath: m_LocalPosition.x
@@ -95688,13 +95817,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1238881894}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.67143166, y: 0.096261814, z: -0.083324194, w: -0.7300482}
-  m_LocalPosition: {x: 514.55, y: -80.933, z: 104.34}
+  m_LocalRotation: {x: 0.67768574, y: -0.028786324, z: 0.05227718, w: -0.732926}
+  m_LocalPosition: {x: 517.54, y: -79.44955, z: 104.34}
   m_LocalScale: {x: 2069.4885, y: 5145.806, z: 4326.704}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 8580442168571789756}
-  m_LocalEulerAnglesHint: {x: -105.353, y: -252.452, z: -108.60501}
+  m_LocalEulerAnglesHint: {x: -97.955, y: -125.226, z: -236.682}
 --- !u!23 &1238881896
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -103128,17 +103257,17 @@ PrefabInstance:
         type: 3}
       propertyPath: playerForwardCamera
       value: 
-      objectReference: {fileID: 0}
+      objectReference: {fileID: 856915869}
     - target: {fileID: 6954878285581742650, guid: 33c9fcba9b8a081438a42835cd599420,
         type: 3}
       propertyPath: playerBackwardCamera
       value: 
-      objectReference: {fileID: 0}
+      objectReference: {fileID: 2093710459}
     - target: {fileID: 6954878285581742650, guid: 33c9fcba9b8a081438a42835cd599420,
         type: 3}
       propertyPath: playerCloseShotCamera
       value: 
-      objectReference: {fileID: 0}
+      objectReference: {fileID: 761766405}
     - target: {fileID: 6982742806252294938, guid: 33c9fcba9b8a081438a42835cd599420,
         type: 3}
       propertyPath: m_LocalPosition.x
@@ -127204,12 +127333,12 @@ PrefabInstance:
     - target: {fileID: 7943091212885907703, guid: 573a449587bd46c4995590d7a86af321,
         type: 3}
       propertyPath: m_LocalPosition.x
-      value: 808.4
+      value: -312.5
       objectReference: {fileID: 0}
     - target: {fileID: 7943091212885907703, guid: 573a449587bd46c4995590d7a86af321,
         type: 3}
       propertyPath: m_LocalPosition.y
-      value: 24.2
+      value: -7.85
       objectReference: {fileID: 0}
     - target: {fileID: 7943091212885907703, guid: 573a449587bd46c4995590d7a86af321,
         type: 3}
@@ -129109,17 +129238,17 @@ PrefabInstance:
         type: 3}
       propertyPath: playerForwardCamera
       value: 
-      objectReference: {fileID: 0}
+      objectReference: {fileID: 856915869}
     - target: {fileID: 6954878285581742650, guid: 33c9fcba9b8a081438a42835cd599420,
         type: 3}
       propertyPath: playerBackwardCamera
       value: 
-      objectReference: {fileID: 0}
+      objectReference: {fileID: 2093710459}
     - target: {fileID: 6954878285581742650, guid: 33c9fcba9b8a081438a42835cd599420,
         type: 3}
       propertyPath: playerCloseShotCamera
       value: 
-      objectReference: {fileID: 0}
+      objectReference: {fileID: 761766405}
     - target: {fileID: 6982742806252294938, guid: 33c9fcba9b8a081438a42835cd599420,
         type: 3}
       propertyPath: m_LocalPosition.x
@@ -129791,13 +129920,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1650563829}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.033245105, y: 0.052094985, z: 0.7746868, w: 0.629318}
-  m_LocalPosition: {x: 979.2, y: -52.02, z: 0}
+  m_LocalRotation: {x: 0.038962908, y: 0.04796885, z: 0.69795793, w: 0.7134673}
+  m_LocalPosition: {x: 977.36, y: -52.08426, z: 0}
   m_LocalScale: {x: 4.326149, y: 2.8943868, z: 45.0746}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1955279906}
-  m_LocalEulerAnglesHint: {x: -2.228, y: 6.729, z: 101.692}
+  m_LocalEulerAnglesHint: {x: -0.651, y: 7.056, z: 88.701}
 --- !u!65 &1650563831
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -134846,17 +134975,17 @@ PrefabInstance:
         type: 3}
       propertyPath: playerForwardCamera
       value: 
-      objectReference: {fileID: 0}
+      objectReference: {fileID: 856915869}
     - target: {fileID: 6954878285581742650, guid: 33c9fcba9b8a081438a42835cd599420,
         type: 3}
       propertyPath: playerBackwardCamera
       value: 
-      objectReference: {fileID: 0}
+      objectReference: {fileID: 2093710459}
     - target: {fileID: 6954878285581742650, guid: 33c9fcba9b8a081438a42835cd599420,
         type: 3}
       propertyPath: playerCloseShotCamera
       value: 
-      objectReference: {fileID: 0}
+      objectReference: {fileID: 761766405}
     - target: {fileID: 6982742806252294938, guid: 33c9fcba9b8a081438a42835cd599420,
         type: 3}
       propertyPath: m_LocalPosition.x
@@ -138048,6 +138177,18 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1758671168}
   m_Mesh: {fileID: -4349352302294835015, guid: 214545de91960ac4c968b7c603124f17, type: 3}
+--- !u!114 &1759788727 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 7364074838065889184, guid: 573a449587bd46c4995590d7a86af321,
+    type: 3}
+  m_PrefabInstance: {fileID: 1618646993}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0c6a5d0a752c4d3498b94f7d0b2c3a11, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1001 &1760715138
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -138926,56 +139067,6 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1765984635}
   m_Mesh: {fileID: 5009161486953370047, guid: 29cd71a8595e49a42945f1bf4f8c548b, type: 3}
---- !u!21 &1766026818
-Material:
-  serializedVersion: 8
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_Name: Height Fog Global
-  m_Shader: {fileID: 4800000, guid: 3a7ef1b66bafb7a448a880ef76d2e6e6, type: 3}
-  m_Parent: {fileID: 0}
-  m_ModifiedSerializedProperties: 0
-  m_ValidKeywords: []
-  m_InvalidKeywords:
-  - _RECEIVESHADOWS_OFF
-  - _SURFACE_TYPE_TRANSPARENT
-  m_LightmapFlags: 4
-  m_EnableInstancingVariants: 0
-  m_DoubleSidedGI: 0
-  m_CustomRenderQueue: 3001
-  stringTagMap: {}
-  disabledShaderPasses: []
-  m_LockedProperties: 
-  m_SavedProperties:
-    serializedVersion: 3
-    m_TexEnvs:
-    - unity_Lightmaps:
-        m_Texture: {fileID: 0}
-        m_Scale: {x: 1, y: 1}
-        m_Offset: {x: 0, y: 0}
-    - unity_LightmapsInd:
-        m_Texture: {fileID: 0}
-        m_Scale: {x: 1, y: 1}
-        m_Offset: {x: 0, y: 0}
-    - unity_ShadowMasks:
-        m_Texture: {fileID: 0}
-        m_Scale: {x: 1, y: 1}
-        m_Offset: {x: 0, y: 0}
-    m_Ints: []
-    m_Floats:
-    - _AlphaCutoff: 0.5
-    - _Banner: 1
-    - _FogCameraMode: 0
-    - _HeightFogGlobal: 1
-    - _IsHeightFogShader: 1
-    - _QueueControl: -1
-    - _QueueOffset: 0
-    - _ReceiveShadows: 0
-    m_Colors:
-    - _EmissionColor: {r: 1, g: 1, b: 1, a: 1}
-  m_BuildTextureStacks: []
 --- !u!4 &1766571440 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 8992356962738770095, guid: d6b4894e93b0bae4d9b64f2484725031,
@@ -154863,17 +154954,17 @@ PrefabInstance:
         type: 3}
       propertyPath: playerForwardCamera
       value: 
-      objectReference: {fileID: 0}
+      objectReference: {fileID: 856915869}
     - target: {fileID: 6954878285581742650, guid: 33c9fcba9b8a081438a42835cd599420,
         type: 3}
       propertyPath: playerBackwardCamera
       value: 
-      objectReference: {fileID: 0}
+      objectReference: {fileID: 2093710459}
     - target: {fileID: 6954878285581742650, guid: 33c9fcba9b8a081438a42835cd599420,
         type: 3}
       propertyPath: playerCloseShotCamera
       value: 
-      objectReference: {fileID: 0}
+      objectReference: {fileID: 761766405}
     - target: {fileID: 6982742806252294938, guid: 33c9fcba9b8a081438a42835cd599420,
         type: 3}
       propertyPath: m_LocalPosition.x
@@ -164290,6 +164381,18 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2093054761}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!114 &2093710459 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 3458723090205463254, guid: 573a449587bd46c4995590d7a86af321,
+    type: 3}
+  m_PrefabInstance: {fileID: 1618646993}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 45e653bab7fb20e499bda25e1b646fea, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1001 &2094263393
 PrefabInstance:
   m_ObjectHideFlags: 0

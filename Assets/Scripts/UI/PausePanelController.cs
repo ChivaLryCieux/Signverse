@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+using UnityEngine.InputSystem;
 
 public class PausePanelController : MonoBehaviour
 {
@@ -76,22 +77,21 @@ public class PausePanelController : MonoBehaviour
         }
     }
 
-    private void Update()
+    void Update()
     {
         if (PickupUIController.BlocksPauseEscape || CartoonPanelController.IsPlaying)
-        {
             return;
-        }
 
-        if (Input.GetKeyDown(KeyCode.Escape))
+        if (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)
         {
             if (IsTipPanelOpen())
             {
                 CloseTipPanel();
-                return;
             }
-
-            Toggle();
+            else
+            {
+                Toggle();
+            }
         }
     }
     private void PlayPauseButtonSFX()
