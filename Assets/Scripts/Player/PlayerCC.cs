@@ -565,18 +565,25 @@ public class PlayerCC : MonoBehaviour
     }
 
     public void EnterClimbTransitionTrigger(ClimbTransitionTrigger trigger)
+{
+    // 已经在 Trigger 内时，不重复计数
+    if (trigger != null && ActiveClimbTransitionTrigger == trigger)
     {
-        climbTransitionTriggerCount++;
-        if (trigger != null)
-        {
-            ActiveClimbTransitionTrigger = trigger;
-        }
-
-        if (trigger != null && trigger.DebugLogs)
-        {
-            Debug.Log($"[PlayerCC] EnterClimbTransitionTrigger count={climbTransitionTriggerCount}, active={trigger.name}", this);
-        }
+        return;
     }
+
+    climbTransitionTriggerCount++;
+
+    if (trigger != null)
+    {
+        ActiveClimbTransitionTrigger = trigger;
+    }
+
+    if (trigger != null && trigger.DebugLogs)
+    {
+        Debug.Log($"[PlayerCC] EnterClimbTransitionTrigger count={climbTransitionTriggerCount}, active={trigger.name}", this);
+    }
+}
 
     public void ExitClimbTransitionTrigger()
     {

@@ -115,6 +115,27 @@ public class ClimbTransitionTrigger : MonoBehaviour
         }
     }
 
+    void OnTriggerStay(Collider other)
+    {
+        PlayerCC controller = other.GetComponentInParent<PlayerCC>();
+
+        if (!CanUseClimbTransition(controller))
+        {
+            return;
+        }
+
+        // 只有当前真正处于这个 Trigger 内时才补注册
+        if (GetComponent<Collider>().bounds.Contains(controller.transform.position))
+        {
+            controller.EnterClimbTransitionTrigger(this);
+
+            if (debugLogs)
+            {
+                Debug.Log($"[ClimbTransitionTrigger] Registered via OnTriggerStay. player={controller.name}", this);
+            }
+        }
+    }
+
     private void OnTriggerExit(Collider other)
     {
         PlayerCC controller = other.GetComponentInParent<PlayerCC>();
@@ -129,6 +150,7 @@ public class ClimbTransitionTrigger : MonoBehaviour
         }
 
         controller.ExitClimbTransitionTrigger(this);
+        controller.IsPosture(PlayerCC.Posture.Grounded);
 
         if (debugLogs)
         {

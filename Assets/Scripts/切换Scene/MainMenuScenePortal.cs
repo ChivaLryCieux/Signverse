@@ -65,6 +65,10 @@ public class MainMenuScenePortal : MonoBehaviour
         {
             DetectClick();
         }
+        if(Keyboard.current.spaceKey.wasPressedThisFrame || Keyboard.current.enterKey.wasPressedThisFrame)
+        {
+            ChangeScene();
+        }
     }
 
     void DetectClick()
