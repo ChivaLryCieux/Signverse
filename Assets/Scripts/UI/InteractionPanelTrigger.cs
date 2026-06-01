@@ -148,6 +148,23 @@ public class InteractionPanelTrigger : MonoBehaviour
         }
     }
 
+    public void ForceExit()
+    {
+        playerInRange = false;
+
+        if (hidePanelOnExit && panelController != null)
+        {
+            panelController.HideFromTrigger(this);
+        }
+
+        extraObject = GetRecordBG();
+
+        if (extraObject != null)
+        {
+            extraObject.SetActive(false);
+        }
+    }
+
     private bool WasInteractPressed()
     {
         return !CartoonPanelController.IsPlaying &&

@@ -1,6 +1,7 @@
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using System.Collections.Generic;
 
 public class InteractionPanelController : MonoBehaviour
 {
@@ -13,7 +14,7 @@ public class InteractionPanelController : MonoBehaviour
     [SerializeField] private Image backgroundImage;
 
     [Header("Content States")]
-    [SerializeField] private GameObject fixedContent;
+    [SerializeField] private List<GameObject> fixedContent;
 
     [SerializeField] private GameObject detailContent;
 
@@ -157,9 +158,17 @@ public class InteractionPanelController : MonoBehaviour
     /// </summary>
     private void SetFixedContentVisible(bool visible)
     {
-        if (fixedContent != null)
+        if (fixedContent == null)
         {
-            fixedContent.SetActive(visible);
+            return;
+        }
+
+        for (int i = 0; i < fixedContent.Count; i++)
+        {
+            if (fixedContent[i] != null)
+            {
+                fixedContent[i].SetActive(visible);
+            }
         }
     }
 

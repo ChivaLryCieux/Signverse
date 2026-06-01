@@ -163,6 +163,7 @@ public class PausePanelController : MonoBehaviour
 
         if (playerDeath != null)
         {
+            InteractionPanelController.Instance?.Hide();
             playerDeath.RespawnAtLastCheckpoint();
         }
         else

@@ -220,6 +220,14 @@ public class PlayerDeath : MonoBehaviour
         }
 
         transform.position = respawnPosition;
+        //确保没有交互状态残留问题
+        InteractionPanelTrigger[] triggers = FindObjectsOfType<InteractionPanelTrigger>(true);
+
+        for (int i = 0; i < triggers.Length; i++)
+        {
+            triggers[i].ForceExit();
+        }
+        //确保结束
         transform.forward = Vector3.right;
 
         controller.SetFacing(Vector3.right);
