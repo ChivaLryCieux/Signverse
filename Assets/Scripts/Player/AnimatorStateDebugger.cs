@@ -32,6 +32,9 @@ public class AnimatorStateDebugger : MonoBehaviour
     public ParticleSystem jumpBoostVFX;
     // 标记是否已经缓存过重力，防止重复调用时把 0 当成原始重力。
     private bool hasCachedGravity;
+    [Header("UltraMove FX")]
+    public AudioClip ultraMoveClip;
+    private bool lastUltraMove = false;
     [Header("核心引用")]
     public Animator animator;
     public AudioSource audioSource;
@@ -329,14 +332,14 @@ public class AnimatorStateDebugger : MonoBehaviour
         //                (Mathf.Abs(playerMove.x) > 0.1f );
 
         // SetBoolIfExists(hasRun, "Run", running);
-        if (HasEquippedSkill("10-StdMove") || HasEquippedSkill("12-mj")  ||HasEquippedSkill("13-md") ||  HasEquippedSkill("14-mh"))
+        if (HasEquippedSkill("10-StdMove") || HasEquippedSkill("12-mj")  ||HasEquippedSkill("13-md") ||  HasEquippedSkill("14-mc"))
         {
             if(currentPosture == Posture.Grounded)
             {
                 
                 if (Mathf.Abs(move.x) > 0.01f)
                 {
-                    if (HasEquippedSkill("10-StdMove") || HasEquippedSkill("12-mj")  || HasEquippedSkill("14-mh"))
+                    if (HasEquippedSkill("10-StdMove") || HasEquippedSkill("12-mj")  || HasEquippedSkill("14-mc"))
                     {
                         animator.SetBool("Run", true);
                     }
@@ -641,7 +644,22 @@ public class AnimatorStateDebugger : MonoBehaviour
             animator.SetBool("ultraMove", ultraMove);
             hasUltraMove = true;
         }
-    }
+        // 🔹 音频处理
+        // 只有在：
+        // false -> true（刚换上技能）
+        // 的瞬间播放一次
+        if (audioSource != null && ultraMoveClip != null)
+        {
+            if (ultraMove && !lastUltraMove)
+            {
+                float clipVolume = 0.8f; // 音量可调
+                audioSource.PlayOneShot(ultraMoveClip, clipVolume);
+            }
+        }
+
+        // 记录上一帧状态
+        lastUltraMove = ultraMove;
+        }
 
     // Lry的修改：当前 PlayerCC 只有 Hide 输入接口，没有独立隐身状态字段；这里同步输入态是兼容旧 AnimatorStateDebugger 的 Hide Bool，后续若有隐身技能状态，应改为读取领域状态。
     void HandleHideFromPlayerCC()
