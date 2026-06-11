@@ -3,7 +3,10 @@ using UnityEngine.EventSystems;
 using UnityEngine.UI;
 using System.Collections.Generic;
 
-public class PickupUISlotView : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler, IPointerExitHandler
+public class PickupUISlotView : MonoBehaviour,
+    IPointerClickHandler, IPointerDownHandler,
+    IBeginDragHandler, IDragHandler, IEndDragHandler,
+    IPointerEnterHandler, IPointerExitHandler
 {
     public enum SlotRole
     {
@@ -20,6 +23,7 @@ public class PickupUISlotView : MonoBehaviour, IPointerClickHandler, IPointerEnt
     [Header("点击音效")]
     [SerializeField] private AudioSource audioSource;
     [SerializeField] private List<AudioClip> clickSFXList = new List<AudioClip>();
+
     private PickupUIController owner;
     private SlotRole role;
     private PickupItemId itemId;
@@ -29,6 +33,7 @@ public class PickupUISlotView : MonoBehaviour, IPointerClickHandler, IPointerEnt
     private bool hasItem;
     private bool hasBaseScale;
     private bool selected;
+    private bool wasDragging;
 
     private void Awake()
     {
@@ -138,6 +143,58 @@ public class PickupUISlotView : MonoBehaviour, IPointerClickHandler, IPointerEnt
         SetHighlight(false);
     }
 
+    // ── 拖动接口 ──
+
+    public void OnPointerDown(PointerEventData eventData)
+    {
+        wasDragging = false;
+    }
+
+    public void OnBeginDrag(PointerEventData eventData)
+    {
+        if (!initialized || owner == null || eventData.button != PointerEventData.InputButton.Left)
+        {
+            return;
+        }
+
+        wasDragging = true;
+
+        Vector3 sourcePos = GetIconScreenPosition();
+
+        if (role == SlotRole.Unlock && hasItem)
+        {
+            owner.BeginDragFromUnlockSlot(itemId, sourcePos);
+        }
+        else if (role == SlotRole.Equipped && hasItem && owner.IsEquippedSlotUnlocked(equippedIndex))
+        {
+            owner.BeginDragFromEquippedSlot(equippedIndex, sourcePos);
+        }
+        else
+        {
+            wasDragging = false;
+        }
+    }
+
+    public void OnDrag(PointerEventData eventData)
+    {
+        // 拖动跟随由 PickupUIController.UpdateDrag 处理
+    }
+
+    public void OnEndDrag(PointerEventData eventData)
+    {
+        if (!initialized || owner == null || eventData.button != PointerEventData.InputButton.Left)
+        {
+            return;
+        }
+
+        if (wasDragging)
+        {
+            owner.EndDrag(eventData.position);
+        }
+    }
+
+    // ── 点击接口（仅保留右键详情面板）──
+
     public void OnPointerClick(PointerEventData eventData)
     {
         if (!initialized || owner == null)
@@ -145,6 +202,14 @@ public class PickupUISlotView : MonoBehaviour, IPointerClickHandler, IPointerEnt
             return;
         }
 
+        // 左键拖动结束后不再触发点击
+        if (eventData.button == PointerEventData.InputButton.Left && wasDragging)
+        {
+            wasDragging = false;
+            return;
+        }
+
+        // 右键打开详情面板
         if (eventData.button == PointerEventData.InputButton.Right)
         {
             if (role == SlotRole.Unlock && hasItem)
@@ -154,30 +219,9 @@ public class PickupUISlotView : MonoBehaviour, IPointerClickHandler, IPointerEnt
 
             return;
         }
-
-        if (eventData.button != PointerEventData.InputButton.Left)
-        {
-            return;
-        }
-
-        if (role == SlotRole.Equipped && !owner.IsEquippedSlotUnlocked(equippedIndex))
-        {
-            owner.OnEquippedSlotClicked(equippedIndex, eventData.clickCount);
-            return;
-        }
-
-        if (role == SlotRole.Unlock)
-        {
-            if (hasItem)
-            {
-                owner.OnUnlockSlotClicked(itemId, eventData.clickCount);
-            }
-
-            return;
-        }
-
-        owner.OnEquippedSlotClicked(equippedIndex, eventData.clickCount);
     }
+
+    // ── 悬停接口 ──
 
     public void OnPointerEnter(PointerEventData eventData)
     {
@@ -187,7 +231,7 @@ public class PickupUISlotView : MonoBehaviour, IPointerClickHandler, IPointerEnt
         }
 
         bool slotUnlocked = role != SlotRole.Equipped || owner == null || owner.IsEquippedSlotUnlocked(equippedIndex);
-        bool interactive = slotUnlocked && (hasItem || (role == SlotRole.Equipped && owner != null && owner.HasSelectedUnlockItem));
+        bool interactive = slotUnlocked && hasItem;
         if (!interactive)
         {
             return;
@@ -201,6 +245,20 @@ public class PickupUISlotView : MonoBehaviour, IPointerClickHandler, IPointerEnt
     {
         transform.localScale = selected ? baseScale * hoverScale : baseScale;
         SetHighlight(selected);
+    }
+
+    // ── 内部方法 ──
+
+    private Vector3 GetIconScreenPosition()
+    {
+        if (iconImage != null && iconImage.rectTransform != null)
+        {
+            Vector3[] corners = new Vector3[4];
+            iconImage.rectTransform.GetWorldCorners(corners);
+            return (corners[0] + corners[2]) * 0.5f;
+        }
+
+        return transform.position;
     }
 
     private void SetIcon(Sprite icon)

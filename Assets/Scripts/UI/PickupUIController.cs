@@ -114,6 +114,14 @@ public class PickupUIController : MonoBehaviour
     private int selectionStartedFrame = -1;
     private int lastSkillUiClickFrame = -1;
 
+    // ── 拖动状态 ──
+    private enum DragSource { None, UnlockSlot, EquippedSlot }
+    private DragSource dragSource;
+    private PickupItemId dragSourceItem;
+    private int dragSourceEquippedIndex = -1;
+    private Vector3 dragReturnPosition;
+    private bool isReturningDrag;
+
     // Lry的修改：装备槽组合后真正生效的 SkillBase 快照。它会同步到 PlayerCC.equippedSkills，供动画层读取当前 loadout。
     private readonly List<SkillBase> equippedSkillSnapshot = new List<SkillBase>();
 
@@ -283,6 +291,8 @@ public class PickupUIController : MonoBehaviour
     private void Update()
     {
         UpdateSelectedIconFollow();
+        UpdateDrag();
+        TickDragReturn();
         TickWarnPanel();
     }
 
@@ -326,7 +336,6 @@ public class PickupUIController : MonoBehaviour
                 return;
             }
 
-            SelectForEquip(id);
             return;
         }
 
@@ -336,7 +345,7 @@ public class PickupUIController : MonoBehaviour
             return;
         }
 
-        SelectForEquip(id);
+        // 技能装卸改为拖动操作，点击不再触发装备
     }
 
     public void SelectForEquip(PickupItemId id)
@@ -412,10 +421,7 @@ public class PickupUIController : MonoBehaviour
             return;
         }
 
-        if (equippedSlotOccupied[equippedIndex])
-        {
-            UnequipAt(equippedIndex);
-        }
+        // 技能装卸改为拖动操作，点击不再触发卸下
     }
 
     private bool EquipSelectedAt(int equippedIndex)
@@ -1236,7 +1242,17 @@ public class PickupUIController : MonoBehaviour
 
     private void UpdateSelectedIconFollow(bool snapToMouse = false)
     {
-        if (!hasSelectedUnlockItem || floatingSelectedIcon == null || Mouse.current == null)
+        if (!hasSelectedUnlockItem || floatingSelectedIcon == null)
+        {
+            return;
+        }
+
+        UpdateFloatingIconPosition(snapToMouse);
+    }
+
+    private void UpdateFloatingIconPosition(bool snapToMouse)
+    {
+        if (floatingSelectedIcon == null || !TryGetPointerPosition(out Vector2 screenPosition))
         {
             return;
         }
@@ -1249,7 +1265,6 @@ public class PickupUIController : MonoBehaviour
         }
 
         Camera eventCamera = canvas.renderMode == RenderMode.ScreenSpaceOverlay ? null : canvas.worldCamera;
-        Vector2 screenPosition = Mouse.current.position.ReadValue();
         if (RectTransformUtility.ScreenPointToLocalPointInRectangle(canvasRect, screenPosition, eventCamera, out Vector2 localPosition))
         {
             if (snapToMouse || selectedIconFollowSpeedOffset <= 0f)
@@ -1265,7 +1280,7 @@ public class PickupUIController : MonoBehaviour
 
     private void CancelSelectedSkillWhenClickingElsewhere()
     {
-        if (!hasSelectedUnlockItem || Mouse.current == null || !Mouse.current.leftButton.wasReleasedThisFrame)
+        if (!hasSelectedUnlockItem || !IsPointerReleased())
         {
             return;
         }
@@ -1276,6 +1291,470 @@ public class PickupUIController : MonoBehaviour
         }
 
         CancelSelectedUnlockItem();
+    }
+
+    // ══════════════════════════════════════════════════════
+    //  统一指针输入（鼠标 + 触屏）
+    // ══════════════════════════════════════════════════════
+
+    private static bool TryGetPointerPosition(out Vector2 screenPos)
+    {
+        if (Mouse.current != null)
+        {
+            screenPos = Mouse.current.position.ReadValue();
+            return true;
+        }
+
+        if (Touchscreen.current != null && Touchscreen.current.primaryTouch.press.isPressed)
+        {
+            screenPos = Touchscreen.current.primaryTouch.position.ReadValue();
+            return true;
+        }
+
+        screenPos = Vector2.zero;
+        return false;
+    }
+
+    private static bool IsPointerDown()
+    {
+        return (Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame)
+            || (Touchscreen.current != null && Touchscreen.current.primaryTouch.press.wasPressedThisFrame);
+    }
+
+    private static bool IsPointerReleased()
+    {
+        return (Mouse.current != null && Mouse.current.leftButton.wasReleasedThisFrame)
+            || (Touchscreen.current != null && Touchscreen.current.primaryTouch.press.wasReleasedThisFrame);
+    }
+
+    // ══════════════════════════════════════════════════════
+    //  拖动系统
+    // ══════════════════════════════════════════════════════
+
+    public void BeginDragFromUnlockSlot(PickupItemId id, Vector3 sourceScreenPosition)
+    {
+        if (!unlockedItems.Contains(id) || IsEquipped(id))
+        {
+            return;
+        }
+
+        if (!entryById.TryGetValue(id, out PickupUiEntry entry) || entry == null)
+        {
+            return;
+        }
+
+        if (IsMimicIndex(GetRightSideIndex(entry)))
+        {
+            return;
+        }
+
+        dragSource = DragSource.UnlockSlot;
+        dragSourceItem = id;
+        dragSourceEquippedIndex = -1;
+        dragReturnPosition = sourceScreenPosition;
+        isReturningDrag = false;
+
+        hasSelectedUnlockItem = false;
+        StopSelectedIconFollow();
+        PreviewBoltCost(entry);
+        entry.unlockSlot.SetIconVisualVisible(false);
+        StartDragFloatingIcon(entry.unlockSlot);
+    }
+
+    public void BeginDragFromEquippedSlot(int equippedIndex, Vector3 sourceScreenPosition)
+    {
+        if (!IsValidEquippedIndex(equippedIndex) || !equippedSlotOccupied[equippedIndex])
+        {
+            return;
+        }
+
+        if (!IsEquippedSlotUnlocked(equippedIndex))
+        {
+            return;
+        }
+
+        PickupItemId itemId = equippedSlotItems[equippedIndex];
+        if (!entryById.TryGetValue(itemId, out PickupUiEntry entry) || entry == null)
+        {
+            return;
+        }
+
+        dragSource = DragSource.EquippedSlot;
+        dragSourceItem = itemId;
+        dragSourceEquippedIndex = equippedIndex;
+        dragReturnPosition = sourceScreenPosition;
+        isReturningDrag = false;
+
+        equippedSlots[equippedIndex].SetIconVisualVisible(false);
+        StartDragFloatingIcon(equippedSlots[equippedIndex]);
+    }
+
+    private void StartDragFloatingIcon(PickupUISlotView sourceSlot)
+    {
+        StopSelectedIconFollow();
+
+        if (sourceSlot == null)
+        {
+            return;
+        }
+
+        Canvas canvas = GetComponentInParent<Canvas>();
+        if (canvas == null)
+        {
+            return;
+        }
+
+        RectTransform canvasRect = canvas.transform as RectTransform;
+        if (canvasRect == null)
+        {
+            return;
+        }
+
+        GameObject followObject = new GameObject("Drag Skill Icon", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
+        followObject.transform.SetParent(canvas.transform, false);
+        followObject.transform.SetAsLastSibling();
+
+        floatingSelectedIcon = followObject.GetComponent<RectTransform>();
+        floatingSelectedIconImage = followObject.GetComponent<Image>();
+
+        // 获取源槽位的图标
+        Sprite followSprite = null;
+        Image sourceImage = sourceSlot.GetComponent<Image>();
+        if (sourceImage != null && sourceImage.sprite != null)
+        {
+            followSprite = sourceImage.sprite;
+        }
+
+        if (followSprite == null)
+        {
+            Destroy(followObject);
+            return;
+        }
+
+        floatingSelectedIconImage.sprite = followSprite;
+        floatingSelectedIconImage.raycastTarget = false;
+        floatingSelectedIconImage.preserveAspect = true;
+
+        Vector2 iconSize = sourceSlot.GetIconSize();
+        if (iconSize.x <= 0f || iconSize.y <= 0f)
+        {
+            iconSize = new Vector2(64f, 64f);
+        }
+
+        floatingSelectedIcon.sizeDelta = iconSize;
+
+        // 立即将图标放置到指针位置，避免在屏幕中心闪一帧
+        if (TryGetPointerPosition(out Vector2 screenPos))
+        {
+            Camera eventCamera = canvas.renderMode == RenderMode.ScreenSpaceOverlay ? null : canvas.worldCamera;
+            if (RectTransformUtility.ScreenPointToLocalPointInRectangle(canvasRect, screenPos, eventCamera, out Vector2 localPos))
+            {
+                floatingSelectedIcon.anchoredPosition = localPos;
+            }
+        }
+    }
+
+    private void UpdateDrag()
+    {
+        if (dragSource == DragSource.None || isReturningDrag)
+        {
+            return;
+        }
+
+        UpdateFloatingIconPosition(false);
+    }
+
+    public void EndDrag(Vector2 screenPos)
+    {
+        if (dragSource == DragSource.None || isReturningDrag)
+        {
+            return;
+        }
+
+        // 详细面板打开时不处理
+        if (isDetailPanelOpen)
+        {
+            CancelDrag();
+            return;
+        }
+
+        if (!CanModifySkillLoadout())
+        {
+            AnimateDragReturn();
+            return;
+        }
+
+        if (dragSource == DragSource.UnlockSlot)
+        {
+            EndDragFromUnlockSlot(screenPos);
+        }
+        else if (dragSource == DragSource.EquippedSlot)
+        {
+            EndDragFromEquippedSlot(screenPos);
+        }
+    }
+
+    private void EndDragFromUnlockSlot(Vector2 screenPos)
+    {
+        // 检测是否拖到了某个装备槽上
+        for (int i = 0; i < equippedSlots.Length; i++)
+        {
+            if (equippedSlots[i] == null)
+            {
+                continue;
+            }
+
+            RectTransform slotRect = equippedSlots[i].GetComponent<RectTransform>();
+            if (slotRect == null)
+            {
+                continue;
+            }
+
+            if (!RectTransformUtility.RectangleContainsScreenPoint(slotRect, screenPos))
+            {
+                continue;
+            }
+
+            // 找到目标槽位
+            if (!IsEquippedSlotUnlocked(i))
+            {
+                AnimateDragReturn();
+                return;
+            }
+
+            if (!CanEquipItemAtSlot(dragSourceItem, i))
+            {
+                Debug.Log("左上角第 5 个技能槽只能装备 10、20、30、40 系列的基础技能。", this);
+                AnimateDragReturn();
+                return;
+            }
+
+            // 检查螺栓消耗
+            int itemCost = GetEquippedItemBoltCost(dragSourceItem);
+            int replacedCost = equippedSlotOccupied[i] ? GetEquippedItemBoltCost(equippedSlotItems[i]) : 0;
+
+            ResolveBoltPanel();
+            if (boltPanel != null && itemCost > boltPanel.AvailableCount + replacedCost)
+            {
+                boltPanel.ShowInsufficient();
+                AnimateDragReturn();
+                return;
+            }
+
+            // 先卸下目标槽位的旧技能（如果有）
+            if (equippedSlotOccupied[i])
+            {
+                PickupItemId replacedItem = equippedSlotItems[i];
+                equippedSlotOccupied[i] = false;
+                ItemUnequipped?.Invoke(replacedItem);
+            }
+
+            // 装备新技能
+            equippedSlotItems[i] = dragSourceItem;
+            equippedSlotOccupied[i] = true;
+
+            StopDrag();
+            RefreshUnlockedSlots();
+            RefreshEquippedSlots();
+            SyncBoltSpend();
+            SyncLinkedSkills();
+            PlaySkillLoadoutSfx(equipSuccessSfx);
+            ItemEquipped?.Invoke(dragSourceItem);
+            return;
+        }
+
+        // 未拖到任何装备槽，弹回
+        AnimateDragReturn();
+    }
+
+    private void EndDragFromEquippedSlot(Vector2 screenPos)
+    {
+        // 检测是否拖到了另一个装备槽上
+        for (int i = 0; i < equippedSlots.Length; i++)
+        {
+            if (equippedSlots[i] == null || i == dragSourceEquippedIndex)
+            {
+                continue;
+            }
+
+            RectTransform slotRect = equippedSlots[i].GetComponent<RectTransform>();
+            if (slotRect == null)
+            {
+                continue;
+            }
+
+            if (!RectTransformUtility.RectangleContainsScreenPoint(slotRect, screenPos))
+            {
+                continue;
+            }
+
+            // 找到目标槽位
+            if (!IsEquippedSlotUnlocked(i))
+            {
+                AnimateDragReturn();
+                return;
+            }
+
+            if (!CanEquipItemAtSlot(dragSourceItem, i))
+            {
+                AnimateDragReturn();
+                return;
+            }
+
+            // 在装备槽之间移动
+            MoveEquippedItem(dragSourceEquippedIndex, i);
+            return;
+        }
+
+        // 检测是否拖到了右侧解锁区域（卸下）
+        ResolveHudPanels();
+        if (rightPanel != null)
+        {
+            RectTransform rightRect = rightPanel.GetComponent<RectTransform>();
+            if (rightRect != null && RectTransformUtility.RectangleContainsScreenPoint(rightRect, screenPos))
+            {
+                int sourceIndex = dragSourceEquippedIndex;
+                StopDrag();
+                UnequipAt(sourceIndex);
+                return;
+            }
+        }
+
+        // 未拖到有效位置，弹回
+        AnimateDragReturn();
+    }
+
+    private void MoveEquippedItem(int fromIndex, int toIndex)
+    {
+        if (!IsValidEquippedIndex(fromIndex) || !IsValidEquippedIndex(toIndex))
+        {
+            AnimateDragReturn();
+            return;
+        }
+
+        if (!equippedSlotOccupied[fromIndex])
+        {
+            AnimateDragReturn();
+            return;
+        }
+
+        PickupItemId sourceItem = equippedSlotItems[fromIndex];
+
+        // 目标槽位有技能时交换，空槽时直接移入
+        if (equippedSlotOccupied[toIndex])
+        {
+            PickupItemId targetItem = equippedSlotItems[toIndex];
+            equippedSlotItems[fromIndex] = targetItem;
+            equippedSlotItems[toIndex] = sourceItem;
+            // occupied 状态不变，两个槽都仍然有技能
+        }
+        else
+        {
+            equippedSlotItems[fromIndex] = default;
+            equippedSlotOccupied[fromIndex] = false;
+            equippedSlotItems[toIndex] = sourceItem;
+            equippedSlotOccupied[toIndex] = true;
+        }
+
+        StopDrag();
+        RefreshUnlockedSlots();
+        RefreshEquippedSlots();
+        SyncBoltSpend();
+        SyncLinkedSkills();
+        PlaySkillLoadoutSfx(equipSuccessSfx);
+    }
+
+    private void CancelDrag()
+    {
+        // 恢复源槽位图标
+        if (dragSource == DragSource.UnlockSlot)
+        {
+            RefreshUnlockedSlots();
+        }
+        else if (dragSource == DragSource.EquippedSlot && IsValidEquippedIndex(dragSourceEquippedIndex))
+        {
+            equippedSlots[dragSourceEquippedIndex].SetIconVisualVisible(true);
+        }
+
+        StopSelectedIconFollow();
+        dragSource = DragSource.None;
+        isReturningDrag = false;
+    }
+
+    private void AnimateDragReturn()
+    {
+        isReturningDrag = true;
+
+        // 隐藏源槽位图标，等动画完成后恢复
+        if (dragSource == DragSource.UnlockSlot)
+        {
+            // unlock 槽的图标已通过浮动图标显示，保持隐藏
+        }
+    }
+
+    private void TickDragReturn()
+    {
+        if (!isReturningDrag || floatingSelectedIcon == null)
+        {
+            return;
+        }
+
+        Canvas canvas = floatingSelectedIcon.GetComponentInParent<Canvas>();
+        if (canvas == null)
+        {
+            // Canvas 丢失，直接清理
+            if (dragSource == DragSource.UnlockSlot)
+            {
+                RefreshUnlockedSlots();
+            }
+            else if (dragSource == DragSource.EquippedSlot && IsValidEquippedIndex(dragSourceEquippedIndex))
+            {
+                equippedSlots[dragSourceEquippedIndex].SetIconVisualVisible(true);
+            }
+
+            StopSelectedIconFollow();
+            dragSource = DragSource.None;
+            isReturningDrag = false;
+            return;
+        }
+
+        RectTransform canvasRect = canvas.transform as RectTransform;
+        Camera eventCamera = canvas.renderMode == RenderMode.ScreenSpaceOverlay ? null : canvas.worldCamera;
+
+        if (!RectTransformUtility.ScreenPointToLocalPointInRectangle(canvasRect, dragReturnPosition, eventCamera, out Vector2 targetLocal))
+        {
+            return;
+        }
+
+        // 平滑 Lerp 回原始位置
+        float returnSpeed = 12f;
+        float step = 1f - Mathf.Exp(-returnSpeed * Time.unscaledDeltaTime);
+        floatingSelectedIcon.anchoredPosition = Vector2.Lerp(floatingSelectedIcon.anchoredPosition, targetLocal, step);
+
+        // 到达阈值时完成
+        float distSq = (floatingSelectedIcon.anchoredPosition - targetLocal).sqrMagnitude;
+        if (distSq < 1f)
+        {
+            if (dragSource == DragSource.UnlockSlot)
+            {
+                RefreshUnlockedSlots();
+            }
+            else if (dragSource == DragSource.EquippedSlot && IsValidEquippedIndex(dragSourceEquippedIndex))
+            {
+                equippedSlots[dragSourceEquippedIndex].SetIconVisualVisible(true);
+            }
+
+            StopSelectedIconFollow();
+            dragSource = DragSource.None;
+            isReturningDrag = false;
+        }
+    }
+
+    private void StopDrag()
+    {
+        StopSelectedIconFollow();
+        dragSource = DragSource.None;
+        isReturningDrag = false;
     }
 
     private void BeginMimicTargetSelection()

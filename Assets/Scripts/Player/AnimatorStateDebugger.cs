@@ -240,10 +240,16 @@ public class AnimatorStateDebugger : MonoBehaviour
     // }
     void HandleInput()
     {
-        move = inputActions.Player.Move.ReadValue<Vector2>();
+        // 移动输入：键盘 + 虚拟摇杆
+        Vector2 kbMove = inputActions.Player.Move.ReadValue<Vector2>();
+        Vector2 mobileMove = MobileInputManager.MoveInput;
+        move = Vector2.ClampMagnitude(kbMove + mobileMove, 1f);
 
+        // 跳跃轴：键盘 + 虚拟按钮 held（仅用于动画权重，不消费标志）
         jumpAxis = inputActions.Player.Jump.ReadValue<float>();
+        if (MobileInputManager.JumpHeld) jumpAxis = 1f;
 
+        // 冲刺/隐身：仅用键盘 inputActions 的 triggered（动画不需要精确的单帧触发）
         dashPressed = inputActions.Player.Dash.triggered;
 
         hidePressed = inputActions.Player.Hide.triggered;

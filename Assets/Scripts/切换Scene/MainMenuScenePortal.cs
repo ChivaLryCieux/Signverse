@@ -59,13 +59,17 @@ public class MainMenuScenePortal : MonoBehaviour
             Debug.Log("已退出游戏！");
         }
 
-        // 鼠标左键点击
-        if (Mouse.current != null &&
-            Mouse.current.leftButton.wasPressedThisFrame)
+        // 鼠标左键点击 / 触屏点击
+        bool tapped = (Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame)
+                      || (Touchscreen.current != null && Touchscreen.current.primaryTouch.press.wasPressedThisFrame)
+                      || MobileInputManager.InteractPressed;
+        if (tapped)
         {
             DetectClick();
+            MobileInputManager.ConsumeInteractPressed();
         }
-        if(Keyboard.current.spaceKey.wasPressedThisFrame || Keyboard.current.enterKey.wasPressedThisFrame)
+        if ((Keyboard.current != null && (Keyboard.current.spaceKey.wasPressedThisFrame || Keyboard.current.enterKey.wasPressedThisFrame))
+            || MobileInputManager.ConsumeInteractPressed())
         {
             ChangeScene();
         }
@@ -78,10 +82,13 @@ public class MainMenuScenePortal : MonoBehaviour
             return;
         }
 
-        Ray ray =
-            mainCamera.ScreenPointToRay(
-                Mouse.current.position.ReadValue()
-            );
+        Vector2 screenPos = Mouse.current != null
+            ? Mouse.current.position.ReadValue()
+            : (Touchscreen.current != null
+                ? (Vector2)Touchscreen.current.primaryTouch.position.ReadValue()
+                : Vector2.zero);
+
+        Ray ray = mainCamera.ScreenPointToRay(screenPos);
 
         RaycastHit hit;
 

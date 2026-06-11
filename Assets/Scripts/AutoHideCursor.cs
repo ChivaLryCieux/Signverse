@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 public class AutoHideCursor : MonoBehaviour
 {
@@ -21,18 +22,20 @@ public class AutoHideCursor : MonoBehaviour
         }
 
         Cursor.visible = true;
-        lastMousePosition = Input.mousePosition;
+        lastMousePosition = GetMousePosition();
     }
 
     void Update()
     {
+        Vector3 currentPos = GetMousePosition();
+
         // 鼠标移动检测
-        if (Input.mousePosition != lastMousePosition)
+        if (currentPos != lastMousePosition)
         {
             idleTimer = 0f;
             if (!Cursor.visible)
                 Cursor.visible = true; // 重新显示光标
-            lastMousePosition = Input.mousePosition;
+            lastMousePosition = currentPos;
         }
         else
         {
@@ -42,5 +45,22 @@ public class AutoHideCursor : MonoBehaviour
                 Cursor.visible = false; // 闲置超过指定时间隐藏光标
             }
         }
+    }
+
+    private static Vector3 GetMousePosition()
+    {
+        if (Mouse.current != null)
+        {
+            Vector2 pos = Mouse.current.position.ReadValue();
+            return new Vector3(pos.x, pos.y, 0f);
+        }
+
+        if (Touchscreen.current != null)
+        {
+            Vector2 pos = Touchscreen.current.primaryTouch.position.ReadValue();
+            return new Vector3(pos.x, pos.y, 0f);
+        }
+
+        return Vector3.zero;
     }
 }

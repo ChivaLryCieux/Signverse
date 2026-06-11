@@ -1,6 +1,7 @@
 using System.Collections;
 using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.InputSystem;
 using UnityEngine.UI;
 
 [RequireComponent(typeof(CanvasGroup))]
@@ -81,7 +82,8 @@ public class CartoonPanelController : MonoBehaviour, IPointerClickHandler
             return;
         }
 
-        if (Input.GetKeyDown(KeyCode.E))
+        if ((Keyboard.current != null && Keyboard.current.eKey.wasPressedThisFrame)
+            || MobileInputManager.ConsumeInteractPressed())
         {
             PlayNextPicture();
         }

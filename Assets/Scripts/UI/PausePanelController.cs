@@ -82,7 +82,7 @@ public class PausePanelController : MonoBehaviour
         if (PickupUIController.BlocksPauseEscape || CartoonPanelController.IsPlaying)
             return;
 
-        if (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)
+        if ((Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame) || MobileInputManager.ConsumePausePressed())
         {
             if (IsTipPanelOpen())
             {
