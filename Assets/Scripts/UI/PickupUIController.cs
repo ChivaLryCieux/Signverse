@@ -1464,7 +1464,7 @@ public class PickupUIController : MonoBehaviour
         UpdateFloatingIconPosition(false);
     }
 
-    public void EndDrag()
+    public void EndDrag(Vector2 screenPos)
     {
         if (dragSource == DragSource.None || isReturningDrag)
         {
@@ -1479,13 +1479,6 @@ public class PickupUIController : MonoBehaviour
         }
 
         if (!CanModifySkillLoadout())
-        {
-            AnimateDragReturn();
-            return;
-        }
-
-        // 获取指针位置
-        if (!TryGetPointerPosition(out Vector2 screenPos))
         {
             AnimateDragReturn();
             return;

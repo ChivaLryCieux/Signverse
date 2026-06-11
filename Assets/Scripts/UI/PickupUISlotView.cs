@@ -189,7 +189,7 @@ public class PickupUISlotView : MonoBehaviour,
 
         if (wasDragging)
         {
-            owner.EndDrag();
+            owner.EndDrag(eventData.position);
         }
     }
 
