@@ -1617,19 +1617,21 @@ public class PickupUIController : MonoBehaviour
 
         PickupItemId sourceItem = equippedSlotItems[fromIndex];
 
-        // 先卸下目标槽位的旧技能（如果有）
+        // 目标槽位有技能时交换，空槽时直接移入
         if (equippedSlotOccupied[toIndex])
         {
-            PickupItemId replacedItem = equippedSlotItems[toIndex];
-            equippedSlotOccupied[toIndex] = false;
-            ItemUnequipped?.Invoke(replacedItem);
+            PickupItemId targetItem = equippedSlotItems[toIndex];
+            equippedSlotItems[fromIndex] = targetItem;
+            equippedSlotItems[toIndex] = sourceItem;
+            // occupied 状态不变，两个槽都仍然有技能
         }
-
-        // 移动技能
-        equippedSlotItems[fromIndex] = default;
-        equippedSlotOccupied[fromIndex] = false;
-        equippedSlotItems[toIndex] = sourceItem;
-        equippedSlotOccupied[toIndex] = true;
+        else
+        {
+            equippedSlotItems[fromIndex] = default;
+            equippedSlotOccupied[fromIndex] = false;
+            equippedSlotItems[toIndex] = sourceItem;
+            equippedSlotOccupied[toIndex] = true;
+        }
 
         StopDrag();
         RefreshUnlockedSlots();
@@ -1637,7 +1639,6 @@ public class PickupUIController : MonoBehaviour
         SyncBoltSpend();
         SyncLinkedSkills();
         PlaySkillLoadoutSfx(equipSuccessSfx);
-        ItemEquipped?.Invoke(sourceItem);
     }
 
     private void CancelDrag()
