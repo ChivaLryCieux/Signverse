@@ -170,19 +170,43 @@ public class PlayerCC : MonoBehaviour
 
     public bool IsJumpPressed() => CurrentPosture != Posture.Climbing &&
         (playerActions.Jump.IsPressed() || MobileInputManager.JumpHeld);
-    public bool WasJumpPressed() => CurrentPosture != Posture.Climbing &&
-        (playerActions.Jump.WasPressedThisFrame() || MobileInputManager.JumpPressed);
+    public bool WasJumpPressed()
+    {
+        if (CurrentPosture == Posture.Climbing) return false;
+        bool kb = playerActions.Jump.WasPressedThisFrame();
+        bool mobile = MobileInputManager.JumpPressed;
+        MobileInputManager.JumpPressed = false; // 消费后重置，不依赖执行顺序
+        return kb || mobile;
+    }
 
-    public bool WasJumpReleased() => CurrentPosture != Posture.Climbing &&
-        (playerActions.Jump.WasReleasedThisFrame() || MobileInputManager.JumpReleased);
+    public bool WasJumpReleased()
+    {
+        if (CurrentPosture == Posture.Climbing) return false;
+        bool kb = playerActions.Jump.WasReleasedThisFrame();
+        bool mobile = MobileInputManager.JumpReleased;
+        MobileInputManager.JumpReleased = false;
+        return kb || mobile;
+    }
 
     public bool IsDashPressed() => CurrentPosture != Posture.Climbing &&
-        (playerActions.Dash.IsPressed() || MobileInputManager.DashPressed);
-    public bool WasDashPressed() => CurrentPosture != Posture.Climbing &&
-        (playerActions.Dash.WasPressedThisFrame() || MobileInputManager.DashPressed);
+        playerActions.Dash.IsPressed();
+    public bool WasDashPressed()
+    {
+        if (CurrentPosture == Posture.Climbing) return false;
+        bool kb = playerActions.Dash.WasPressedThisFrame();
+        bool mobile = MobileInputManager.DashPressed;
+        MobileInputManager.DashPressed = false;
+        return kb || mobile;
+    }
 
     public bool IsHidePressed() => playerActions.Hide.IsPressed() || MobileInputManager.HideHeld;
-    public bool WasHidePressed() => playerActions.Hide.WasPressedThisFrame() || MobileInputManager.HidePressed;
+    public bool WasHidePressed()
+    {
+        bool kb = playerActions.Hide.WasPressedThisFrame();
+        bool mobile = MobileInputManager.HidePressed;
+        MobileInputManager.HidePressed = false;
+        return kb || mobile;
+    }
 
     public Vector3 GetFacing() => facingDirection;
     public bool IsDead => playerDeath != null && playerDeath.IsDead;

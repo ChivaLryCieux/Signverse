@@ -12,14 +12,16 @@ public class MobileInputManager : MonoBehaviour
     public static Vector2 MoveInput { get; private set; }
 
     // ── 跳跃状态机（支持 tap / hold / release）──
-    public static bool JumpPressed { get; private set; }
+    public static bool JumpPressed { get; internal set; }
     public static bool JumpHeld { get; private set; }
-    public static bool JumpReleased { get; private set; }
+    public static bool JumpReleased { get; internal set; }
     private static bool prevJumpHeld;
+    private static bool jumpPressedLatch;
+    private static bool jumpReleasedLatch;
 
     // ── 单帧触发 ──
-    public static bool DashPressed { get; private set; }
-    public static bool HidePressed { get; private set; }
+    public static bool DashPressed { get; internal set; }
+    public static bool HidePressed { get; internal set; }
     public static bool HideHeld { get; private set; }
     public static bool InteractPressed { get; private set; }
     public static bool PausePressed { get; private set; }
@@ -56,18 +58,18 @@ public class MobileInputManager : MonoBehaviour
 
     private void LateUpdate()
     {
-        // 重置单帧触发标志
-        JumpPressed = false;
-        JumpReleased = false;
-        DashPressed = false;
-        HidePressed = false;
-        InteractPressed = false;
-        PausePressed = false;
+        // 同帧 down+up 的快速点击保底：如果 Update 期间重置了但同帧事件又触发了 latch
+        if (jumpPressedLatch)
+        {
+            JumpPressed = true;
+            jumpPressedLatch = false;
+        }
 
-        // 跳跃边缘检测
-        JumpPressed = JumpHeld && !prevJumpHeld;
-        JumpReleased = !JumpHeld && prevJumpHeld;
-        prevJumpHeld = JumpHeld;
+        if (jumpReleasedLatch)
+        {
+            JumpReleased = true;
+            jumpReleasedLatch = false;
+        }
     }
 
     // ── 摇杆调用 ──
@@ -81,6 +83,19 @@ public class MobileInputManager : MonoBehaviour
 
     public static void SetJumpHeld(bool held)
     {
+        if (held && !JumpHeld)
+        {
+            // 上升沿：立即设置 pressed 标志
+            JumpPressed = true;
+            jumpPressedLatch = true; // 同帧 down+up 的保底
+        }
+        else if (!held && JumpHeld)
+        {
+            // 下降沿：立即设置 released 标志
+            JumpReleased = true;
+            jumpReleasedLatch = true;
+        }
+
         JumpHeld = held;
     }
 
