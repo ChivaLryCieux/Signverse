@@ -162,8 +162,8 @@ public class PickupCollectible : MonoBehaviour
     private bool WasInteractPressed()
     {
         return !CartoonPanelController.IsPlaying &&
-               Keyboard.current != null &&
-               Keyboard.current.eKey.wasPressedThisFrame;
+               ((Keyboard.current != null && Keyboard.current.eKey.wasPressedThisFrame)
+                || MobileInputManager.ConsumeInteractPressed());
     }
 
     private void ShowPrompt()

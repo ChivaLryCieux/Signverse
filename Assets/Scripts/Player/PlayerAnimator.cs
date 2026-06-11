@@ -57,8 +57,10 @@ public class PlayerAnimatorController : MonoBehaviour
 
     void Update()
     {
-        // 获取移动输入
-        moveInput = controls.Player.Move.ReadValue<Vector2>();
+        // 获取移动输入（键盘 + 移动端虚拟摇杆）
+        Vector2 kbMove = controls.Player.Move.ReadValue<Vector2>();
+        Vector2 mobileMove = MobileInputManager.MoveInput;
+        moveInput = Vector2.ClampMagnitude(kbMove + mobileMove, 1f);
 
         // 判断是否移动
         isRunning =

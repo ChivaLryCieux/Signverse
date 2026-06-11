@@ -240,13 +240,16 @@ public class AnimatorStateDebugger : MonoBehaviour
     // }
     void HandleInput()
     {
-        move = inputActions.Player.Move.ReadValue<Vector2>();
+        Vector2 kbMove = inputActions.Player.Move.ReadValue<Vector2>();
+        Vector2 mobileMove = MobileInputManager.MoveInput;
+        move = Vector2.ClampMagnitude(kbMove + mobileMove, 1f);
 
         jumpAxis = inputActions.Player.Jump.ReadValue<float>();
+        if (MobileInputManager.JumpHeld) jumpAxis = 1f;
 
-        dashPressed = inputActions.Player.Dash.triggered;
+        dashPressed = inputActions.Player.Dash.triggered || MobileInputManager.DashPressed;
 
-        hidePressed = inputActions.Player.Hide.triggered;
+        hidePressed = inputActions.Player.Hide.triggered || MobileInputManager.HidePressed;
     }
 
     //========================

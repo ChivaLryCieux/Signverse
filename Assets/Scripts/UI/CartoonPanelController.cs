@@ -81,7 +81,7 @@ public class CartoonPanelController : MonoBehaviour, IPointerClickHandler
             return;
         }
 
-        if (Input.GetKeyDown(KeyCode.E))
+        if (Input.GetKeyDown(KeyCode.E) || MobileInputManager.ConsumeInteractPressed())
         {
             PlayNextPicture();
         }

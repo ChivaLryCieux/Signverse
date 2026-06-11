@@ -1242,7 +1242,7 @@ public class PickupUIController : MonoBehaviour
 
     private void UpdateSelectedIconFollow(bool snapToMouse = false)
     {
-        if (!hasSelectedUnlockItem || floatingSelectedIcon == null || Mouse.current == null)
+        if (!hasSelectedUnlockItem || floatingSelectedIcon == null)
         {
             return;
         }
@@ -1252,7 +1252,7 @@ public class PickupUIController : MonoBehaviour
 
     private void UpdateFloatingIconPosition(bool snapToMouse)
     {
-        if (floatingSelectedIcon == null || Mouse.current == null)
+        if (floatingSelectedIcon == null || !TryGetPointerPosition(out Vector2 screenPosition))
         {
             return;
         }
@@ -1265,7 +1265,6 @@ public class PickupUIController : MonoBehaviour
         }
 
         Camera eventCamera = canvas.renderMode == RenderMode.ScreenSpaceOverlay ? null : canvas.worldCamera;
-        Vector2 screenPosition = Mouse.current.position.ReadValue();
         if (RectTransformUtility.ScreenPointToLocalPointInRectangle(canvasRect, screenPosition, eventCamera, out Vector2 localPosition))
         {
             if (snapToMouse || selectedIconFollowSpeedOffset <= 0f)
@@ -1281,7 +1280,7 @@ public class PickupUIController : MonoBehaviour
 
     private void CancelSelectedSkillWhenClickingElsewhere()
     {
-        if (!hasSelectedUnlockItem || Mouse.current == null || !Mouse.current.leftButton.wasReleasedThisFrame)
+        if (!hasSelectedUnlockItem || !IsPointerReleased())
         {
             return;
         }
@@ -1292,6 +1291,40 @@ public class PickupUIController : MonoBehaviour
         }
 
         CancelSelectedUnlockItem();
+    }
+
+    // ══════════════════════════════════════════════════════
+    //  统一指针输入（鼠标 + 触屏）
+    // ══════════════════════════════════════════════════════
+
+    private static bool TryGetPointerPosition(out Vector2 screenPos)
+    {
+        if (Mouse.current != null)
+        {
+            screenPos = Mouse.current.position.ReadValue();
+            return true;
+        }
+
+        if (Touchscreen.current != null && Touchscreen.current.primaryTouch.press.isPressed)
+        {
+            screenPos = Touchscreen.current.primaryTouch.position.ReadValue();
+            return true;
+        }
+
+        screenPos = Vector2.zero;
+        return false;
+    }
+
+    private static bool IsPointerDown()
+    {
+        return (Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame)
+            || (Touchscreen.current != null && Touchscreen.current.primaryTouch.press.wasPressedThisFrame);
+    }
+
+    private static bool IsPointerReleased()
+    {
+        return (Mouse.current != null && Mouse.current.leftButton.wasReleasedThisFrame)
+            || (Touchscreen.current != null && Touchscreen.current.primaryTouch.press.wasReleasedThisFrame);
     }
 
     // ══════════════════════════════════════════════════════
@@ -1410,10 +1443,9 @@ public class PickupUIController : MonoBehaviour
 
         floatingSelectedIcon.sizeDelta = iconSize;
 
-        // 立即将图标放置到鼠标位置，避免在屏幕中心闪一帧
-        if (Mouse.current != null)
+        // 立即将图标放置到指针位置，避免在屏幕中心闪一帧
+        if (TryGetPointerPosition(out Vector2 screenPos))
         {
-            Vector2 screenPos = Mouse.current.position.ReadValue();
             Camera eventCamera = canvas.renderMode == RenderMode.ScreenSpaceOverlay ? null : canvas.worldCamera;
             if (RectTransformUtility.ScreenPointToLocalPointInRectangle(canvasRect, screenPos, eventCamera, out Vector2 localPos))
             {
@@ -1452,14 +1484,12 @@ public class PickupUIController : MonoBehaviour
             return;
         }
 
-        // 获取鼠标位置
-        if (Mouse.current == null)
+        // 获取指针位置
+        if (!TryGetPointerPosition(out Vector2 screenPos))
         {
             AnimateDragReturn();
             return;
         }
-
-        Vector2 screenPos = Mouse.current.position.ReadValue();
 
         if (dragSource == DragSource.UnlockSlot)
         {

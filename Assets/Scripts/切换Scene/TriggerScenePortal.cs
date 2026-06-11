@@ -28,7 +28,7 @@ public class TriggerScenePortal : MonoBehaviour
         }
 
         // 按下 E 切换场景
-        if ( Input.GetKeyDown(KeyCode.E) || Keyboard.current.eKey.wasPressedThisFrame)
+        if ( Input.GetKeyDown(KeyCode.E) || (Keyboard.current != null && Keyboard.current.eKey.wasPressedThisFrame) || MobileInputManager.ConsumeInteractPressed())
         {
             ChangeScene();
         }
