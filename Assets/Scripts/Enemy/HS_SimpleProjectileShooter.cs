@@ -23,7 +23,7 @@ public class HS_SimpleProjectileShooter : MonoBehaviour
     private float fireTimer = 0f;
 
     [Header("测试按键")]
-    public KeyCode testKey = KeyCode.I; // Inspector里配置
+    public Key testKey = Key.I; // Inspector里配置（新输入系统 Key 枚举）
 
     [Header("相机抖动动画")]
     public Animation camAnim;
@@ -49,7 +49,7 @@ public class HS_SimpleProjectileShooter : MonoBehaviour
         fireTimer -= Time.deltaTime;
 
         // 测试输入（Inspector可选键）
-        if (Input.GetKeyDown(testKey))
+        if (Keyboard.current != null && Keyboard.current[testKey].wasPressedThisFrame)
         {
             fire = true;
         }

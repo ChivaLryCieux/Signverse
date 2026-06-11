@@ -46,7 +46,7 @@ public class DoorPickup : MonoBehaviour
 
     void OnTriggerStay(Collider other)
     {
-        if (Input.GetKeyDown(KeyCode.E) || (Keyboard.current != null && Keyboard.current.eKey.wasPressedThisFrame) || MobileInputManager.ConsumeInteractPressed())
+        if ((Keyboard.current != null && Keyboard.current.eKey.wasPressedThisFrame) || MobileInputManager.ConsumeInteractPressed())
         {
             
             currentPlayer.hasDoorPickup = true;
