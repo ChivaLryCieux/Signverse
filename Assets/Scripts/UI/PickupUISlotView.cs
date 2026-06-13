@@ -164,10 +164,12 @@ public class PickupUISlotView : MonoBehaviour,
         if (role == SlotRole.Unlock && hasItem)
         {
             owner.BeginDragFromUnlockSlot(itemId, sourcePos);
+            PlayClickSfx();
         }
         else if (role == SlotRole.Equipped && hasItem && owner.IsEquippedSlotUnlocked(equippedIndex))
         {
             owner.BeginDragFromEquippedSlot(equippedIndex, sourcePos);
+            PlayClickSfx();
         }
         else
         {
@@ -310,5 +312,26 @@ public class PickupUISlotView : MonoBehaviour,
         {
             highlight.SetActive(visible);
         }
+    }
+
+    private void PlayClickSfx()
+    {
+        if (audioSource == null)
+        {
+            return;
+        }
+
+        if (clickSFXList == null || clickSFXList.Count == 0)
+        {
+            return;
+        }
+
+        AudioClip clip = clickSFXList[Random.Range(0, clickSFXList.Count)];
+        if (clip == null)
+        {
+            return;
+        }
+
+        audioSource.PlayOneShot(clip);
     }
 }
