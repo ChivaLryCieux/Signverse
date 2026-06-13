@@ -1916,6 +1916,12 @@ public class PickupUIController : MonoBehaviour
         selectingMimicTarget = false;
         hasSelectedUnlockItem = false;
         StopSelectedIconFollow();
+        
+         // ⭐⭐⭐ 关键修复：退出模仿时停止音效
+        if (constantSoundAudioSource != null)
+        {
+            constantSoundAudioSource.Stop();
+        }
 
         ResolveBoltPanel();
         if (boltPanel != null)
