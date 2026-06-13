@@ -209,6 +209,16 @@ public class PickupUISlotView : MonoBehaviour,
             return;
         }
 
+        // 模仿目标选择状态：左键点击直接确认目标（纯点击路径）
+        if (eventData.button == PointerEventData.InputButton.Left && role == SlotRole.Unlock && hasItem)
+        {
+            if (owner.TryCompleteMimicTargetSelection(itemId))
+            {
+                wasDragging = false;
+                return;
+            }
+        }
+
         // 右键打开详情面板
         if (eventData.button == PointerEventData.InputButton.Right)
         {

@@ -102,6 +102,7 @@ public class PickupUIController : MonoBehaviour
     private readonly List<SkillBase> appliedLinkedSkills = new List<SkillBase>();
     private InputAction toggleHudAction;
     private InputAction closeDetailAction;
+    private InputAction mimicAction;
     private bool isHudVisible = true;
     private bool isDetailPanelOpen;
     private PickupItemId currentDetailItem;
@@ -145,6 +146,7 @@ public class PickupUIController : MonoBehaviour
         BuildEntries();
         InitializeHudToggleInput();
         InitializeDetailInput();
+        InitializeMimicInput();
         ResolveHudPanels();
         ResolveDetailPanel();
         ResolveWarnPanel();
@@ -172,6 +174,11 @@ public class PickupUIController : MonoBehaviour
         {
             closeDetailAction.Enable();
         }
+
+        if (mimicAction != null)
+        {
+            mimicAction.Enable();
+        }
     }
 
     private void OnDisable()
@@ -184,6 +191,11 @@ public class PickupUIController : MonoBehaviour
         if (closeDetailAction != null)
         {
             closeDetailAction.Disable();
+        }
+
+        if (mimicAction != null)
+        {
+            mimicAction.Disable();
         }
     }
 
@@ -203,6 +215,13 @@ public class PickupUIController : MonoBehaviour
             closeDetailAction.performed -= OnCloseDetailPerformed;
             closeDetailAction.Dispose();
             closeDetailAction = null;
+        }
+
+        if (mimicAction != null)
+        {
+            mimicAction.performed -= OnMimicTogglePerformed;
+            mimicAction.Dispose();
+            mimicAction = null;
         }
 
         if (Instance == this)
@@ -315,27 +334,9 @@ public class PickupUIController : MonoBehaviour
             return;
         }
 
-        int rightSideIndex = GetRightSideIndex(entry);
-        if (IsMimicIndex(rightSideIndex))
+        // 模仿者的进入/退出模仿已改为 M 键；点击模仿者本体不再切换状态
+        if (IsMimicIndex(GetRightSideIndex(entry)))
         {
-            if (clickCount >= 2 && hasMimicTarget)
-            {
-                if (!CanModifySkillLoadout())
-                {
-                    return;
-                }
-
-                ClearMimicTarget();
-                PlayMimicSfx(mimicExitSfx);
-                return;
-            }
-
-            if (!hasMimicTarget)
-            {
-                BeginMimicTargetSelection();
-                return;
-            }
-
             return;
         }
 
@@ -346,6 +347,31 @@ public class PickupUIController : MonoBehaviour
         }
 
         // 技能装卸改为拖动操作，点击不再触发装备
+    }
+
+    /// <summary>
+    /// 模仿目标选择状态下，左键点击某个解锁槽：直接确认目标。
+    /// 返回 true 表示已经处理（无论成功还是失败），调用方应停止后续逻辑。
+    /// </summary>
+    public bool TryCompleteMimicTargetSelection(PickupItemId id)
+    {
+        if (!selectingMimicTarget)
+        {
+            return false;
+        }
+
+        if (!entryById.TryGetValue(id, out PickupUiEntry entry) || entry == null)
+        {
+            return false;
+        }
+
+        if (IsMimicIndex(GetRightSideIndex(entry)))
+        {
+            return false;
+        }
+
+        CompleteMimicTargetSelection(entry);
+        return true;
     }
 
     public void SelectForEquip(PickupItemId id)
@@ -360,9 +386,9 @@ public class PickupUIController : MonoBehaviour
             return;
         }
 
-        if (IsMimicIndex(GetRightSideIndex(entry)) && !hasMimicTarget)
+        // 模仿者的进入模仿已改为 M 键；点击模仿者不再触发
+        if (IsMimicIndex(GetRightSideIndex(entry)))
         {
-            BeginMimicTargetSelection();
             return;
         }
 
@@ -399,18 +425,7 @@ public class PickupUIController : MonoBehaviour
             return;
         }
 
-        if (clickCount >= 2 && equippedSlotOccupied[equippedIndex] && IsMimicItem(equippedSlotItems[equippedIndex]) && hasMimicTarget)
-        {
-            if (!CanModifySkillLoadout())
-            {
-                return;
-            }
-
-            ClearMimicTarget();
-            PlayMimicSfx(mimicExitSfx);
-            return;
-        }
-
+        // 模仿者的退出模仿已改为 M 键，且装备到左上角时 M 键无效
         if (hasSelectedUnlockItem)
         {
             if (!EquipSelectedAt(equippedIndex))
@@ -623,6 +638,17 @@ public class PickupUIController : MonoBehaviour
         closeDetailAction.performed += OnCloseDetailPerformed;
     }
 
+    private void InitializeMimicInput()
+    {
+        if (mimicAction != null)
+        {
+            return;
+        }
+
+        mimicAction = new InputAction("ToggleMimicTarget", InputActionType.Button, "<Keyboard>/m");
+        mimicAction.performed += OnMimicTogglePerformed;
+    }
+
     private void OnToggleHudPerformed(InputAction.CallbackContext context)
     {
         if (context.performed)
@@ -637,6 +663,56 @@ public class PickupUIController : MonoBehaviour
         {
             HideDetailPanel();
         }
+    }
+
+    private void OnMimicTogglePerformed(InputAction.CallbackContext context)
+    {
+        if (!context.performed)
+        {
+            return;
+        }
+
+        if (!TryGetMimicItemId(out PickupItemId mimicId) || !unlockedItems.Contains(mimicId))
+        {
+            return;
+        }
+
+        // 模仿者装备到左上角时，M 键无效；必须先卸下回到右上角
+        if (IsEquipped(mimicId))
+        {
+            return;
+        }
+
+        if (selectingMimicTarget)
+        {
+            // 正在选择目标但没点中 → 取消选择（不要求在 Nature/Water 地面上，纯 UI 状态重置）
+            ClearMimicTarget(requireGround: false);
+        }
+        else if (hasMimicTarget)
+        {
+            // 已在模仿（且未装备）→ 退出模仿
+            ClearMimicTarget();
+        }
+        else
+        {
+            // 未模仿 → 进入目标选择
+            BeginMimicTargetSelection();
+        }
+    }
+
+    private bool TryGetMimicItemId(out PickupItemId mimicId)
+    {
+        foreach (PickupUiEntry entry in entryById.Values)
+        {
+            if (entry != null && IsMimicIndex(GetRightSideIndex(entry)))
+            {
+                mimicId = entry.id;
+                return true;
+            }
+        }
+
+        mimicId = default(PickupItemId);
+        return false;
     }
 
     private void ResolveHudPanels()
@@ -1343,7 +1419,17 @@ public class PickupUIController : MonoBehaviour
             return;
         }
 
-        if (IsMimicIndex(GetRightSideIndex(entry)))
+        bool isMimic = IsMimicIndex(GetRightSideIndex(entry));
+
+        // 模仿目标选择状态：把"按下 + 微移"识别为点击（避免和拖拽冲突）
+        if (selectingMimicTarget)
+        {
+            CompleteMimicTargetSelection(entry);
+            return;
+        }
+
+        // 模仿者在未模仿状态下不能拖动；成功模仿后变成目标技能，可以像其他技能一样装卸
+        if (isMimic && !hasMimicTarget)
         {
             return;
         }
@@ -1759,6 +1845,11 @@ public class PickupUIController : MonoBehaviour
 
     private void BeginMimicTargetSelection()
     {
+        if (selectingMimicTarget)
+        {
+            return;
+        }
+
         hasSelectedUnlockItem = false;
         StopSelectedIconFollow();
         selectingMimicTarget = true;
@@ -1812,9 +1903,9 @@ public class PickupUIController : MonoBehaviour
         SyncLinkedSkills();
     }
 
-    private void ClearMimicTarget()
+    private void ClearMimicTarget(bool requireGround = true)
     {
-        if (!CanModifySkillLoadout())
+        if (requireGround && !CanModifySkillLoadout())
         {
             return;
         }
