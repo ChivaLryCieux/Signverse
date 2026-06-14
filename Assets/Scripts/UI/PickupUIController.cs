@@ -1407,6 +1407,32 @@ public class PickupUIController : MonoBehaviour
     //  拖动系统
     // ══════════════════════════════════════════════════════
 
+    private void RestorePreviousDragSource()
+    {
+        if (dragSource == DragSource.None)
+        {
+            return;
+        }
+
+        if (isReturningDrag)
+        {
+            // 回弹动画被打断，直接恢复源槽位图标
+            if (dragSource == DragSource.UnlockSlot)
+            {
+                RefreshUnlockedSlots();
+            }
+            else if (dragSource == DragSource.EquippedSlot && IsValidEquippedIndex(dragSourceEquippedIndex))
+            {
+                equippedSlots[dragSourceEquippedIndex].SetIconVisualVisible(true);
+            }
+        }
+        else
+        {
+            // 拖拽正在进行中被打断（理论上不应该发生，但保险起见）
+            CancelDrag();
+        }
+    }
+
     public bool BeginDragFromUnlockSlot(PickupItemId id, Vector3 sourceScreenPosition)
     {
         if (!unlockedItems.Contains(id) || IsEquipped(id))
@@ -1433,6 +1459,8 @@ public class PickupUIController : MonoBehaviour
         {
             return false;
         }
+
+        RestorePreviousDragSource();
 
         dragSource = DragSource.UnlockSlot;
         dragSourceItem = id;
@@ -1465,6 +1493,8 @@ public class PickupUIController : MonoBehaviour
         {
             return false;
         }
+
+        RestorePreviousDragSource();
 
         dragSource = DragSource.EquippedSlot;
         dragSourceItem = itemId;
