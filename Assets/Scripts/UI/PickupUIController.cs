@@ -1407,16 +1407,16 @@ public class PickupUIController : MonoBehaviour
     //  拖动系统
     // ══════════════════════════════════════════════════════
 
-    public void BeginDragFromUnlockSlot(PickupItemId id, Vector3 sourceScreenPosition)
+    public bool BeginDragFromUnlockSlot(PickupItemId id, Vector3 sourceScreenPosition)
     {
         if (!unlockedItems.Contains(id) || IsEquipped(id))
         {
-            return;
+            return false;
         }
 
         if (!entryById.TryGetValue(id, out PickupUiEntry entry) || entry == null)
         {
-            return;
+            return false;
         }
 
         bool isMimic = IsMimicIndex(GetRightSideIndex(entry));
@@ -1425,13 +1425,13 @@ public class PickupUIController : MonoBehaviour
         if (selectingMimicTarget)
         {
             CompleteMimicTargetSelection(entry);
-            return;
+            return false;
         }
 
         // 模仿者在未模仿状态下不能拖动；成功模仿后变成目标技能，可以像其他技能一样装卸
         if (isMimic && !hasMimicTarget)
         {
-            return;
+            return false;
         }
 
         dragSource = DragSource.UnlockSlot;
@@ -1445,24 +1445,25 @@ public class PickupUIController : MonoBehaviour
         PreviewBoltCost(entry);
         entry.unlockSlot.SetIconVisualVisible(false);
         StartDragFloatingIcon(entry.unlockSlot);
+        return true;
     }
 
-    public void BeginDragFromEquippedSlot(int equippedIndex, Vector3 sourceScreenPosition)
+    public bool BeginDragFromEquippedSlot(int equippedIndex, Vector3 sourceScreenPosition)
     {
         if (!IsValidEquippedIndex(equippedIndex) || !equippedSlotOccupied[equippedIndex])
         {
-            return;
+            return false;
         }
 
         if (!IsEquippedSlotUnlocked(equippedIndex))
         {
-            return;
+            return false;
         }
 
         PickupItemId itemId = equippedSlotItems[equippedIndex];
         if (!entryById.TryGetValue(itemId, out PickupUiEntry entry) || entry == null)
         {
-            return;
+            return false;
         }
 
         dragSource = DragSource.EquippedSlot;
@@ -1473,6 +1474,7 @@ public class PickupUIController : MonoBehaviour
 
         equippedSlots[equippedIndex].SetIconVisualVisible(false);
         StartDragFloatingIcon(equippedSlots[equippedIndex]);
+        return true;
     }
 
     private void StartDragFloatingIcon(PickupUISlotView sourceSlot)
@@ -1544,6 +1546,14 @@ public class PickupUIController : MonoBehaviour
     {
         if (dragSource == DragSource.None || isReturningDrag)
         {
+            return;
+        }
+
+        // 安全网：鼠标已松开但 OnEndDrag 未触发（指针离开窗口、Canvas 被遮挡等），
+        // 自动触发回弹动画，防止浮动图标永远跟随鼠标
+        if (IsPointerReleased())
+        {
+            AnimateDragReturn();
             return;
         }
 

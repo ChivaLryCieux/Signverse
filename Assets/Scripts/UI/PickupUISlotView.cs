@@ -157,19 +157,31 @@ public class PickupUISlotView : MonoBehaviour,
             return;
         }
 
-        wasDragging = true;
-
         Vector3 sourcePos = GetIconScreenPosition();
 
         if (role == SlotRole.Unlock && hasItem)
         {
-            owner.BeginDragFromUnlockSlot(itemId, sourcePos);
-            PlayClickSfx();
+            if (owner.BeginDragFromUnlockSlot(itemId, sourcePos))
+            {
+                wasDragging = true;
+                PlayClickSfx();
+            }
+            else
+            {
+                wasDragging = false;
+            }
         }
         else if (role == SlotRole.Equipped && hasItem && owner.IsEquippedSlotUnlocked(equippedIndex))
         {
-            owner.BeginDragFromEquippedSlot(equippedIndex, sourcePos);
-            PlayClickSfx();
+            if (owner.BeginDragFromEquippedSlot(equippedIndex, sourcePos))
+            {
+                wasDragging = true;
+                PlayClickSfx();
+            }
+            else
+            {
+                wasDragging = false;
+            }
         }
         else
         {
