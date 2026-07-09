@@ -46,7 +46,7 @@ public class ClimbGroundInvincibility : MonoBehaviour
 
         Debug.DrawRay(t.position, Vector3.down * rayDistance, hitGround ? Color.green : Color.red);
 
-        // ⭐关键：只在“第一次接触到地面”时触发
+        // 只在“第一次接触到地面”时触发
         if (hitGround)
         {
             controller.isClimbInvincible = true;

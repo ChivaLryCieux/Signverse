@@ -74,12 +74,12 @@ public class InteractionPanelTrigger : MonoBehaviour
             return;
         }
 
-        // ⭐E键：关闭详情
+        // E键：关闭详情
         if (panelController.IsDetailOpenFor(this))
         {
             panelController.HideFromTrigger(this);
 
-            // ⭐同步关闭
+            // 同步关闭
             if (extraObject != null)
             {
                 extraObject.SetActive(false);
@@ -89,10 +89,10 @@ public class InteractionPanelTrigger : MonoBehaviour
         }
 
 
-        // ⭐E键：打开详情
+        // E键：打开详情
         panelController.ShowDetail(this, background, bodyText);
 
-        // ⭐同步关闭（关键：交互成功瞬间）
+        // 同步关闭（交互成功瞬间）
         if (extraObject != null)
         {
             extraObject.SetActive(false);
@@ -119,7 +119,7 @@ public class InteractionPanelTrigger : MonoBehaviour
 
         extraObject = GetRecordBG();
 
-        // ⭐进入时显示
+        // 进入时显示
         if (extraObject != null)
         {
             extraObject.SetActive(true);
@@ -141,7 +141,7 @@ public class InteractionPanelTrigger : MonoBehaviour
         }
 
         extraObject = GetRecordBG();
-        // ⭐离开时关闭
+        // 离开时关闭
         if (extraObject != null)
         {
             extraObject.SetActive(false);

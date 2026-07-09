@@ -93,8 +93,6 @@ public class PickupUIController : MonoBehaviour
     private readonly HashSet<PickupItemId> unlockedItems = new HashSet<PickupItemId>();
     private PickupItemId[] equippedSlotItems = Array.Empty<PickupItemId>();
     private bool[] equippedSlotOccupied = Array.Empty<bool>();
-    private bool hasSelectedUnlockItem;
-    private PickupItemId selectedUnlockItem;
     private bool selectingMimicTarget;
     private bool hasMimicTarget;
     private int mimicTargetRightSideIndex;
@@ -111,9 +109,6 @@ public class PickupUIController : MonoBehaviour
     private float warnPanelTimer;
     private RectTransform floatingSelectedIcon;
     private Image floatingSelectedIconImage;
-    private PickupUISlotView selectedUnlockSlotView;
-    private int selectionStartedFrame = -1;
-    private int lastSkillUiClickFrame = -1;
 
     // ── 拖动状态 ──
     private enum DragSource { None, UnlockSlot, EquippedSlot }
@@ -123,10 +118,9 @@ public class PickupUIController : MonoBehaviour
     private Vector3 dragReturnPosition;
     private bool isReturningDrag;
 
-    // Lry的修改：装备槽组合后真正生效的 SkillBase 快照。它会同步到 PlayerCC.equippedSkills，供动画层读取当前 loadout。
+    // 装备槽组合后真正生效的 SkillBase 快照。它会同步到 PlayerCC.equippedSkills，供动画层读取当前 loadout。
     private readonly List<SkillBase> equippedSkillSnapshot = new List<SkillBase>();
 
-    public bool HasSelectedUnlockItem => hasSelectedUnlockItem;
     public bool IsHudVisible => isHudVisible;
     public PickupItemId CurrentDetailItem => currentDetailItem;
     public static bool BlocksPauseEscape => Instance != null &&
@@ -309,44 +303,9 @@ public class PickupUIController : MonoBehaviour
 
     private void Update()
     {
-        UpdateSelectedIconFollow();
         UpdateDrag();
         TickDragReturn();
         TickWarnPanel();
-    }
-
-    private void LateUpdate()
-    {
-        CancelSelectedSkillWhenClickingElsewhere();
-    }
-
-    public void OnUnlockSlotClicked(PickupItemId id, int clickCount)
-    {
-        lastSkillUiClickFrame = Time.frameCount;
-
-        if (!unlockedItems.Contains(id) || IsEquipped(id))
-        {
-            return;
-        }
-
-        if (!entryById.TryGetValue(id, out PickupUiEntry entry))
-        {
-            return;
-        }
-
-        // 模仿者的进入/退出模仿已改为 M 键；点击模仿者本体不再切换状态
-        if (IsMimicIndex(GetRightSideIndex(entry)))
-        {
-            return;
-        }
-
-        if (selectingMimicTarget)
-        {
-            CompleteMimicTargetSelection(entry);
-            return;
-        }
-
-        // 技能装卸改为拖动操作，点击不再触发装备
     }
 
     /// <summary>
@@ -371,133 +330,6 @@ public class PickupUIController : MonoBehaviour
         }
 
         CompleteMimicTargetSelection(entry);
-        return true;
-    }
-
-    public void SelectForEquip(PickupItemId id)
-    {
-        if (!unlockedItems.Contains(id) || IsEquipped(id))
-        {
-            return;
-        }
-
-        if (!entryById.TryGetValue(id, out PickupUiEntry entry))
-        {
-            return;
-        }
-
-        // 模仿者的进入模仿已改为 M 键；点击模仿者不再触发
-        if (IsMimicIndex(GetRightSideIndex(entry)))
-        {
-            return;
-        }
-
-        if (hasSelectedUnlockItem && selectedUnlockItem.Equals(id))
-        {
-            ClearSelectedUnlockItem();
-            return;
-        }
-
-        PreviewBoltCost(entry);
-
-        hasSelectedUnlockItem = true;
-        selectedUnlockItem = id;
-        selectingMimicTarget = false;
-        PlaySkillLoadoutSfx(unlockedSkillSelectSfx);
-        RefreshUnlockedSlots();
-        StartSelectedIconFollow(entry);
-    }
-
-    public void OnEquippedSlotClicked(int equippedIndex, int clickCount = 1)
-    {
-        lastSkillUiClickFrame = Time.frameCount;
-
-        if (!IsValidEquippedIndex(equippedIndex))
-        {
-            CancelSelectedUnlockItem();
-            return;
-        }
-
-        if (!IsEquippedSlotUnlocked(equippedIndex))
-        {
-            Debug.Log("左上角第 5 个技能槽尚未解锁，需要先拾取对应道具。", this);
-            CancelSelectedUnlockItem();
-            return;
-        }
-
-        // 模仿者的退出模仿已改为 M 键，且装备到左上角时 M 键无效
-        if (hasSelectedUnlockItem)
-        {
-            if (!EquipSelectedAt(equippedIndex))
-            {
-                CancelSelectedUnlockItem();
-            }
-
-            return;
-        }
-
-        // 技能装卸改为拖动操作，点击不再触发卸下
-    }
-
-    private bool EquipSelectedAt(int equippedIndex)
-    {
-        if (!hasSelectedUnlockItem || !IsValidEquippedIndex(equippedIndex))
-        {
-            return false;
-        }
-
-        if (!IsEquippedSlotUnlocked(equippedIndex))
-        {
-            Debug.Log("左上角第 5 个技能槽尚未解锁，需要先拾取对应道具。", this);
-            return false;
-        }
-
-        if (!CanModifySkillLoadout())
-        {
-            return false;
-        }
-
-        PickupItemId itemToEquip = selectedUnlockItem;
-        if (!unlockedItems.Contains(itemToEquip) || IsEquipped(itemToEquip))
-        {
-            ClearSelectedUnlockItem();
-            return false;
-        }
-
-        if (!CanEquipItemAtSlot(itemToEquip, equippedIndex))
-        {
-            Debug.Log("左上角第 5 个技能槽只能装备 10、20、30、40 系列的基础技能。", this);
-            return false;
-        }
-
-        bool replacedExistingItem = equippedSlotOccupied[equippedIndex];
-        PickupItemId replacedItem = replacedExistingItem ? equippedSlotItems[equippedIndex] : default(PickupItemId);
-        int replacedCost = replacedExistingItem ? GetEquippedItemBoltCost(replacedItem) : 0;
-        int itemCost = GetEquippedItemBoltCost(itemToEquip);
-
-        ResolveBoltPanel();
-        if (boltPanel != null && itemCost > boltPanel.AvailableCount + replacedCost)
-        {
-            boltPanel.ShowInsufficient();
-            RefreshUnlockedSlots();
-            return false;
-        }
-
-        equippedSlotItems[equippedIndex] = itemToEquip;
-        equippedSlotOccupied[equippedIndex] = true;
-
-        ClearSelectedUnlockItem();
-        RefreshEquippedSlots();
-        SyncBoltSpend();
-        SyncLinkedSkills();
-        PlaySkillLoadoutSfx(equipSuccessSfx);
-
-        if (replacedExistingItem)
-        {
-            ItemUnequipped?.Invoke(replacedItem);
-        }
-
-        ItemEquipped?.Invoke(itemToEquip);
         return true;
     }
 
@@ -871,12 +703,7 @@ public class PickupUIController : MonoBehaviour
             if (visible)
             {
                 entry.unlockSlot.InitializeUnlockSlot(this, entry.id, GetUnlockIcon(entry));
-                bool selected = hasSelectedUnlockItem && selectedUnlockItem.Equals(entry.id);
-                if (selectingMimicTarget && IsMimicIndex(GetRightSideIndex(entry)))
-                {
-                    selected = true;
-                }
-
+                bool selected = selectingMimicTarget && IsMimicIndex(GetRightSideIndex(entry));
                 entry.unlockSlot.SetSelected(selected);
             }
         }
@@ -943,7 +770,7 @@ public class PickupUIController : MonoBehaviour
             player.unlockedSkills = new List<SkillBase>();
         }
 
-        // Lry的修改：每次装备栏变化时重建装备技能快照，保证 PlayerCC.equippedSkills 与 UI 装备槽保持一致。
+        // 每次装备栏变化时重建装备技能快照，保证 PlayerCC.equippedSkills 与 UI 装备槽保持一致。
         equippedSkillSnapshot.Clear();
 
         if (removePreviousLinkedSkills)
@@ -964,7 +791,7 @@ public class PickupUIController : MonoBehaviour
         AddLinkedSkillForPair(3, 4);
         AddStandaloneSkillForSlot(5);
 
-        // Lry的修改：把装备槽推导出的技能同步到 PlayerCC。动画脚本不再需要读取 UI 私有状态，只读取 PlayerCC.equippedSkills。
+        // 把装备槽推导出的技能同步到 PlayerCC。动画脚本不再需要读取 UI 私有状态，只读取 PlayerCC.equippedSkills。
         player.SetEquippedSkills(equippedSkillSnapshot);
     }
 
@@ -1006,7 +833,7 @@ public class PickupUIController : MonoBehaviour
             appliedLinkedSkills.Add(skill);
         }
 
-        // Lry的修改：无论该技能之前是否已在 unlockedSkills 中，都应该进入当前装备快照；unlocked 与 equipped 是两个不同生命周期的集合。
+        // 无论该技能之前是否已在 unlockedSkills 中，都应该进入当前装备快照；unlocked 与 equipped 是两个不同生命周期的集合。
         if (!equippedSkillSnapshot.Contains(skill))
         {
             equippedSkillSnapshot.Add(skill);
@@ -1230,100 +1057,14 @@ public class PickupUIController : MonoBehaviour
         }
     }
 
-    private void ClearSelectedUnlockItem()
-    {
-        hasSelectedUnlockItem = false;
-        StopSelectedIconFollow();
-        ResolveBoltPanel();
-        if (boltPanel != null)
-        {
-            boltPanel.ClearPreview();
-        }
-
-        RefreshUnlockedSlots();
-    }
-
-    private void CancelSelectedUnlockItem()
-    {
-        if (!hasSelectedUnlockItem)
-        {
-            return;
-        }
-
-        ClearSelectedUnlockItem();
-    }
-
-    private void StartSelectedIconFollow(PickupUiEntry entry)
-    {
-        StopSelectedIconFollow();
-
-        Sprite followSprite = GetUnlockIcon(entry);
-        if (entry == null || entry.unlockSlot == null || followSprite == null)
-        {
-            return;
-        }
-
-        Canvas canvas = GetComponentInParent<Canvas>();
-        if (canvas == null)
-        {
-            return;
-        }
-
-        RectTransform canvasRect = canvas.transform as RectTransform;
-        if (canvasRect == null)
-        {
-            return;
-        }
-
-        GameObject followObject = new GameObject("Selected Skill Follow Icon", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
-        followObject.transform.SetParent(canvas.transform, false);
-        followObject.transform.SetAsLastSibling();
-
-        floatingSelectedIcon = followObject.GetComponent<RectTransform>();
-        floatingSelectedIconImage = followObject.GetComponent<Image>();
-        floatingSelectedIconImage.sprite = followSprite;
-        floatingSelectedIconImage.raycastTarget = false;
-        floatingSelectedIconImage.preserveAspect = true;
-
-        Vector2 iconSize = entry.unlockSlot.GetIconSize();
-        if (iconSize.x <= 0f || iconSize.y <= 0f)
-        {
-            iconSize = new Vector2(64f, 64f);
-        }
-
-        floatingSelectedIcon.sizeDelta = iconSize;
-        selectedUnlockSlotView = entry.unlockSlot;
-        selectedUnlockSlotView.SetIconVisualVisible(false);
-        selectionStartedFrame = Time.frameCount;
-        UpdateSelectedIconFollow(true);
-    }
-
     private void StopSelectedIconFollow()
     {
-        if (selectedUnlockSlotView != null)
-        {
-            selectedUnlockSlotView.SetIconVisualVisible(true);
-            selectedUnlockSlotView = null;
-        }
-
         if (floatingSelectedIcon != null)
         {
             Destroy(floatingSelectedIcon.gameObject);
             floatingSelectedIcon = null;
             floatingSelectedIconImage = null;
         }
-
-        selectionStartedFrame = -1;
-    }
-
-    private void UpdateSelectedIconFollow(bool snapToMouse = false)
-    {
-        if (!hasSelectedUnlockItem || floatingSelectedIcon == null)
-        {
-            return;
-        }
-
-        UpdateFloatingIconPosition(snapToMouse);
     }
 
     private void UpdateFloatingIconPosition(bool snapToMouse)
@@ -1352,21 +1093,6 @@ public class PickupUIController : MonoBehaviour
             float followT = 1f - Mathf.Exp(-selectedIconFollowSpeedOffset * Time.unscaledDeltaTime);
             floatingSelectedIcon.anchoredPosition = Vector2.Lerp(floatingSelectedIcon.anchoredPosition, localPosition, followT);
         }
-    }
-
-    private void CancelSelectedSkillWhenClickingElsewhere()
-    {
-        if (!hasSelectedUnlockItem || !IsPointerReleased())
-        {
-            return;
-        }
-
-        if (Time.frameCount <= selectionStartedFrame || lastSkillUiClickFrame == Time.frameCount)
-        {
-            return;
-        }
-
-        CancelSelectedUnlockItem();
     }
 
     // ══════════════════════════════════════════════════════
@@ -1468,7 +1194,6 @@ public class PickupUIController : MonoBehaviour
         dragReturnPosition = sourceScreenPosition;
         isReturningDrag = false;
 
-        hasSelectedUnlockItem = false;
         StopSelectedIconFollow();
         PreviewBoltCost(entry);
         entry.unlockSlot.SetIconVisualVisible(false);
@@ -1890,7 +1615,6 @@ public class PickupUIController : MonoBehaviour
             return;
         }
 
-        hasSelectedUnlockItem = false;
         StopSelectedIconFollow();
         selectingMimicTarget = true;
         ResolveBoltPanel();
@@ -1929,7 +1653,6 @@ public class PickupUIController : MonoBehaviour
         mimicTargetComboCode = targetEntry.comboCode;
         hasMimicTarget = true;
         selectingMimicTarget = false;
-        hasSelectedUnlockItem = false;
 
         PlayMimicSfx(mimicSuccessSfx);
         if (constantSoundAudioSource != null)
@@ -1954,10 +1677,9 @@ public class PickupUIController : MonoBehaviour
         mimicTargetRightSideIndex = 0;
         mimicTargetComboCode = null;
         selectingMimicTarget = false;
-        hasSelectedUnlockItem = false;
         StopSelectedIconFollow();
-        
-         // ⭐⭐⭐ 关键修复：退出模仿时停止音效
+
+        // 退出模仿时停止音效
         if (constantSoundAudioSource != null)
         {
             constantSoundAudioSource.Stop();
