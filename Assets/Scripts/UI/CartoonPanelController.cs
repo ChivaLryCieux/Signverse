@@ -55,7 +55,14 @@ public class CartoonPanelController : MonoBehaviour, IPointerClickHandler
         CachePictureTargetAlphas();
         SetupStartButton();
 
-        if (playOnStart)
+        // 继续游戏时不播放开场漫画（只有新游戏/首次进入才播放）
+        bool shouldPlay = playOnStart;
+        if (SaveManager.Instance != null && SaveManager.Instance.PendingMode == SaveManager.LoadMode.Continue)
+        {
+            shouldPlay = false;
+        }
+
+        if (shouldPlay)
         {
             Show();
         }

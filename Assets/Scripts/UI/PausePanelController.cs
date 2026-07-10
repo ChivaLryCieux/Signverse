@@ -18,7 +18,6 @@ public class PausePanelController : MonoBehaviour
 
     [Header("Actions")]
     [SerializeField] private PlayerDeath playerDeath;
-    [SerializeField] private string mainMenuSceneName = "开始界面";
 
     [Header("Audio")]
     [SerializeField] private CanvasAudio canvasAudio;
@@ -204,16 +203,10 @@ public class PausePanelController : MonoBehaviour
 
     public void LoadMainMenuScene()
     {
-        if (string.IsNullOrWhiteSpace(mainMenuSceneName))
-        {
-            Debug.LogWarning("PausePanelController 没有设置主菜单 Scene 名称。", this);
-            return;
-        }
-
         RestoreTimeScaleBeforeAction();
         activePanel = null;
         SaveManager.Instance?.CaptureAndSave();
-        SceneManager.LoadScene(mainMenuSceneName);
+        SceneManager.LoadScene("Assets/Scenes/主scene/0开始界面.unity");
     }
 
     private void OnDestroy()

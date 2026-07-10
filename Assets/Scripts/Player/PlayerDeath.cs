@@ -85,6 +85,14 @@ public class PlayerDeath : MonoBehaviour
         }
 
         transform.position = new Vector3(position.x, position.y, 0f);
+
+        if (characterController != null)
+        {
+            characterController.enabled = true;
+            // 强制 CharacterController 同步到新的 transform 位置，否则在场景刚加载时传送可能不生效
+            Physics.SyncTransforms();
+        }
+
         controller.SetVerticalVelocity(-2f);
         controller.SetClimbState(false, 0f);
         controller.ClearMovementLocks();
@@ -92,10 +100,7 @@ public class PlayerDeath : MonoBehaviour
         airStartY = position.y;
         wasGrounded = false;
 
-        if (characterController != null)
-        {
-            characterController.enabled = true;
-        }
+        Debug.Log($"[PlayerDeath] 继续游戏：传送到存档点 {position}，传送后位置 {transform.position}");
     }
 
     public void Die()
