@@ -60,10 +60,16 @@ public class PlayerDeath : MonoBehaviour
         HandleFallDeath();
     }
 
-    public void SetCheckpoint(Vector3 checkpointPosition)
+    private int lastCheckpointIndex = -1;
+
+    // 最后触发检查点的标号（-1 表示未分配），供存档与 UI 使用。
+    public int LastCheckpointIndex => lastCheckpointIndex;
+
+    public void SetCheckpoint(Vector3 checkpointPosition, int index = -1)
     {
         currentCheckpoint = checkpointPosition;
-        Debug.Log($"<color=green>已更新存档点：</color>{currentCheckpoint}");
+        lastCheckpointIndex = index;
+        Debug.Log($"<color=green>已更新存档点：</color>{currentCheckpoint} (标号 {index})");
         SaveManager.Instance?.CaptureAndSave(controller);
     }
 

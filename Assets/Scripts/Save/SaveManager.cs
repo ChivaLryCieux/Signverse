@@ -239,6 +239,7 @@ public class SaveManager : MonoBehaviour
             data.checkpointX = cp.x;
             data.checkpointY = cp.y;
             data.checkpointZ = cp.z;
+            data.checkpointIndex = death.LastCheckpointIndex;
         }
 
         if (PickupUIController.Instance != null)

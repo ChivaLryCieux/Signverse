@@ -1,3 +1,4 @@
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -10,6 +11,9 @@ public class SavePanelController : MonoBehaviour
     [SerializeField] private Button newGameButton;
     [SerializeField] private Button continueButton;
 
+    [Header("TMP")]
+    [SerializeField] private TMP_Text continueButtonLabel;
+
     private void Start()
     {
         EnsureSaveManager();
@@ -18,11 +22,27 @@ public class SavePanelController : MonoBehaviour
         {
             continueButton.interactable = SaveManager.HasSave;
             continueButton.onClick.AddListener(OnContinueClicked);
+            UpdateContinueLabel();
         }
 
         if (newGameButton != null)
         {
             newGameButton.onClick.AddListener(OnNewGameClicked);
+        }
+    }
+
+    private void UpdateContinueLabel()
+    {
+        if (continueButtonLabel == null) return;
+
+        SaveData save = SaveManager.LoadSave();
+        if (save != null && save.checkpointIndex >= 0)
+        {
+            continueButtonLabel.text = $"Resume {save.checkpointIndex}";
+        }
+        else
+        {
+            continueButtonLabel.text = "Resume";
         }
     }
 

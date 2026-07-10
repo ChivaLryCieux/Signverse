@@ -393,11 +393,11 @@ public class PlayerCC : MonoBehaviour
         EnsureSkillController().InitializeStartingSkills();
     }
 
-    public void SetCheckpoint(Vector3 checkpointPosition)
+    public void SetCheckpoint(Vector3 checkpointPosition, int index = -1)
     {
         if (playerDeath != null)
         {
-            playerDeath.SetCheckpoint(checkpointPosition);
+            playerDeath.SetCheckpoint(checkpointPosition, index);
         }
     }
 

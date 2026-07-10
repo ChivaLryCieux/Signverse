@@ -5,6 +5,13 @@ public class Checkpoint : MonoBehaviour
 {
     [SerializeField] private Vector3 respawnOffset = Vector3.zero;
 
+    [Header("标号")]
+    [Tooltip("手动分配的检查点编号，从 0 开始。不分配则留 -1。")]
+    [SerializeField] private int checkpointIndex = -1;
+
+    // 检查点编号（-1 表示未分配）
+    public int CheckpointIndex => checkpointIndex;
+
     private void Reset()
     {
         Collider checkpointCollider = GetComponent<Collider>();
@@ -30,7 +37,7 @@ public class Checkpoint : MonoBehaviour
             return;
         }
 
-        player.SetCheckpoint(GetRespawnPosition());
+        player.SetCheckpoint(GetRespawnPosition(), checkpointIndex);
     }
 
     private void OnDrawGizmos()

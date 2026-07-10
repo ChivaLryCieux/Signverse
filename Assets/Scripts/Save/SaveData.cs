@@ -22,6 +22,7 @@ public class SaveData
     public float checkpointX;
     public float checkpointY;
     public float checkpointZ;
+    public int checkpointIndex = -1;
     public PickupSaveState pickup;
     public int boltUnlockedCount;
     public List<string> unlockedSkillIds = new List<string>();
