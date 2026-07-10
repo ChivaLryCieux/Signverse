@@ -103,6 +103,7 @@ public class PickupUIController : MonoBehaviour
     private InputAction mimicAction;
     private bool isHudVisible = true;
     private bool isDetailPanelOpen;
+    private bool suppressSaveOnSync;
     private PickupItemId currentDetailItem;
     private GameObject activeDetailPanel;
     private int detailPanelClosedFrame = -1;
@@ -153,8 +154,10 @@ public class PickupUIController : MonoBehaviour
         RefreshAllSlots();
         RefreshUnlockedSlots();
         RefreshEquippedSlots();
+        suppressSaveOnSync = true;
         SyncBoltSpend();
         SyncLinkedSkills();
+        suppressSaveOnSync = false;
     }
 
     private void OnEnable()
@@ -751,6 +754,75 @@ public class PickupUIController : MonoBehaviour
         }
     }
 
+    private void SaveCurrentState()
+    {
+        SaveManager.Instance?.CaptureAndSave();
+    }
+
+    /// <summary>
+    /// 采集当前装备/拾取 UI 状态用于存档。
+    /// </summary>
+    public PickupSaveState CaptureState()
+    {
+        PickupSaveState state = new PickupSaveState();
+
+        state.unlockedItems = new List<PickupItemId>(unlockedItems);
+
+        EnsureEquippedStateArrays();
+        state.equippedSlotItems = new List<PickupItemId>(equippedSlotItems);
+        state.equippedSlotOccupied = new List<bool>(equippedSlotOccupied);
+
+        state.fifthEquippedSlotUnlocked = fifthEquippedSlotUnlocked;
+        state.hasMimicTarget = hasMimicTarget;
+        state.mimicTargetRightSideIndex = mimicTargetRightSideIndex;
+        state.mimicTargetComboCode = mimicTargetComboCode;
+
+        return state;
+    }
+
+    /// <summary>
+    /// 「继续游戏」时恢复装备/拾取 UI 状态。内部刷新与 SyncLinkedSkills 不会触发存档写入。
+    /// </summary>
+    public void ApplyState(PickupSaveState state)
+    {
+        if (state == null)
+        {
+            return;
+        }
+
+        unlockedItems.Clear();
+        if (state.unlockedItems != null)
+        {
+            for (int i = 0; i < state.unlockedItems.Count; i++)
+            {
+                unlockedItems.Add(state.unlockedItems[i]);
+            }
+        }
+
+        EnsureEquippedStateArrays();
+        for (int i = 0; i < equippedSlotItems.Length; i++)
+        {
+            equippedSlotItems[i] = (state.equippedSlotItems != null && i < state.equippedSlotItems.Count)
+                ? state.equippedSlotItems[i]
+                : default(PickupItemId);
+            equippedSlotOccupied[i] = (state.equippedSlotOccupied != null && i < state.equippedSlotOccupied.Count)
+                && state.equippedSlotOccupied[i];
+        }
+
+        fifthEquippedSlotUnlocked = state.fifthEquippedSlotUnlocked;
+        hasMimicTarget = state.hasMimicTarget;
+        mimicTargetRightSideIndex = state.mimicTargetRightSideIndex;
+        mimicTargetComboCode = state.mimicTargetComboCode;
+        selectingMimicTarget = false;
+
+        suppressSaveOnSync = true;
+        RefreshUnlockedSlots();
+        RefreshEquippedSlots();
+        SyncBoltSpend();
+        SyncLinkedSkills();
+        suppressSaveOnSync = false;
+    }
+
     private void SyncLinkedSkills()
     {
         if (!syncLinkedSkillsToPlayer)
@@ -793,6 +865,11 @@ public class PickupUIController : MonoBehaviour
 
         // 把装备槽推导出的技能同步到 PlayerCC。动画脚本不再需要读取 UI 私有状态，只读取 PlayerCC.equippedSkills。
         player.SetEquippedSkills(equippedSkillSnapshot);
+
+        if (!suppressSaveOnSync)
+        {
+            SaveCurrentState();
+        }
     }
 
     private void SyncBoltSpend()

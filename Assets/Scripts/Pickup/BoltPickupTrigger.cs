@@ -139,6 +139,8 @@ public class BoltPickupTrigger : MonoBehaviour
             objectToDisappear.SetActive(false);
         }
 
+        SaveManager.Instance?.CaptureAndSave();
+
         if (destroyAfterPickup)
         {
             Destroy(gameObject);

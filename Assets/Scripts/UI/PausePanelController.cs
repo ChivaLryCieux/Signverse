@@ -212,6 +212,7 @@ public class PausePanelController : MonoBehaviour
 
         RestoreTimeScaleBeforeAction();
         activePanel = null;
+        SaveManager.Instance?.CaptureAndSave();
         SceneManager.LoadScene(mainMenuSceneName);
     }
 

@@ -64,6 +64,38 @@ public class PlayerDeath : MonoBehaviour
     {
         currentCheckpoint = checkpointPosition;
         Debug.Log($"<color=green>已更新存档点：</color>{currentCheckpoint}");
+        SaveManager.Instance?.CaptureAndSave();
+    }
+
+    /// <summary>
+    /// 当前存档点位置（供存档系统采集）。
+    /// </summary>
+    public Vector3 CurrentCheckpoint => currentCheckpoint;
+
+    /// <summary>
+    /// 「继续游戏」时把玩家直接放到指定存档点（不走死亡重生流程，不触发存档写入）。
+    /// </summary>
+    public void PlaceAtCheckpoint(Vector3 position)
+    {
+        currentCheckpoint = position;
+
+        if (characterController != null)
+        {
+            characterController.enabled = false;
+        }
+
+        transform.position = new Vector3(position.x, position.y, 0f);
+        controller.SetVerticalVelocity(-2f);
+        controller.SetClimbState(false, 0f);
+        controller.ClearMovementLocks();
+
+        airStartY = position.y;
+        wasGrounded = false;
+
+        if (characterController != null)
+        {
+            characterController.enabled = true;
+        }
     }
 
     public void Die()

@@ -8,6 +8,8 @@ public class PickupCollectible : MonoBehaviour
 {
     [Header("拾取物")]
     [SerializeField] private PickupItemId itemId;
+
+    public PickupItemId ItemId => itemId;
     [SerializeField] private string playerTag = "Player";
     [SerializeField] private bool destroyAfterPickup = true;
 
@@ -140,6 +142,8 @@ public class PickupCollectible : MonoBehaviour
         {
             player.UnlockNewSkill(skillId);
         }
+
+        SaveManager.Instance?.CaptureAndSave();
 
         if (destroyAfterPickup)
         {

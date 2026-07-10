@@ -79,6 +79,7 @@ public class TriggerScenePortal : MonoBehaviour
         }
         SetPromptPanelVisible(false);
 
+        SaveManager.Instance?.CaptureAndSave();
         SceneManager.LoadScene(targetSceneIndex);
     }
 

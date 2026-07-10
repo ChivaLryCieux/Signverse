@@ -129,6 +129,8 @@ public class FifthEquippedSlotPickupTrigger : MonoBehaviour
         // 播放音效
         PlayPickupSound();
 
+        SaveManager.Instance?.CaptureAndSave();
+
         if (destroyAfterPickup)
         {
             Destroy(gameObject);
