@@ -64,17 +64,13 @@ public class PlayerDeath : MonoBehaviour
     {
         currentCheckpoint = checkpointPosition;
         Debug.Log($"<color=green>已更新存档点：</color>{currentCheckpoint}");
-        SaveManager.Instance?.CaptureAndSave();
+        SaveManager.Instance?.CaptureAndSave(controller);
     }
 
-    /// <summary>
-    /// 当前存档点位置（供存档系统采集）。
-    /// </summary>
+    // 当前存档点位置（供存档系统采集）。
     public Vector3 CurrentCheckpoint => currentCheckpoint;
 
-    /// <summary>
-    /// 「继续游戏」时把玩家直接放到指定存档点（不走死亡重生流程，不触发存档写入）。
-    /// </summary>
+    // 「继续游戏」时把玩家直接放到指定存档点（不走死亡重生流程，不触发存档写入）。
     public void PlaceAtCheckpoint(Vector3 position)
     {
         currentCheckpoint = position;

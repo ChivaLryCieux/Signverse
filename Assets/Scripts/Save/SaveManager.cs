@@ -4,12 +4,10 @@ using Skills;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-/// <summary>
-/// 存档管理器：DontDestroyOnLoad 单例。负责读写单存档位 JSON，
-/// 协调「开始新游戏（清档）」与「继续游戏（读档）」两种加载模式。
-/// 通过 SceneManager.sceneLoaded 在关卡场景 Awake 初始化后自动应用存档，
-/// 因此无需在每个关卡单独放置 Applier 组件。
-/// </summary>
+// 存档管理器：DontDestroyOnLoad 单例。负责读写单存档位 JSON，
+// 协调「开始新游戏（清档）」与「继续游戏（读档）」两种加载模式。
+// 通过 SceneManager.sceneLoaded 在关卡场景 Awake 初始化后自动应用存档，
+// 因此无需在每个关卡单独放置 Applier 组件。
 public class SaveManager : MonoBehaviour
 {
     public enum LoadMode
@@ -29,12 +27,14 @@ public class SaveManager : MonoBehaviour
 
     public LoadMode PendingMode { get; private set; } = LoadMode.None;
 
-    /// <summary>
-    /// Continue 模式下缓存已读取的存档，供场景加载后应用。
-    /// </summary>
+    // Continue 模式下缓存已读取的存档，供场景加载后应用。
     public SaveData LoadedSave { get; private set; }
 
     private static string SavePath => Path.Combine(Application.persistentDataPath, SaveFileName);
+
+    // SetCheckpoint 等已知正确 PlayerCC 的调用方写入后缓存，后续无参 CaptureAndSave 优先使用，
+    // 避免场景里存在多个 PlayerCC 时 FindPlayer 搜到错误实例。
+    private static PlayerCC s_lastKnownPlayer;
 
     public static bool HasSave => File.Exists(SavePath);
 
@@ -49,6 +49,19 @@ public class SaveManager : MonoBehaviour
         Instance = this;
         DontDestroyOnLoad(gameObject);
         SceneManager.sceneLoaded += OnSceneLoaded;
+    }
+
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
+    private static void EnsureExists()
+    {
+        // 无论从哪个场景启动（包括编辑器直接 Play 关卡），都确保 SaveManager 存在，
+        // 否则各处 SaveManager.Instance?.CaptureAndSave() 会被 null 跳过，存档写不进去。
+        if (Instance == null)
+        {
+            GameObject go = new GameObject("SaveManager");
+            go.AddComponent<SaveManager>();
+            Debug.Log("[SaveManager] 运行时启动：自动创建 SaveManager");
+        }
     }
 
     private void OnDestroy()
@@ -71,7 +84,9 @@ public class SaveManager : MonoBehaviour
 
     private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
+        s_lastKnownPlayer = null; // 场景切换后缓存失效
         LoadMode pending = PendingMode;
+        Debug.Log($"[SaveManager] OnSceneLoaded: scene={scene.name}, pending={pending}");
 
         if (pending == LoadMode.Continue)
         {
@@ -86,9 +101,7 @@ public class SaveManager : MonoBehaviour
 
     // ── 主菜单按钮入口 ──
 
-    /// <summary>
-    /// 开始新游戏：清档 + 以默认状态加载主关卡。
-    /// </summary>
+    // 开始新游戏：清档 + 以默认状态加载主关卡。
     public void StartNewGame()
     {
         DeleteSave();
@@ -97,9 +110,7 @@ public class SaveManager : MonoBehaviour
         SceneManager.LoadScene(newGameScenePath);
     }
 
-    /// <summary>
-    /// 继续游戏：读取存档，加载存档所在场景。无存档时忽略。
-    /// </summary>
+    // 继续游戏：读取存档，加载存档所在场景。无存档时忽略。
     public void ContinueGame()
     {
         SaveData data = LoadSave();
@@ -121,9 +132,7 @@ public class SaveManager : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// 应用完存档后调用，回到 None 模式。
-    /// </summary>
+    // 应用完存档后调用，回到 None 模式。
     public void ClearPending()
     {
         PendingMode = LoadMode.None;
@@ -165,15 +174,15 @@ public class SaveManager : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// 从当前关卡场景的各单例采集状态并写入存档。
-    /// 在主菜单（无 PlayerCC）等非关卡场景下不会写入。
-    /// </summary>
-    public void CaptureAndSave()
+    // 从当前关卡场景的各单例采集状态并写入存档。
+    // 在主菜单（无 PlayerCC）等非关卡场景下不会写入。
+    // overridePlayer：可选，调用方已知的 PlayerCC，避免再次搜索（搜索可能找到错误实例）。
+    public void CaptureAndSave(PlayerCC overridePlayer = null)
     {
-        SaveData data = CaptureState();
+        SaveData data = CaptureState(overridePlayer);
         if (data == null)
         {
+            Debug.LogWarning("[SaveManager] CaptureAndSave: CaptureState 返回 null，不存档");
             return;
         }
 
@@ -182,6 +191,7 @@ public class SaveManager : MonoBehaviour
             string json = JsonUtility.ToJson(data, true);
             Directory.CreateDirectory(Application.persistentDataPath);
             File.WriteAllText(SavePath, json);
+            Debug.Log($"[SaveManager] 存档已写入: cp=({data.checkpointX:F2},{data.checkpointY:F2}), path={SavePath}");
         }
         catch (System.Exception e)
         {
@@ -189,9 +199,28 @@ public class SaveManager : MonoBehaviour
         }
     }
 
-    private SaveData CaptureState()
+    private static PlayerCC FindPlayer()
     {
-        PlayerCC player = FindFirstObjectByType<PlayerCC>();
+        // 优先按 Player 标签精确搜索（避免场景里有多个 PlayerCC 时找错）。
+        // 用 includeInactive=true 确保即使子物体处于非活跃状态也能搜到 PlayerCC。
+        GameObject go = GameObject.FindGameObjectWithTag("Player");
+        if (go != null)
+        {
+            PlayerCC player = go.GetComponent<PlayerCC>();
+            if (player == null) player = go.GetComponentInChildren<PlayerCC>(true);
+            if (player != null) return player;
+        }
+
+        // 兜底：没有标签时（编辑器直接 Play 某些关卡可能没设），用 FindFirstObjectByType
+        return FindFirstObjectByType<PlayerCC>();
+    }
+
+    private SaveData CaptureState(PlayerCC overridePlayer = null)
+    {
+        PlayerCC player = overridePlayer ?? s_lastKnownPlayer ?? FindPlayer();
+
+        // 如果调用方明确传了正确的 PlayerCC，缓存起来，避免后续无参调用搜到错误实例
+        if (overridePlayer != null) s_lastKnownPlayer = overridePlayer;
         if (player == null)
         {
             // 不在关卡场景（如主菜单），不采集。
@@ -248,11 +277,14 @@ public class SaveManager : MonoBehaviour
             return;
         }
 
-        PlayerCC player = FindFirstObjectByType<PlayerCC>();
+        PlayerCC player = FindPlayer();
         if (player == null)
         {
+            Debug.LogWarning("[SaveManager] ApplyLoadedSave: 未找到 PlayerCC，跳过");
             return;
         }
+
+        Debug.Log($"[SaveManager] ApplyLoadedSave: 开始应用存档，cp=({data.checkpointX},{data.checkpointY},{data.checkpointZ})");
 
         // 1. 螺栓解锁数（先恢复，ApplyState 内 SyncBoltSpend 才能用正确的上限重算 spentCount）
         if (BoltPanelController.Instance != null)
@@ -275,16 +307,24 @@ public class SaveManager : MonoBehaviour
             }
         }
 
-        // 4. 传送玩家到存档点
+        // 4. 传送玩家到存档点（延一帧，确保 CharacterController 完全就绪后再传送）
         PlayerDeath death = player.GetComponent<PlayerDeath>();
+        Debug.Log($"[SaveManager] 准备传送: death={(death != null)}");
         if (death != null)
         {
             Vector3 cp = new Vector3(data.checkpointX, data.checkpointY, data.checkpointZ);
-            death.PlaceAtCheckpoint(cp);
+            StartCoroutine(DeferredPlaceAtCheckpoint(death, cp));
         }
 
         // 5. 禁用已经捡过的道具/第五槽触发器，避免重复拾取
         DisableCollectedPickups(data);
+    }
+
+    private System.Collections.IEnumerator DeferredPlaceAtCheckpoint(PlayerDeath death, Vector3 cp)
+    {
+        // 延一帧，让场景完成 Start 与首次物理更新，CharacterController 完全就绪后再传送
+        yield return null;
+        death.PlaceAtCheckpoint(cp);
     }
 
     private void DisableCollectedPickups(SaveData data)

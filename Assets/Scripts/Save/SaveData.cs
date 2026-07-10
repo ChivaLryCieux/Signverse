@@ -1,9 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-/// <summary>
-/// 装备/拾取 UI 状态的存档快照。由 PickupUIController 采集与恢复。
-/// </summary>
+// 装备/拾取 UI 状态的存档快照。由 PickupUIController 采集与恢复。
 [Serializable]
 public class PickupSaveState
 {
@@ -16,9 +14,7 @@ public class PickupSaveState
     public string mimicTargetComboCode;
 }
 
-/// <summary>
-/// 单存档位的完整存档数据。JSON 序列化到 persistentDataPath。
-/// </summary>
+// 单存档位的完整存档数据。JSON 序列化到 persistentDataPath。
 [Serializable]
 public class SaveData
 {

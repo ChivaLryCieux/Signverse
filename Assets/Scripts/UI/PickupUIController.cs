@@ -759,9 +759,7 @@ public class PickupUIController : MonoBehaviour
         SaveManager.Instance?.CaptureAndSave();
     }
 
-    /// <summary>
-    /// 采集当前装备/拾取 UI 状态用于存档。
-    /// </summary>
+    // 采集当前装备/拾取 UI 状态用于存档。
     public PickupSaveState CaptureState()
     {
         PickupSaveState state = new PickupSaveState();
@@ -780,9 +778,7 @@ public class PickupUIController : MonoBehaviour
         return state;
     }
 
-    /// <summary>
-    /// 「继续游戏」时恢复装备/拾取 UI 状态。内部刷新与 SyncLinkedSkills 不会触发存档写入。
-    /// </summary>
+    // 「继续游戏」时恢复装备/拾取 UI 状态。内部刷新与 SyncLinkedSkills 不会触发存档写入。
     public void ApplyState(PickupSaveState state)
     {
         if (state == null)
