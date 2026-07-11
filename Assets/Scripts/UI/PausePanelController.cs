@@ -206,7 +206,7 @@ public class PausePanelController : MonoBehaviour
         RestoreTimeScaleBeforeAction();
         activePanel = null;
         SaveManager.Instance?.CaptureAndSave();
-        SceneManager.LoadScene("Assets/Scenes/主scene/0开始界面.unity");
+        SceneManager.LoadScene(0);
     }
 
     private void OnDestroy()

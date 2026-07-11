@@ -21,8 +21,7 @@ public class SaveManager : MonoBehaviour
 
     [Header("场景")]
     [Tooltip("开始新游戏时加载的关卡场景路径。")]
-    [SerializeField] private string newGameScenePath = "Assets/Scenes/主scene/1夜晚林间.unity";
-
+    [SerializeField] private int newGameSceneIndex = 1;
     private const string SaveFileName = "save.json";
 
     public LoadMode PendingMode { get; private set; } = LoadMode.None;
@@ -107,7 +106,7 @@ public class SaveManager : MonoBehaviour
         DeleteSave();
         LoadedSave = null;
         PendingMode = LoadMode.NewGame;
-        SceneManager.LoadScene(newGameScenePath);
+        SceneManager.LoadScene(newGameSceneIndex);
     }
 
     // 继续游戏：读取存档，加载存档所在场景。无存档时忽略。
@@ -128,7 +127,7 @@ public class SaveManager : MonoBehaviour
         }
         else
         {
-            SceneManager.LoadScene(newGameScenePath);
+            SceneManager.LoadScene(newGameSceneIndex);
         }
     }
 
