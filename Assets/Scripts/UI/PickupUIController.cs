@@ -118,6 +118,7 @@ public class PickupUIController : MonoBehaviour
     private int dragSourceEquippedIndex = -1;
     private Vector3 dragReturnPosition;
     private bool isReturningDrag;
+    private int dropTargetSlotIndex = -1;
 
     // 装备槽组合后真正生效的 SkillBase 快照。它会同步到 PlayerCC.equippedSkills，供动画层读取当前 loadout。
     private readonly List<SkillBase> equippedSkillSnapshot = new List<SkillBase>();
@@ -241,6 +242,12 @@ public class PickupUIController : MonoBehaviour
         }
 
         RefreshUnlockedSlots();
+
+        // 新解锁的右侧槽播放淡入弹出动画（仅在槽位可见时）
+        if (entryById.TryGetValue(id, out PickupUiEntry entry) && entry.unlockSlot != null && entry.unlockSlot.gameObject.activeSelf)
+        {
+            entry.unlockSlot.PlayUnlockAppearAnimation();
+        }
 
         ItemUnlocked?.Invoke(id);
     }
@@ -1142,7 +1149,7 @@ public class PickupUIController : MonoBehaviour
 
     private void UpdateFloatingIconPosition(bool snapToMouse)
     {
-        if (floatingSelectedIcon == null || !TryGetPointerPosition(out Vector2 screenPosition))
+        if (floatingSelectedIcon == null)
         {
             return;
         }
@@ -1155,17 +1162,44 @@ public class PickupUIController : MonoBehaviour
         }
 
         Camera eventCamera = canvas.renderMode == RenderMode.ScreenSpaceOverlay ? null : canvas.worldCamera;
-        if (RectTransformUtility.ScreenPointToLocalPointInRectangle(canvasRect, screenPosition, eventCamera, out Vector2 localPosition))
+
+        // 磁吸：图标压在合法装备槽上时，目标位置切换为该槽中心，而非鼠标位置。
+        Vector2 targetLocal = default;
+        bool haveTarget = false;
+        if (!snapToMouse && dropTargetSlotIndex >= 0 && IsValidEquippedIndex(dropTargetSlotIndex) && equippedSlots[dropTargetSlotIndex] != null)
         {
-            if (snapToMouse || selectedIconFollowSpeedOffset <= 0f)
+            RectTransform slotRect = equippedSlots[dropTargetSlotIndex].GetComponent<RectTransform>();
+            if (slotRect != null)
             {
-                floatingSelectedIcon.anchoredPosition = localPosition;
+                Vector3[] corners = new Vector3[4];
+                slotRect.GetWorldCorners(corners);
+                Vector3 worldCenter = (corners[0] + corners[2]) * 0.5f;
+                Vector2 screenCenter = RectTransformUtility.WorldToScreenPoint(eventCamera, worldCenter);
+                haveTarget = RectTransformUtility.ScreenPointToLocalPointInRectangle(canvasRect, screenCenter, eventCamera, out targetLocal);
+            }
+        }
+
+        if (!haveTarget)
+        {
+            if (!TryGetPointerPosition(out Vector2 screenPosition))
+            {
                 return;
             }
 
-            float followT = 1f - Mathf.Exp(-selectedIconFollowSpeedOffset * Time.unscaledDeltaTime);
-            floatingSelectedIcon.anchoredPosition = Vector2.Lerp(floatingSelectedIcon.anchoredPosition, localPosition, followT);
+            if (!RectTransformUtility.ScreenPointToLocalPointInRectangle(canvasRect, screenPosition, eventCamera, out targetLocal))
+            {
+                return;
+            }
         }
+
+        if (snapToMouse || selectedIconFollowSpeedOffset <= 0f)
+        {
+            floatingSelectedIcon.anchoredPosition = targetLocal;
+            return;
+        }
+
+        float followT = 1f - Mathf.Exp(-selectedIconFollowSpeedOffset * Time.unscaledDeltaTime);
+        floatingSelectedIcon.anchoredPosition = Vector2.Lerp(floatingSelectedIcon.anchoredPosition, targetLocal, followT);
     }
 
     // ══════════════════════════════════════════════════════
@@ -1385,7 +1419,80 @@ public class PickupUIController : MonoBehaviour
             return;
         }
 
+        UpdateDropTargetHighlight();
         UpdateFloatingIconPosition(false);
+    }
+
+    // 检测鼠标当前压在哪个合法装备槽上，切换磁吸高亮。
+    private void UpdateDropTargetHighlight()
+    {
+        int newTarget = FindDropTargetSlot();
+        if (newTarget == dropTargetSlotIndex)
+        {
+            return;
+        }
+
+        if (dropTargetSlotIndex >= 0 && IsValidEquippedIndex(dropTargetSlotIndex) && equippedSlots[dropTargetSlotIndex] != null)
+        {
+            equippedSlots[dropTargetSlotIndex].SetDropTarget(false);
+        }
+
+        dropTargetSlotIndex = newTarget;
+
+        if (dropTargetSlotIndex >= 0 && equippedSlots[dropTargetSlotIndex] != null)
+        {
+            equippedSlots[dropTargetSlotIndex].SetDropTarget(true);
+        }
+    }
+
+    private int FindDropTargetSlot()
+    {
+        if (!TryGetPointerPosition(out Vector2 screenPos))
+        {
+            return -1;
+        }
+
+        for (int i = 0; i < equippedSlots.Length; i++)
+        {
+            if (equippedSlots[i] == null || i == dragSourceEquippedIndex)
+            {
+                continue;
+            }
+
+            RectTransform slotRect = equippedSlots[i].GetComponent<RectTransform>();
+            if (slotRect == null)
+            {
+                continue;
+            }
+
+            if (!RectTransformUtility.RectangleContainsScreenPoint(slotRect, screenPos))
+            {
+                continue;
+            }
+
+            if (!IsEquippedSlotUnlocked(i))
+            {
+                continue;
+            }
+
+            if (!CanEquipItemAtSlot(dragSourceItem, i))
+            {
+                continue;
+            }
+
+            return i;
+        }
+
+        return -1;
+    }
+
+    private void ClearDropTargetHighlight()
+    {
+        if (dropTargetSlotIndex >= 0 && IsValidEquippedIndex(dropTargetSlotIndex) && equippedSlots[dropTargetSlotIndex] != null)
+        {
+            equippedSlots[dropTargetSlotIndex].SetDropTarget(false);
+        }
+        dropTargetSlotIndex = -1;
     }
 
     public void EndDrag(Vector2 screenPos)
@@ -1600,6 +1707,7 @@ public class PickupUIController : MonoBehaviour
             equippedSlots[dragSourceEquippedIndex].SetIconVisualVisible(true);
         }
 
+        ClearDropTargetHighlight();
         StopSelectedIconFollow();
         dragSource = DragSource.None;
         isReturningDrag = false;
@@ -1608,6 +1716,7 @@ public class PickupUIController : MonoBehaviour
     private void AnimateDragReturn()
     {
         isReturningDrag = true;
+        ClearDropTargetHighlight();
 
         // 隐藏源槽位图标，等动画完成后恢复
         if (dragSource == DragSource.UnlockSlot)
@@ -1636,6 +1745,7 @@ public class PickupUIController : MonoBehaviour
                 equippedSlots[dragSourceEquippedIndex].SetIconVisualVisible(true);
             }
 
+            ClearDropTargetHighlight();
             StopSelectedIconFollow();
             dragSource = DragSource.None;
             isReturningDrag = false;
@@ -1668,6 +1778,7 @@ public class PickupUIController : MonoBehaviour
                 equippedSlots[dragSourceEquippedIndex].SetIconVisualVisible(true);
             }
 
+            ClearDropTargetHighlight();
             StopSelectedIconFollow();
             dragSource = DragSource.None;
             isReturningDrag = false;
@@ -1676,6 +1787,7 @@ public class PickupUIController : MonoBehaviour
 
     private void StopDrag()
     {
+        ClearDropTargetHighlight();
         StopSelectedIconFollow();
         dragSource = DragSource.None;
         isReturningDrag = false;

@@ -1,3 +1,4 @@
+using System.Collections;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -20,6 +21,14 @@ public class PickupUISlotView : MonoBehaviour,
     [SerializeField] private GameObject highlight;
     [SerializeField] private float hoverScale = 1.08f;
 
+    [Header("磁吸 / 悬停增强")]
+    [Tooltip("拖拽时图标压在装备槽上，目标槽的放大倍数。")]
+    [SerializeField] private float dropTargetScale = 1.15f;
+    [Tooltip("悬停或被磁吸时图标向上抬起的像素，作用于 iconImage，不影响布局。")]
+    [SerializeField] private float hoverLift = 6f;
+    [Tooltip("拾取解锁时图标淡入弹出的时长（秒）。")]
+    [SerializeField] private float appearDuration = 0.25f;
+
     [Header("点击音效")]
     [SerializeField] private AudioSource audioSource;
     [SerializeField] private List<AudioClip> clickSFXList = new List<AudioClip>();
@@ -34,6 +43,11 @@ public class PickupUISlotView : MonoBehaviour,
     private bool hasBaseScale;
     private bool selected;
     private bool wasDragging;
+    private bool hovering;
+    private bool isDropTarget;
+    private Vector2 baseIconPos;
+    private bool hasBaseIconPos;
+    private Coroutine appearRoutine;
 
     private void Awake()
     {
@@ -47,6 +61,7 @@ public class PickupUISlotView : MonoBehaviour,
         }
 
         CacheBaseScale();
+        CacheBaseIconPos();
         EnsureRaycastTarget();
         SetHighlight(false);
     }
@@ -54,8 +69,7 @@ public class PickupUISlotView : MonoBehaviour,
     public void SetSelected(bool value)
     {
         selected = value;
-        transform.localScale = selected ? baseScale * hoverScale : baseScale;
-        SetHighlight(selected);
+        ApplyVisual();
     }
 
     public void SetIconVisualVisible(bool visible)
@@ -94,13 +108,15 @@ public class PickupUISlotView : MonoBehaviour,
         initialized = true;
         hasItem = true;
         selected = false;
+        hovering = false;
+        isDropTarget = false;
 
         CacheBaseScale();
-        transform.localScale = baseScale;
+        CacheBaseIconPos();
         EnsureRaycastTarget();
         SetIcon(icon);
 
-        SetHighlight(false);
+        ApplyVisual();
     }
 
     public void InitializeEquippedSlot(PickupUIController controller, int index)
@@ -111,12 +127,14 @@ public class PickupUISlotView : MonoBehaviour,
         initialized = true;
         hasItem = false;
         selected = false;
+        hovering = false;
+        isDropTarget = false;
 
         CacheBaseScale();
-        transform.localScale = baseScale;
+        CacheBaseIconPos();
         EnsureRaycastTarget();
         ClearIcon();
-        SetHighlight(false);
+        ApplyVisual();
     }
 
     public void SetItem(PickupItemId id, Sprite icon)
@@ -129,7 +147,6 @@ public class PickupUISlotView : MonoBehaviour,
     public void ClearIcon()
     {
         hasItem = false;
-        transform.localScale = baseScale;
 
         if (iconImage != null)
         {
@@ -140,7 +157,7 @@ public class PickupUISlotView : MonoBehaviour,
             iconImage.color = color;
         }
 
-        SetHighlight(false);
+        ApplyVisual();
     }
 
     // ── 拖动接口 ──
@@ -261,14 +278,14 @@ public class PickupUISlotView : MonoBehaviour,
             return;
         }
 
-        transform.localScale = baseScale * hoverScale;
-        SetHighlight(true);
+        hovering = true;
+        ApplyVisual();
     }
 
     public void OnPointerExit(PointerEventData eventData)
     {
-        transform.localScale = selected ? baseScale * hoverScale : baseScale;
-        SetHighlight(selected);
+        hovering = false;
+        ApplyVisual();
     }
 
     // ── 内部方法 ──
@@ -324,6 +341,94 @@ public class PickupUISlotView : MonoBehaviour,
         {
             highlight.SetActive(visible);
         }
+    }
+
+    // 拖拽磁吸：controller 检测到浮动图标压在本槽上时调用，切换磁吸高亮。
+    public void SetDropTarget(bool value)
+    {
+        isDropTarget = value;
+        ApplyVisual();
+    }
+
+    // 拾取解锁后由 controller 调用，图标原地淡入 + 弹出。
+    public void PlayUnlockAppearAnimation()
+    {
+        if (iconImage == null || appearDuration <= 0f)
+        {
+            return;
+        }
+
+        if (appearRoutine != null)
+        {
+            StopCoroutine(appearRoutine);
+        }
+
+        appearRoutine = StartCoroutine(AppearRoutine());
+    }
+
+    private IEnumerator AppearRoutine()
+    {
+        CacheBaseIconPos();
+
+        Color color = iconImage.color;
+        float elapsed = 0f;
+
+        while (elapsed < appearDuration)
+        {
+            elapsed += Time.unscaledDeltaTime;
+            float p = Mathf.Clamp01(elapsed / appearDuration);
+
+            // alpha 线性淡入
+            color.a = p;
+            iconImage.color = color;
+
+            // scale：从 0.6 -> 1.0，带轻微 overshoot（先冲到 ~1.08 再回落）
+            float overshoot = Mathf.Sin(p * Mathf.PI) * 0.08f;
+            transform.localScale = baseScale * (0.6f + 0.4f * p + overshoot);
+
+            yield return null;
+        }
+
+        // 精确落点
+        color.a = 1f;
+        iconImage.color = color;
+        appearRoutine = null;
+        ApplyVisual();
+    }
+
+    // 统一视觉状态：缩放（磁吸 > 悬停/选中 > 默认）+ 图标上浮 + 高亮。
+    private void ApplyVisual()
+    {
+        float scaleMul = 1f;
+        if (isDropTarget)
+        {
+            scaleMul = dropTargetScale;
+        }
+        else if (hovering || selected)
+        {
+            scaleMul = hoverScale;
+        }
+
+        transform.localScale = baseScale * scaleMul;
+
+        if (iconImage != null && iconImage.rectTransform != null && hasBaseIconPos)
+        {
+            bool lift = hovering || isDropTarget;
+            iconImage.rectTransform.anchoredPosition = baseIconPos + (lift ? Vector2.up * hoverLift : Vector2.zero);
+        }
+
+        SetHighlight(hovering || selected || isDropTarget);
+    }
+
+    private void CacheBaseIconPos()
+    {
+        if (hasBaseIconPos || iconImage == null || iconImage.rectTransform == null)
+        {
+            return;
+        }
+
+        baseIconPos = iconImage.rectTransform.anchoredPosition;
+        hasBaseIconPos = true;
     }
 
     private void PlayClickSfx()
