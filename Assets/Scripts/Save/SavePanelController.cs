@@ -2,6 +2,8 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
+using System.Collections;
+using UnityEngine.Events;
 
 // 主菜单存档面板：「开始新游戏（清档）」与「继续游戏」。
 // 触发方式二选一或并存：
@@ -31,6 +33,13 @@ public class SavePanelController : MonoBehaviour
     [SerializeField] private Camera raycastCamera;
     [Tooltip("射线检测的最大距离。")]
     [SerializeField] private float maxRayDistance = 100f;
+
+    [Header("转场时间")]
+    [SerializeField] private float transitionTime = 1f;
+
+
+    public UnityEvent OnNewGameEvent = new UnityEvent();
+    public UnityEvent OnContinueGameEvent = new UnityEvent();
 
     private Camera mainCamera;
     private bool continueEnabled = true;
@@ -157,6 +166,17 @@ public class SavePanelController : MonoBehaviour
         if (SaveManager.Instance != null)
         {
             isChangingScene = true;
+            StartCoroutine(NewGameTransition());
+        }
+    }
+    //使用协程，处理转场停留时间、音效、标识响应动画
+    private IEnumerator NewGameTransition()
+    {
+        OnNewGameEvent?.Invoke();
+        yield return new WaitForSeconds(transitionTime);
+
+        if (SaveManager.Instance != null)
+        {
             SaveManager.Instance.StartNewGame();
         }
     }
@@ -171,6 +191,17 @@ public class SavePanelController : MonoBehaviour
         if (SaveManager.Instance != null)
         {
             isChangingScene = true;
+            StartCoroutine(ContinueGameTransition());
+        }
+    }
+    //使用协程，处理转场停留时间、音效、标识响应动画
+    private IEnumerator ContinueGameTransition()
+    {
+        OnContinueGameEvent?.Invoke();
+        yield return new WaitForSeconds(transitionTime);
+
+        if (SaveManager.Instance != null)
+        {
             SaveManager.Instance.ContinueGame();
         }
     }
