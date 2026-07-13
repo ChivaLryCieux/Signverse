@@ -7,15 +7,16 @@ public class NewGameEffectController : MonoBehaviour
 
     [Header("音效")]
     [SerializeField] private AudioSource audioSource;
-    [SerializeField] private AudioClip newGameSFX;
-
+    [SerializeField] private AudioClip[] newGameSFX = new AudioClip[0];
 
     [SerializeField] private SavePanelController savePanelController;
 
 
     private void Awake()
     {
+        GameObject.DontDestroyOnLoad(this.gameObject);//此处是否需要保持eventsystem存疑
         
+
 
         if (animator == null)
         {
@@ -56,7 +57,10 @@ public class NewGameEffectController : MonoBehaviour
 
         if (audioSource != null && newGameSFX != null)
         {
-            audioSource.PlayOneShot(newGameSFX);
+            foreach (var clip in newGameSFX)
+            {
+                audioSource.PlayOneShot(clip);
+            }
         }
     }
 }
