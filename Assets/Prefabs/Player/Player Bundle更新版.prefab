@@ -198,7 +198,7 @@ Transform:
   m_GameObject: {fileID: 963416246817204657}
   serializedVersion: 2
   m_LocalRotation: {x: 0.07091771, y: 0.1985965, z: -0.014409578, w: 0.977406}
-  m_LocalPosition: {x: 0.63848877, y: 2.3813667, z: -6.5096893}
+  m_LocalPosition: {x: 0.6385498, y: 2.3813725, z: -6.509713}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -1846,7 +1846,7 @@ Transform:
   m_GameObject: {fileID: 5244852490555856681}
   serializedVersion: 2
   m_LocalRotation: {x: 0.07236338, y: 0.008459767, z: -0.0006138087, w: 0.9973423}
-  m_LocalPosition: {x: -0.16760254, y: 2.3813539, z: -9.892944}
+  m_LocalPosition: {x: -0.16760254, y: 2.3813534, z: -9.892943}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -2228,8 +2228,8 @@ MonoBehaviour:
   - Water
   - water
   waterColliderRefreshInterval: 0.25
-  cloakSfx: {fileID: 8300000, guid: cc8a1aba61bddbe4aa29a487ecf2f873, type: 3}
-  cloakSfxVolume: 1
+  cloakSfx: {fileID: 8300000, guid: 4f467db2f03663d42925aae110f68fee, type: 3}
+  cloakSfxVolume: 0.598
 --- !u!114 &4959998224386708676
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2294,7 +2294,7 @@ MonoBehaviour:
   chargeReleaseReturnTime: 0.08
   legChargeLayerIndex: -1
   jumpBoostVFX: {fileID: 1934465609626109907}
-  ultraMoveClip: {fileID: 0}
+  ultraMoveClip: {fileID: 8300000, guid: 4b127739ef03f734e88af9f5e4d92703, type: 3}
   animator: {fileID: 555050154619810132}
   audioSource: {fileID: 9172042815699925319}
   controller: {fileID: 6853003824039800259}
@@ -2339,7 +2339,7 @@ CharacterController:
   m_StepOffset: 0.3
   m_SkinWidth: 0.08
   m_MinMoveDistance: 0.001
-  m_Center: {x: 0, y: 0.95, z: 0}
+  m_Center: {x: 0, y: 1.1, z: 0}
 --- !u!114 &6853003824039800259
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3200,7 +3200,7 @@ GameObject:
   - component: {fileID: 7943091212885907703}
   - component: {fileID: 5132750196893430421}
   m_Layer: 0
-  m_Name: "Player Bundle\u5916\u90E8scene"
+  m_Name: "Player Bundle\u66F4\u65B0\u7248"
   m_TagString: Player
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -3219,12 +3219,12 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
+  - {fileID: 7521985838853448051}
   - {fileID: 5958743956727845790}
   - {fileID: 1644211383562760575}
   - {fileID: 3981535087004807406}
   - {fileID: 6038124255830734750}
   - {fileID: 2081660521391230467}
-  - {fileID: 7521985838853448051}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &5132750196893430421
@@ -4320,7 +4320,7 @@ Transform:
   m_GameObject: {fileID: 8812490027071525093}
   serializedVersion: 2
   m_LocalRotation: {x: 0.07538822, y: 0, z: 0, w: 0.9971543}
-  m_LocalPosition: {x: 0.7402344, y: 1.4413029, z: -3.5154383}
+  m_LocalPosition: {x: 0.74035645, y: 1.4412994, z: -3.515438}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -4455,7 +4455,7 @@ Transform:
   m_GameObject: {fileID: 8877963101800341188}
   serializedVersion: 2
   m_LocalRotation: {x: 0.064457096, y: -0.4534013, z: 0.03289748, w: 0.8883639}
-  m_LocalPosition: {x: 3.3135986, y: 1.2013721, z: -2.82455}
+  m_LocalPosition: {x: 3.3135986, y: 1.2013702, z: -2.8245745}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
