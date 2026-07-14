@@ -22,10 +22,6 @@ public class ButtonMoveCamera : MonoBehaviour
         newGameButton.SetActive(false);
         continueButton.SetActive(false);
     }
-    public void Update()
-    {
-
-    }
 
     public void SwitchToCamera2()
     {

@@ -827,8 +827,10 @@ MonoBehaviour:
   audioSource: {fileID: 315332672}
   clips:
   - {fileID: 8300000, guid: 513801042f4f7d54aaaa7fef1c56d26c, type: 3}
-  raycastCamera: {fileID: 0}
+  raycastCamera: {fileID: 1210346430}
   maxRayDistance: 100
+  upButton: {fileID: 158299616}
+  buttonDelay: 1
 --- !u!114 &315332682
 MonoBehaviour:
   m_ObjectHideFlags: 0
