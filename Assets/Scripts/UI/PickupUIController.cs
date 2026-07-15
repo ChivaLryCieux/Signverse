@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using Skills;
 using UnityEngine;
@@ -52,9 +53,37 @@ public class PickupUIController : MonoBehaviour
     [Tooltip("按界面位置顺序拖入左上角 5 个装备槽。装备不会自动补位，槽位允许空缺。")]
     [SerializeField] private PickupUISlotView[] equippedSlots = new PickupUISlotView[5];
 
+    [Header("装备动效")]
+    [Tooltip("5 个装备槽各自对应的 image 物体（如 Image(1,1)、Image(2,1) 等）。按槽位顺序拖入。")]
+    [SerializeField] private GameObject[] equippedSlotImages = new GameObject[5];
+
+    [Header("联动特效")]
+    [Tooltip("联动菱形线条的 Animator（两个）。按顺序拖入。")]
+    [SerializeField] private Animator[] linkedDiamondLineAnimators = new Animator[2];
+    [Tooltip("联动菱形背景的 Animator（两个）。按顺序拖入。")]
+    [SerializeField] private Animator[] linkedDiamondBgAnimators = new Animator[2];
+    [Tooltip("线条出现后，背景出现前的停顿时间（秒）。")]
+    [SerializeField, Min(0f)] private float linkedEffectDelay = 0.3f;
+    [Tooltip("CanvasAudio 组件，用于播放联动特效音效。")]
+    [SerializeField] private CanvasAudio canvasAudio;
+
+    [Header("联动技能材质")]
+    [Tooltip("联动技能的 Outline 材质（UI Shader 文件夹下的 Outline.mat）。")]
+    [SerializeField] private Material linkedOutlineMaterial;
+    [Tooltip("联动技能解锁后，切换到 Outline 材质的延迟时间（秒）。")]
+    [SerializeField, Min(0f)] private float linkedMaterialSwitchDelay = 0.5f;
+    [Tooltip("材质切换的渐入渐出时间（秒）。")]
+    [SerializeField, Min(0f)] private float linkedMaterialFadeDuration = 0.3f;
+
     [Header("第五装备槽")]
     [Tooltip("左上角第 5 个装备槽是否已解锁。未解锁时不能安装技能，可通过 Trigger Pickup 按 E 解锁。")]
     [SerializeField] private bool fifthEquippedSlotUnlocked;
+
+    [Header("调试（仅编辑器测试用）")]
+    [Tooltip("勾选后在游戏启动时获得全部螺栓。")]
+    [SerializeField] private bool debugUnlockAllBolts;
+    [Tooltip("填入要提前解锁的技能序号（1-5），多个用逗号分隔。例如：1,2,3")]
+    [SerializeField] private string debugUnlockSkills = "";
 
     [Header("行为")]
     [SerializeField] private bool hideLockedSlotsOnStart = true;
@@ -161,6 +190,49 @@ public class PickupUIController : MonoBehaviour
         SyncBoltSpend();
         SyncLinkedSkills();
         suppressSaveOnSync = false;
+        InitializeEquipEffects();
+        InitializeDebugOptions();
+    }
+
+    // 启动时隐藏所有装备动效物体，仅在装备瞬间由 PlayEquipEffect 激活显示。
+    private void InitializeEquipEffects()
+    {
+        // 子 prefab 的 active 状态由用户自行控制，代码不做初始化隐藏。
+    }
+
+    // 调试选项：在 Inspector 中勾选后，游戏启动时自动解锁装备槽或获得全部螺栓。
+    private void InitializeDebugOptions()
+    {
+        if (debugUnlockAllBolts && boltPanel != null)
+        {
+            boltPanel.SetUnlockedCount(boltPanel.MaxUnlockedCount);
+            Debug.Log("[调试] 已获得全部螺栓。");
+        }
+
+        if (!string.IsNullOrEmpty(debugUnlockSkills))
+        {
+            UnlockSkillsByDebug(debugUnlockSkills);
+        }
+    }
+
+    // 解析调试输入的技能序号（1-5），解锁对应技能。
+    private void UnlockSkillsByDebug(string input)
+    {
+        string[] parts = input.Split(',');
+        foreach (string part in parts)
+        {
+            string trimmed = part.Trim();
+            if (int.TryParse(trimmed, out int index) && index >= 1 && index <= 5)
+            {
+                PickupItemId itemId = (PickupItemId)(index - 1);
+                Unlock(itemId);
+                Debug.Log($"[调试] 已解锁技能 {itemId}（序号 {index}）。");
+            }
+            else
+            {
+                Debug.LogWarning($"[调试] 无效的技能序号：{trimmed}（应为 1-5）。");
+            }
+        }
     }
 
     private void OnEnable()
@@ -880,9 +952,40 @@ public class PickupUIController : MonoBehaviour
             appliedLinkedSkills.Clear();
         }
 
-        AddLinkedSkillForPair(1, 2);
-        AddLinkedSkillForPair(3, 4);
-        AddStandaloneSkillForSlot(5);
+        // 记录当前联动特效状态（是否正在显示）
+        bool wasShowing23 = IsLinkedEffectShowing(0);
+        bool wasShowing45 = IsLinkedEffectShowing(1);
+
+        AddStandaloneSkillForSlot(1);
+        AddLinkedSkillForPair(2, 3);
+        AddLinkedSkillForPair(4, 5);
+
+        // 检查联动技能是否被解锁
+        bool isLinked23 = HasLinkedSkill(2, 3);
+        bool isLinked45 = HasLinkedSkill(4, 5);
+
+        // 只在状态变化时触发特效
+        if (!wasShowing23 && isLinked23)
+        {
+            PlayLinkedSkillEffect(2);
+            StartLinkedMaterialSwitch(2, 3, true);
+        }
+        else if (wasShowing23 && !isLinked23)
+        {
+            HideLinkedEffect(0);
+            StartLinkedMaterialSwitch(2, 3, false);
+        }
+
+        if (!wasShowing45 && isLinked45)
+        {
+            PlayLinkedSkillEffect(4);
+            StartLinkedMaterialSwitch(4, 5, true);
+        }
+        else if (wasShowing45 && !isLinked45)
+        {
+            HideLinkedEffect(1);
+            StartLinkedMaterialSwitch(4, 5, false);
+        }
 
         // 把装备槽推导出的技能同步到 PlayerCC。动画脚本不再需要读取 UI 私有状态，只读取 PlayerCC.equippedSkills。
         player.SetEquippedSkills(equippedSkillSnapshot);
@@ -935,6 +1038,58 @@ public class PickupUIController : MonoBehaviour
         if (!equippedSkillSnapshot.Contains(skill))
         {
             equippedSkillSnapshot.Add(skill);
+        }
+    }
+
+    // 触发联动特效：先播放菱形线条，停顿后播放菱形背景。
+    // mainSlotNumber 为 2 时触发第一组，为 4 时触发第二组。
+    private void PlayLinkedSkillEffect(int mainSlotNumber)
+    {
+        int effectIndex = mainSlotNumber == 2 ? 0 : 1;
+        StartCoroutine(PlayLinkedSkillEffectCoroutine(effectIndex));
+    }
+
+    // 联动特效协程：线条 → 停顿 → 背景。
+    private IEnumerator PlayLinkedSkillEffectCoroutine(int effectIndex)
+    {
+        // 先触发菱形线条
+        if (linkedDiamondLineAnimators != null && effectIndex < linkedDiamondLineAnimators.Length)
+        {
+            Animator lineAnim = linkedDiamondLineAnimators[effectIndex];
+            if (lineAnim != null)
+            {
+                lineAnim.gameObject.SetActive(true);
+                lineAnim.SetTrigger("Reveal");
+
+                // 播放线条音效
+                if (canvasAudio != null)
+                {
+                    canvasAudio.PlayLinkedDiamondLineSFX();
+                }
+            }
+        }
+
+        // 停顿
+        if (linkedEffectDelay > 0f)
+        {
+            yield return new WaitForSeconds(linkedEffectDelay);
+        }
+
+        // 再触发菱形背景
+        if (linkedDiamondBgAnimators != null && effectIndex < linkedDiamondBgAnimators.Length)
+        {
+            Animator bgAnim = linkedDiamondBgAnimators[effectIndex];
+            if (bgAnim != null)
+            {
+                bgAnim.gameObject.SetActive(true);
+                bgAnim.SetTrigger("Reveal");
+
+                // 播放背景音效
+                if (canvasAudio != null)
+                {
+                    canvasAudio.PlayLinkedDiamondBgSFX();
+                }
+            }
         }
     }
 
@@ -1002,6 +1157,218 @@ public class PickupUIController : MonoBehaviour
         prefix = mainIndex.ToString() + subIndex + "-";
         exactId = BuildLinkedSkillId(prefix, mainCode, subCode);
         return true;
+    }
+
+    // 检查指定的两个槽位是否都装备了技能（联动状态）。
+    private bool HasLinkedSkill(int mainSlotNumber, int subSlotNumber)
+    {
+        return TryGetEquippedEntry(mainSlotNumber, out _) && TryGetEquippedEntry(subSlotNumber, out _);
+    }
+
+    // 检查指定索引的联动特效是否正在显示（通过检查 Animator 状态）。
+    private bool IsLinkedEffectShowing(int effectIndex)
+    {
+        if (linkedDiamondLineAnimators != null && effectIndex < linkedDiamondLineAnimators.Length)
+        {
+            Animator lineAnim = linkedDiamondLineAnimators[effectIndex];
+            if (lineAnim != null && lineAnim.gameObject.activeSelf)
+            {
+                // 检查是否在"菱形线条出现"状态（而不是"菱形空状态"或"菱形线条消失"）
+                AnimatorStateInfo stateInfo = lineAnim.GetCurrentAnimatorStateInfo(0);
+                if (stateInfo.IsName("菱形线条出现") || stateInfo.IsName("联动菱形线条"))
+                {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    // 隐藏指定索引的联动特效。
+    private void HideLinkedEffect(int effectIndex)
+    {
+        if (linkedDiamondLineAnimators != null && effectIndex < linkedDiamondLineAnimators.Length)
+        {
+            Animator lineAnim = linkedDiamondLineAnimators[effectIndex];
+            if (lineAnim != null)
+            {
+                lineAnim.SetTrigger("Hide");
+            }
+        }
+
+        if (linkedDiamondBgAnimators != null && effectIndex < linkedDiamondBgAnimators.Length)
+        {
+            Animator bgAnim = linkedDiamondBgAnimators[effectIndex];
+            if (bgAnim != null)
+            {
+                bgAnim.SetTrigger("Hide");
+            }
+        }
+    }
+
+    // 隐藏所有联动特效（菱形线条和菱形背景）。
+    private void HideAllLinkedEffects()
+    {
+        if (linkedDiamondLineAnimators != null)
+        {
+            for (int i = 0; i < linkedDiamondLineAnimators.Length; i++)
+            {
+                if (linkedDiamondLineAnimators[i] != null)
+                {
+                    linkedDiamondLineAnimators[i].SetTrigger("Hide");
+                }
+            }
+        }
+
+        if (linkedDiamondBgAnimators != null)
+        {
+            for (int i = 0; i < linkedDiamondBgAnimators.Length; i++)
+            {
+                if (linkedDiamondBgAnimators[i] != null)
+                {
+                    linkedDiamondBgAnimators[i].SetTrigger("Hide");
+                }
+            }
+        }
+    }
+
+    // 启动联动技能材质切换（联动时切换到 Outline 材质，解除时切换回默认材质）。
+    private void StartLinkedMaterialSwitch(int mainSlotNumber, int subSlotNumber, bool isLinking)
+    {
+        if (linkedOutlineMaterial == null)
+        {
+            return;
+        }
+
+        // 获取两个装备槽的 PickupUISlotView
+        int mainIndex = mainSlotNumber - 1;
+        int subIndex = subSlotNumber - 1;
+
+        if (mainIndex < 0 || mainIndex >= equippedSlots.Length ||
+            subIndex < 0 || subIndex >= equippedSlots.Length)
+        {
+            return;
+        }
+
+        PickupUISlotView mainSlot = equippedSlots[mainIndex];
+        PickupUISlotView subSlot = equippedSlots[subIndex];
+
+        if (mainSlot == null || subSlot == null)
+        {
+            return;
+        }
+
+        // 获取技能图标的 Image 组件
+        Image mainIcon = mainSlot.GetComponentInChildren<Image>();
+        Image subIcon = subSlot.GetComponentInChildren<Image>();
+
+        if (mainIcon == null || subIcon == null)
+        {
+            return;
+        }
+
+        if (isLinking)
+        {
+            // 联动时，延迟后切换到 Outline 材质
+            StartCoroutine(SwitchMaterialDelayed(mainIcon, subIcon, linkedOutlineMaterial, linkedMaterialSwitchDelay));
+        }
+        else
+        {
+            // 解除联动时，切换回默认材质
+            StartCoroutine(FadeMaterialOut(mainIcon, subIcon));
+        }
+    }
+
+    // 延迟后切换到指定材质（带渐入效果）。
+    private IEnumerator SwitchMaterialDelayed(Image mainImg, Image subImg, Material targetMat, float delay)
+    {
+        if (delay > 0f)
+        {
+            yield return new WaitForSeconds(delay);
+        }
+
+        // 保存原始材质，以便后续恢复
+        if (mainImg.material != targetMat)
+        {
+            mainImg.material = targetMat;
+            StartCoroutine(FadeMaterialIn(mainImg));
+        }
+
+        if (subImg.material != targetMat)
+        {
+            subImg.material = targetMat;
+            StartCoroutine(FadeMaterialIn(subImg));
+        }
+    }
+
+    // 材质渐入效果（从透明到不透明）。
+    private IEnumerator FadeMaterialIn(Image img)
+    {
+        if (linkedMaterialFadeDuration <= 0f)
+        {
+            yield break;
+        }
+
+        float elapsed = 0f;
+        Color color = img.color;
+        float startAlpha = 0f;
+        float endAlpha = 1f;
+
+        img.color = new Color(color.r, color.g, color.b, startAlpha);
+
+        while (elapsed < linkedMaterialFadeDuration)
+        {
+            elapsed += Time.deltaTime;
+            float t = Mathf.Clamp01(elapsed / linkedMaterialFadeDuration);
+            img.color = new Color(color.r, color.g, color.b, Mathf.Lerp(startAlpha, endAlpha, t));
+            yield return null;
+        }
+
+        img.color = new Color(color.r, color.g, color.b, endAlpha);
+    }
+
+    // 材质渐出效果（从不透明到透明，然后切换回默认材质）。
+    private IEnumerator FadeMaterialOut(Image mainImg, Image subImg)
+    {
+        // 如果图片的 sprite 已经被清空（技能被卸下），直接返回
+        if (mainImg.sprite == null || subImg.sprite == null)
+        {
+            mainImg.material = null;
+            subImg.material = null;
+            yield break;
+        }
+
+        if (linkedMaterialFadeDuration <= 0f)
+        {
+            // 无渐出效果，直接切换回默认材质
+            mainImg.material = null;
+            subImg.material = null;
+            yield break;
+        }
+
+        // 渐出效果
+        float elapsed = 0f;
+        Color mainColor = mainImg.color;
+        Color subColor = subImg.color;
+        float startAlpha = 1f;
+        float endAlpha = 0f;
+
+        while (elapsed < linkedMaterialFadeDuration)
+        {
+            elapsed += Time.deltaTime;
+            float t = Mathf.Clamp01(elapsed / linkedMaterialFadeDuration);
+            mainImg.color = new Color(mainColor.r, mainColor.g, mainColor.b, Mathf.Lerp(startAlpha, endAlpha, t));
+            subImg.color = new Color(subColor.r, subColor.g, subColor.b, Mathf.Lerp(startAlpha, endAlpha, t));
+            yield return null;
+        }
+
+        // 切换回默认材质
+        mainImg.material = null;
+        subImg.material = null;
+
+        // 恢复原始透明度
+        mainImg.color = new Color(mainColor.r, mainColor.g, mainColor.b, 1f);
+        subImg.color = new Color(subColor.r, subColor.g, subColor.b, 1f);
     }
 
     private Sprite GetEquippedIcon(int equippedIndex, PickupUiEntry entry)
@@ -1403,6 +1770,24 @@ public class PickupUIController : MonoBehaviour
         floatingSelectedIconImage.raycastTarget = false;
         floatingSelectedIconImage.preserveAspect = true;
 
+        // 检查源槽位是否处于联动状态，如果是则应用 Outline 材质
+        if (linkedOutlineMaterial != null)
+        {
+            int slotIndex = System.Array.IndexOf(equippedSlots, sourceSlot);
+            if (slotIndex >= 0)
+            {
+                // 检查该槽位是否处于联动状态
+                bool isLinked = (slotIndex == 1 && HasLinkedSkill(2, 3)) ||
+                                (slotIndex == 2 && HasLinkedSkill(2, 3)) ||
+                                (slotIndex == 3 && HasLinkedSkill(4, 5)) ||
+                                (slotIndex == 4 && HasLinkedSkill(4, 5));
+                if (isLinked)
+                {
+                    floatingSelectedIconImage.material = linkedOutlineMaterial;
+                }
+            }
+        }
+
         Vector2 iconSize = sourceSlot.GetIconSize();
         if (iconSize.x <= 0f || iconSize.y <= 0f)
         {
@@ -1608,6 +1993,7 @@ public class PickupUIController : MonoBehaviour
             SyncBoltSpend();
             SyncLinkedSkills();
             PlaySkillLoadoutSfx(equipSuccessSfx);
+            PlayEquipEffect(i);
             ItemEquipped?.Invoke(dragSourceItem);
             return;
         }
@@ -1690,7 +2076,8 @@ public class PickupUIController : MonoBehaviour
         PickupItemId sourceItem = equippedSlotItems[fromIndex];
 
         // 目标槽位有技能时交换，空槽时直接移入
-        if (equippedSlotOccupied[toIndex])
+        bool wasSwap = equippedSlotOccupied[toIndex];
+        if (wasSwap)
         {
             PickupItemId targetItem = equippedSlotItems[toIndex];
             equippedSlotItems[fromIndex] = targetItem;
@@ -1711,6 +2098,74 @@ public class PickupUIController : MonoBehaviour
         SyncBoltSpend();
         SyncLinkedSkills();
         PlaySkillLoadoutSfx(equipSuccessSfx);
+
+        // 交换时两槽内容都变了，都播放动效；纯移动只播放目标槽
+        PlayEquipEffect(toIndex);
+        if (wasSwap)
+        {
+            PlayEquipEffect(fromIndex);
+        }
+    }
+
+    // 在指定装备槽对应的 image 物体的子 prefab 上播放"单个圆形旋转"动效。
+    // 从 image 物体的子物体中查找 Animator，触发 "Reveal" 动画，播完后隐藏子物体。
+    private void PlayEquipEffect(int slotIndex)
+    {
+        if (!IsValidEquippedIndex(slotIndex))
+        {
+            return;
+        }
+
+        if (equippedSlotImages == null || slotIndex >= equippedSlotImages.Length)
+        {
+            return;
+        }
+
+        GameObject imageObj = equippedSlotImages[slotIndex];
+        if (imageObj == null)
+        {
+            return;
+        }
+
+        // 从 image 物体的子物体中查找 Animator（includeInactive=true 确保能找到被隐藏的子 prefab）
+        Animator anim = imageObj.GetComponentInChildren<Animator>(true);
+        if (anim == null)
+        {
+            return;
+        }
+
+        // 重新激活子 prefab 物体（上次播完可能已被隐藏），再触发旋转动画
+        anim.gameObject.SetActive(true);
+        anim.SetTrigger("Reveal");
+        StartCoroutine(HideEquipEffectWhenDone(anim));
+    }
+
+    // 等待 Animator 进入旋转状态并播完后，隐藏物体。
+    private IEnumerator HideEquipEffectWhenDone(Animator anim)
+    {
+        int stateHash = Animator.StringToHash("单技能圆形旋转锁定");
+
+        // 先等进入旋转状态（过渡可能需要一帧）
+        int waitFrames = 0;
+        while (!anim.GetCurrentAnimatorStateInfo(0).shortNameHash.Equals(stateHash))
+        {
+            waitFrames++;
+            if (waitFrames > 30)
+            {
+                // 安全兜底：长时间未进入状态则放弃，避免协程泄漏
+                yield break;
+            }
+            yield return null;
+        }
+
+        // 在旋转状态中等到 normalizedTime >= 1（播完）
+        while (anim.GetCurrentAnimatorStateInfo(0).shortNameHash.Equals(stateHash) &&
+               anim.GetCurrentAnimatorStateInfo(0).normalizedTime < 1f)
+        {
+            yield return null;
+        }
+
+        anim.gameObject.SetActive(false);
     }
 
     private void CancelDrag()

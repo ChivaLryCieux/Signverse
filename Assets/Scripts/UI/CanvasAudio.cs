@@ -9,8 +9,13 @@ public class CanvasAudio : MonoBehaviour
 
     [Header("audio")]
     public AudioClip showNarrativeSFX;
-    public AudioClip closeNarrativeSFX; 
+    public AudioClip closeNarrativeSFX;
     public AudioClip pauseButtonSFX;
+
+    [Header("联动特效音效")]
+    public AudioClip linkedDiamondLineSFX;
+    public AudioClip linkedDiamondBgSFX;
+
     // Start is called before the first frame update
     void Start()
     {
@@ -23,7 +28,7 @@ public class CanvasAudio : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        
+
     }
     public void showNarrative()
     {
@@ -36,5 +41,21 @@ public class CanvasAudio : MonoBehaviour
     public void PlayPauseButtonSFX()
     {
         audioSource.PlayOneShot(pauseButtonSFX);
+    }
+
+    public void PlayLinkedDiamondLineSFX()
+    {
+        if (linkedDiamondLineSFX != null)
+        {
+            audioSource.PlayOneShot(linkedDiamondLineSFX);
+        }
+    }
+
+    public void PlayLinkedDiamondBgSFX()
+    {
+        if (linkedDiamondBgSFX != null)
+        {
+            audioSource.PlayOneShot(linkedDiamondBgSFX);
+        }
     }
 }
