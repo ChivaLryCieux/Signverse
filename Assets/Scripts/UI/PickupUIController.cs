@@ -62,6 +62,10 @@ public class PickupUIController : MonoBehaviour
     [SerializeField] private Animator[] linkedDiamondLineAnimators = new Animator[2];
     [Tooltip("联动菱形背景的 Animator（两个）。按顺序拖入。")]
     [SerializeField] private Animator[] linkedDiamondBgAnimators = new Animator[2];
+    [Tooltip("线条出现后，背景出现前的停顿时间（秒）。")]
+    [SerializeField, Min(0f)] private float linkedEffectDelay = 0.3f;
+    [Tooltip("CanvasAudio 组件，用于播放联动特效音效。")]
+    [SerializeField] private CanvasAudio canvasAudio;
 
     [Header("第五装备槽")]
     [Tooltip("左上角第 5 个装备槽是否已解锁。未解锁时不能安装技能，可通过 Trigger Pickup 按 E 解锁。")]
@@ -1007,12 +1011,17 @@ public class PickupUIController : MonoBehaviour
         }
     }
 
-    // 触发联动特效：先播放菱形线条，再播放菱形背景。
+    // 触发联动特效：先播放菱形线条，停顿后播放菱形背景。
     // mainSlotNumber 为 2 时触发第一组，为 4 时触发第二组。
     private void PlayLinkedSkillEffect(int mainSlotNumber)
     {
         int effectIndex = mainSlotNumber == 2 ? 0 : 1;
+        StartCoroutine(PlayLinkedSkillEffectCoroutine(effectIndex));
+    }
 
+    // 联动特效协程：线条 → 停顿 → 背景。
+    private IEnumerator PlayLinkedSkillEffectCoroutine(int effectIndex)
+    {
         // 先触发菱形线条
         if (linkedDiamondLineAnimators != null && effectIndex < linkedDiamondLineAnimators.Length)
         {
@@ -1021,7 +1030,19 @@ public class PickupUIController : MonoBehaviour
             {
                 lineAnim.gameObject.SetActive(true);
                 lineAnim.SetTrigger("Reveal");
+
+                // 播放线条音效
+                if (canvasAudio != null)
+                {
+                    canvasAudio.PlayLinkedDiamondLineSFX();
+                }
             }
+        }
+
+        // 停顿
+        if (linkedEffectDelay > 0f)
+        {
+            yield return new WaitForSeconds(linkedEffectDelay);
         }
 
         // 再触发菱形背景
@@ -1032,6 +1053,12 @@ public class PickupUIController : MonoBehaviour
             {
                 bgAnim.gameObject.SetActive(true);
                 bgAnim.SetTrigger("Reveal");
+
+                // 播放背景音效
+                if (canvasAudio != null)
+                {
+                    canvasAudio.PlayLinkedDiamondBgSFX();
+                }
             }
         }
     }
