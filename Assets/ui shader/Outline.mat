@@ -119,7 +119,7 @@ Material:
     - _DistortSpeedX: 1
     - _DistortSpeedY: 1
     - _DistortTexXSpeed: -16.4
-    - _DistortTexYSpeed: 4
+    - _DistortTexYSpeed: 0
     - _EditorDrawers: 6
     - _EnableExternalAlpha: 0
     - _EndTime: 4
@@ -142,10 +142,10 @@ Material:
     - _Glow: 10
     - _GlowGlobal: 1
     - _GlowIntensity: 2.4
-    - _GlowIntensityMax: 9.38
+    - _GlowIntensityMax: 3.3
     - _GlowScrollSpeed: -1.64
-    - _GlowScrollSpeedX: 0
-    - _GlowScrollSpeedY: -2.44
+    - _GlowScrollSpeedX: -0.55
+    - _GlowScrollSpeedY: -0.62
     - _GradBlend: 1
     - _GradBoostX: 1.2
     - _GradBoostY: 1.2
@@ -187,9 +187,9 @@ Material:
     - _OffsetUvY: 0
     - _OnlyInnerOutline: 0
     - _OnlyOutline: 0
-    - _OutlineAlpha: 0.7
+    - _OutlineAlpha: 1
     - _OutlineDistortAmount: 1.58
-    - _OutlineDistortAmountMax: 0
+    - _OutlineDistortAmountMax: 0.2
     - _OutlineDistortTexXSpeed: -36.5
     - _OutlineDistortTexYSpeed: -50
     - _OutlineGlow: 1
@@ -215,8 +215,8 @@ Material:
     - _ShadowY: -0.05
     - _ShakeUvSpeed: 2.5
     - _ShakeUvSpeedMax: 1.22
-    - _ShakeUvX: 0.87
-    - _ShakeUvY: 0.48
+    - _ShakeUvX: 0.63
+    - _ShakeUvY: 0.15
     - _ShineGlow: 1
     - _ShineLocation: 0.5
     - _ShineRotate: 0
@@ -250,7 +250,7 @@ Material:
     - _ColorSwapRed: {r: 1, g: 1, b: 1, a: 1}
     - _FadeBurnColor: {r: 1, g: 1, b: 0, a: 1}
     - _Flip: {r: 1, g: 1, b: 1, a: 1}
-    - _GlowColor: {r: 0.66666657, g: 0.29140452, b: 0.33207053, a: 1}
+    - _GlowColor: {r: 0.5660378, g: 0, b: 0.36217043, a: 1}
     - _GradBotLeftCol: {r: 0, g: 0, b: 1, a: 1}
     - _GradBotRightCol: {r: 0, g: 1, b: 0, a: 1}
     - _GradTopLeftCol: {r: 1, g: 0, b: 0, a: 1}
@@ -259,7 +259,7 @@ Material:
     - _HitEffectColor: {r: 1, g: 1, b: 1, a: 1}
     - _HologramStripeColor: {r: 0, g: 1, b: 1, a: 1}
     - _InnerOutlineColor: {r: 1, g: 0, b: 0, a: 1}
-    - _OutlineColor: {r: 0.8616352, g: 0.20863485, b: 0.48434606, a: 1}
+    - _OutlineColor: {r: 0.7484276, g: 0.11114497, b: 0, a: 0.63529414}
     - _OverlayColor: {r: 1, g: 1, b: 1, a: 1}
     - _RendererColor: {r: 1, g: 1, b: 1, a: 1}
     - _ShadowColor: {r: 0, g: 0, b: 0, a: 1}
