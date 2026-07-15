@@ -1752,6 +1752,24 @@ public class PickupUIController : MonoBehaviour
         floatingSelectedIconImage.raycastTarget = false;
         floatingSelectedIconImage.preserveAspect = true;
 
+        // 检查源槽位是否处于联动状态，如果是则应用 Outline 材质
+        if (linkedOutlineMaterial != null)
+        {
+            int slotIndex = System.Array.IndexOf(equippedSlots, sourceSlot);
+            if (slotIndex >= 0)
+            {
+                // 检查该槽位是否处于联动状态
+                bool isLinked = (slotIndex == 1 && HasLinkedSkill(2, 3)) ||
+                                (slotIndex == 2 && HasLinkedSkill(2, 3)) ||
+                                (slotIndex == 3 && HasLinkedSkill(4, 5)) ||
+                                (slotIndex == 4 && HasLinkedSkill(4, 5));
+                if (isLinked)
+                {
+                    floatingSelectedIconImage.material = linkedOutlineMaterial;
+                }
+            }
+        }
+
         Vector2 iconSize = sourceSlot.GetIconSize();
         if (iconSize.x <= 0f || iconSize.y <= 0f)
         {
