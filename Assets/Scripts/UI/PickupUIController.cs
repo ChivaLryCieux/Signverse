@@ -67,6 +67,14 @@ public class PickupUIController : MonoBehaviour
     [Tooltip("CanvasAudio 组件，用于播放联动特效音效。")]
     [SerializeField] private CanvasAudio canvasAudio;
 
+    [Header("联动技能材质")]
+    [Tooltip("联动技能的 Outline 材质（UI Shader 文件夹下的 Outline.mat）。")]
+    [SerializeField] private Material linkedOutlineMaterial;
+    [Tooltip("联动技能解锁后，切换到 Outline 材质的延迟时间（秒）。")]
+    [SerializeField, Min(0f)] private float linkedMaterialSwitchDelay = 0.5f;
+    [Tooltip("材质切换的渐入渐出时间（秒）。")]
+    [SerializeField, Min(0f)] private float linkedMaterialFadeDuration = 0.3f;
+
     [Header("第五装备槽")]
     [Tooltip("左上角第 5 个装备槽是否已解锁。未解锁时不能安装技能，可通过 Trigger Pickup 按 E 解锁。")]
     [SerializeField] private bool fifthEquippedSlotUnlocked;
@@ -942,19 +950,23 @@ public class PickupUIController : MonoBehaviour
         if (!wasShowing23 && isLinked23)
         {
             PlayLinkedSkillEffect(2);
+            StartLinkedMaterialSwitch(2, 3, true);
         }
         else if (wasShowing23 && !isLinked23)
         {
             HideLinkedEffect(0);
+            StartLinkedMaterialSwitch(2, 3, false);
         }
 
         if (!wasShowing45 && isLinked45)
         {
             PlayLinkedSkillEffect(4);
+            StartLinkedMaterialSwitch(4, 5, true);
         }
         else if (wasShowing45 && !isLinked45)
         {
             HideLinkedEffect(1);
+            StartLinkedMaterialSwitch(4, 5, false);
         }
 
         // 把装备槽推导出的技能同步到 PlayerCC。动画脚本不再需要读取 UI 私有状态，只读取 PlayerCC.equippedSkills。
@@ -1200,6 +1212,145 @@ public class PickupUIController : MonoBehaviour
                 }
             }
         }
+    }
+
+    // 启动联动技能材质切换（联动时切换到 Outline 材质，解除时切换回默认材质）。
+    private void StartLinkedMaterialSwitch(int mainSlotNumber, int subSlotNumber, bool isLinking)
+    {
+        if (linkedOutlineMaterial == null)
+        {
+            return;
+        }
+
+        // 获取两个装备槽的 PickupUISlotView
+        int mainIndex = mainSlotNumber - 1;
+        int subIndex = subSlotNumber - 1;
+
+        if (mainIndex < 0 || mainIndex >= equippedSlots.Length ||
+            subIndex < 0 || subIndex >= equippedSlots.Length)
+        {
+            return;
+        }
+
+        PickupUISlotView mainSlot = equippedSlots[mainIndex];
+        PickupUISlotView subSlot = equippedSlots[subIndex];
+
+        if (mainSlot == null || subSlot == null)
+        {
+            return;
+        }
+
+        // 获取技能图标的 Image 组件
+        Image mainIcon = mainSlot.GetComponentInChildren<Image>();
+        Image subIcon = subSlot.GetComponentInChildren<Image>();
+
+        if (mainIcon == null || subIcon == null)
+        {
+            return;
+        }
+
+        if (isLinking)
+        {
+            // 联动时，延迟后切换到 Outline 材质
+            StartCoroutine(SwitchMaterialDelayed(mainIcon, subIcon, linkedOutlineMaterial, linkedMaterialSwitchDelay));
+        }
+        else
+        {
+            // 解除联动时，切换回默认材质
+            StartCoroutine(FadeMaterialOut(mainIcon, subIcon));
+        }
+    }
+
+    // 延迟后切换到指定材质（带渐入效果）。
+    private IEnumerator SwitchMaterialDelayed(Image mainImg, Image subImg, Material targetMat, float delay)
+    {
+        if (delay > 0f)
+        {
+            yield return new WaitForSeconds(delay);
+        }
+
+        // 保存原始材质，以便后续恢复
+        if (mainImg.material != targetMat)
+        {
+            mainImg.material = targetMat;
+            StartCoroutine(FadeMaterialIn(mainImg));
+        }
+
+        if (subImg.material != targetMat)
+        {
+            subImg.material = targetMat;
+            StartCoroutine(FadeMaterialIn(subImg));
+        }
+    }
+
+    // 材质渐入效果（从透明到不透明）。
+    private IEnumerator FadeMaterialIn(Image img)
+    {
+        if (linkedMaterialFadeDuration <= 0f)
+        {
+            yield break;
+        }
+
+        float elapsed = 0f;
+        Color color = img.color;
+        float startAlpha = 0f;
+        float endAlpha = 1f;
+
+        img.color = new Color(color.r, color.g, color.b, startAlpha);
+
+        while (elapsed < linkedMaterialFadeDuration)
+        {
+            elapsed += Time.deltaTime;
+            float t = Mathf.Clamp01(elapsed / linkedMaterialFadeDuration);
+            img.color = new Color(color.r, color.g, color.b, Mathf.Lerp(startAlpha, endAlpha, t));
+            yield return null;
+        }
+
+        img.color = new Color(color.r, color.g, color.b, endAlpha);
+    }
+
+    // 材质渐出效果（从不透明到透明，然后切换回默认材质）。
+    private IEnumerator FadeMaterialOut(Image mainImg, Image subImg)
+    {
+        // 如果图片的 sprite 已经被清空（技能被卸下），直接返回
+        if (mainImg.sprite == null || subImg.sprite == null)
+        {
+            mainImg.material = null;
+            subImg.material = null;
+            yield break;
+        }
+
+        if (linkedMaterialFadeDuration <= 0f)
+        {
+            // 无渐出效果，直接切换回默认材质
+            mainImg.material = null;
+            subImg.material = null;
+            yield break;
+        }
+
+        // 渐出效果
+        float elapsed = 0f;
+        Color mainColor = mainImg.color;
+        Color subColor = subImg.color;
+        float startAlpha = 1f;
+        float endAlpha = 0f;
+
+        while (elapsed < linkedMaterialFadeDuration)
+        {
+            elapsed += Time.deltaTime;
+            float t = Mathf.Clamp01(elapsed / linkedMaterialFadeDuration);
+            mainImg.color = new Color(mainColor.r, mainColor.g, mainColor.b, Mathf.Lerp(startAlpha, endAlpha, t));
+            subImg.color = new Color(subColor.r, subColor.g, subColor.b, Mathf.Lerp(startAlpha, endAlpha, t));
+            yield return null;
+        }
+
+        // 切换回默认材质
+        mainImg.material = null;
+        subImg.material = null;
+
+        // 恢复原始透明度
+        mainImg.color = new Color(mainColor.r, mainColor.g, mainColor.b, 1f);
+        subImg.color = new Color(subColor.r, subColor.g, subColor.b, 1f);
     }
 
     private Sprite GetEquippedIcon(int equippedIndex, PickupUiEntry entry)
