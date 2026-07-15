@@ -41,6 +41,12 @@ public class VolumeClickEffect : MonoBehaviour
     [SerializeField] private float maxRayDistance = 100f;
 
 
+    [Header("点击后触发按钮")]
+    [SerializeField] private ButtonMoveCamera upButton;
+
+
+    [Header("触发按钮延迟")]
+    [SerializeField] private float buttonDelay = 1f;
 
     private Camera mainCamera;
 
@@ -50,9 +56,7 @@ public class VolumeClickEffect : MonoBehaviour
 
     private void Awake()
     {
-        mainCamera = raycastCamera != null
-            ? raycastCamera
-            : Camera.main;
+
 
 
         if (audioSource == null)
@@ -68,6 +72,18 @@ public class VolumeClickEffect : MonoBehaviour
         if(targetVolume != null)
         {
             targetVolume.weight = 0f;
+        }
+    }
+
+    private void Start()
+    {
+        if (raycastCamera != null)
+        {
+            mainCamera = raycastCamera;
+        }
+        else
+        {
+            mainCamera = Camera.main;
         }
     }
 
@@ -97,8 +113,9 @@ public class VolumeClickEffect : MonoBehaviour
 
     private void DetectClick()
     {
-        if (mainCamera == null)
+        if(mainCamera == null)
         {
+            Debug.Log("没有找到射线检测相机");
             return;
         }
 
@@ -145,10 +162,19 @@ public class VolumeClickEffect : MonoBehaviour
 
 
         StartCoroutine(VolumeEffectCoroutine());
+        StartCoroutine(TriggerButtonAfterDelay());
     }
 
 
+    private IEnumerator TriggerButtonAfterDelay()
+    {
+        yield return new WaitForSeconds(buttonDelay);
 
+        if (upButton != null)
+        {
+            upButton.SwitchToCamera2();
+        }
+    }
     private IEnumerator VolumeEffectCoroutine()
     {
         isPlaying = true;
@@ -222,6 +248,11 @@ public class VolumeClickEffect : MonoBehaviour
             targetVolume.weight =
                 volumeCurve.Evaluate(1f);
         }
+
+
+        //=========================
+        // 延迟触发按钮
+        //=========================
 
 
 

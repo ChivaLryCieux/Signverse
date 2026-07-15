@@ -1,3 +1,4 @@
+using System.Collections;
 using TMPro;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -9,34 +10,82 @@ public class TriggerScenePortal : MonoBehaviour
     [Header("切换目标 Scene Index")]
     public int targetSceneIndex = 1;
 
-    [Header("进入 Trigger 时显示的提示 Panel")]
-    [SerializeField, FormerlySerializedAs("objectToShow")] private GameObject promptPanel;
 
-    public AudioSource audioSource;
+    [Header("转场")]
+    [Tooltip("引用全局转场Canvas控制器")]
+    [SerializeField] private MainMenuTransitionController transitionController;
+
+    [Tooltip("转场完成后等待时间")]
+    [SerializeField] private float sceneLoadDelay = 0.5f;
+
+
+
+    [Header("进入 Trigger 时显示的提示 Panel")]
+    [Tooltip("拖入完整Panel物体，不要拖TMP文字")]
+    [SerializeField, FormerlySerializedAs("objectToShow")]
+    private GameObject promptPanel;
+
+
+
+    [Header("音效")]
+    [SerializeField] private AudioSource audioSource;
+
+
 
     private bool playerInside;
+    private bool isChangingScene;
 
-    // ------------------------
-    // Update
-    // ------------------------
 
-    void Update()
+
+    private void Start()
     {
-        if (!playerInside)
+        if (transitionController == null)
+        {
+            transitionController =
+                FindObjectOfType<MainMenuTransitionController>();
+        }
+
+
+        if (transitionController == null)
+        {
+            Debug.LogWarning(
+                "没有找到 MainMenuTransitionController"
+            );
+        }
+
+
+        if(audioSource == null)
+        {
+            audioSource = GetComponent<AudioSource>();
+        }
+
+
+        if(promptPanel != null)
+        {
+            promptPanel.SetActive(false);
+        }
+    }
+
+
+
+    private void Update()
+    {
+        if (!playerInside || isChangingScene)
         {
             return;
         }
 
-        // 按下 E 切换场景
-        if ((Keyboard.current != null && Keyboard.current.eKey.wasPressedThisFrame) || MobileInputManager.ConsumeInteractPressed())
+
+        if ((Keyboard.current != null &&
+             Keyboard.current.eKey.wasPressedThisFrame)
+             ||
+             MobileInputManager.ConsumeInteractPressed())
         {
             ChangeScene();
         }
     }
 
-    // ------------------------
-    // 进入 Trigger
-    // ------------------------
+
 
     private void OnTriggerEnter(Collider other)
     {
@@ -45,14 +94,14 @@ public class TriggerScenePortal : MonoBehaviour
             return;
         }
 
+
         playerInside = true;
+
 
         SetPromptPanelVisible(true);
     }
 
-    // ------------------------
-    // 离开 Trigger
-    // ------------------------
+
 
     private void OnTriggerExit(Collider other)
     {
@@ -61,48 +110,106 @@ public class TriggerScenePortal : MonoBehaviour
             return;
         }
 
+
         playerInside = false;
+
 
         SetPromptPanelVisible(false);
     }
 
-    // ------------------------
-    // 切换场景
-    // ------------------------
+
 
     private void ChangeScene()
     {
-        // 停止所有 SFX
-        if (AudioSFXManager.Instance != null)
-        {
-            AudioSFXManager.Instance.StopAllAudioImmediately();
-        }
-        SetPromptPanelVisible(false);
-
-        SaveManager.Instance?.CaptureAndSave();
-        SceneManager.LoadScene(targetSceneIndex);
-    }
-
-    private void SetPromptPanelVisible(bool visible)
-    {
-        ResolvePromptPanel();
-        if (promptPanel != null)
-        {
-            promptPanel.SetActive(visible);
-        }
-    }
-
-    private void ResolvePromptPanel()
-    {
-        if (promptPanel == null || promptPanel.GetComponent<TMP_Text>() == null)
+        if(isChangingScene)
         {
             return;
         }
 
-        Transform parent = promptPanel.transform.parent;
-        if (parent != null)
+
+        isChangingScene = true;
+
+
+        SetPromptPanelVisible(false);
+
+
+        StartCoroutine(ChangeSceneCoroutine());
+    }
+
+
+
+    private IEnumerator ChangeSceneCoroutine()
+    {
+        // 播放转场
+
+        if(transitionController != null)
         {
-            promptPanel = parent.gameObject;
+            transitionController.StartTransition();
         }
+
+
+
+        // 播放传送音效（如果有）
+
+        if(audioSource != null)
+        {
+            audioSource.Play();
+        }
+
+
+
+        yield return new WaitForSeconds(
+            sceneLoadDelay
+        );
+
+
+
+        // 保存
+
+        if(SaveManager.Instance != null)
+        {
+            SaveManager.Instance.CaptureAndSave();
+        }
+
+
+
+        // 停止全局SFX
+
+        if(AudioSFXManager.Instance != null)
+        {
+            AudioSFXManager.Instance.StopAllAudioImmediately();
+        }
+
+
+
+        // 异步加载场景
+
+        AsyncOperation asyncLoad =
+            SceneManager.LoadSceneAsync(
+                targetSceneIndex
+            );
+
+
+        while(!asyncLoad.isDone)
+        {
+            yield return null;
+        }
+    }
+
+
+
+    private void SetPromptPanelVisible(bool visible)
+    {
+        if(promptPanel == null)
+        {
+            Debug.LogWarning(
+                "Prompt Panel没有绑定"
+            );
+
+            return;
+        }
+
+
+        promptPanel.SetActive(visible);
     }
 }

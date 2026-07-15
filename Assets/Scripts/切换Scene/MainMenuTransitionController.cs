@@ -5,33 +5,27 @@ using UnityEngine.UI;
 
 public class MainMenuTransitionController : MonoBehaviour
 {
+    public static MainMenuTransitionController Instance;
+
     [Header("绑定存档面板事件")]
     [SerializeField] private SavePanelController savePanelController;
-
 
     [Header("全屏遮罩 Image")]
     [SerializeField] private Image fadeImage;
 
-
     [Header("颜色渐变时间")]
     [SerializeField] private float fadeDuration = 1.5f;
-
 
     [Header("第一阶段颜色")]
     [SerializeField] private Color firstColor = Color.red;
 
-
     [Header("第二阶段颜色")]
     [SerializeField] private Color secondColor = Color.black;
 
-
     [Header("结束淡出")]
-    [Tooltip("黑屏保持时间")]
     [SerializeField] private float fadeOutDelay = 1f;
 
-    [Tooltip("黑屏淡出到透明的时间")]
     [SerializeField] private float fadeOutDuration = 1.5f;
-
 
     [Header("音效")]
     [SerializeField] private AudioSource audioSource;
@@ -39,22 +33,47 @@ public class MainMenuTransitionController : MonoBehaviour
     [SerializeField] private List<AudioClip> transitionSFX = new List<AudioClip>();
 
 
-    private bool isTransitioning = false;
+    private bool isTransitioning;
     private Canvas transitionCanvas;
 
 
 
     private void Awake()
     {
+        // =========================
+        // 单例 + 保留跨场景
+        // =========================
+
+        if (Instance != null && Instance != this)
+        {
+            Destroy(gameObject);
+            return;
+        }
+
+
+        Instance = this;
+
         DontDestroyOnLoad(gameObject);
 
-        // 确保 Canvas 切换场景后排序在最上层
-        if(transitionCanvas == null)
+
+
+        // =========================
+        // Canvas排序
+        // =========================
+
+        transitionCanvas = GetComponent<Canvas>();
+
+        if (transitionCanvas != null)
         {
-            transitionCanvas = GetComponent<Canvas>();
+            transitionCanvas.overrideSorting = true;
+            transitionCanvas.sortingOrder = 999;
         }
-        transitionCanvas.overrideSorting = true;
-        transitionCanvas.sortingOrder = 999;
+
+
+
+        // =========================
+        // 自动寻找组件
+        // =========================
 
         if (audioSource == null)
         {
@@ -100,9 +119,6 @@ public class MainMenuTransitionController : MonoBehaviour
 
 
 
-    /// <summary>
-    /// 外部调用的转场入口
-    /// </summary>
     public void StartTransition()
     {
         if (isTransitioning)
@@ -121,12 +137,14 @@ public class MainMenuTransitionController : MonoBehaviour
         isTransitioning = true;
 
 
-        // 播放转场音效
+
+        // 播放音效
+
         if (audioSource != null)
         {
-            foreach (AudioClip clip in transitionSFX)
+            foreach(AudioClip clip in transitionSFX)
             {
-                if (clip != null)
+                if(clip != null)
                 {
                     audioSource.PlayOneShot(clip);
                 }
@@ -135,15 +153,13 @@ public class MainMenuTransitionController : MonoBehaviour
 
 
 
-        // 激活遮罩
-        if (fadeImage != null)
+        if(fadeImage != null)
         {
             fadeImage.gameObject.SetActive(true);
         }
 
 
 
-        // 初始透明颜色
         Color transparentStart = firstColor;
         transparentStart.a = 0f;
 
@@ -153,13 +169,13 @@ public class MainMenuTransitionController : MonoBehaviour
 
 
         // =========================
-        // 第一阶段：透明 → firstColor
+        // 透明 -> 第一颜色
         // =========================
 
         float timer = 0f;
 
 
-        while (timer < fadeDuration)
+        while(timer < fadeDuration)
         {
             timer += Time.deltaTime;
 
@@ -184,13 +200,13 @@ public class MainMenuTransitionController : MonoBehaviour
 
 
         // =========================
-        // 第二阶段：firstColor → secondColor
+        // 第一颜色 -> 黑色
         // =========================
 
         timer = 0f;
 
 
-        while (timer < fadeDuration)
+        while(timer < fadeDuration)
         {
             timer += Time.deltaTime;
 
@@ -215,7 +231,7 @@ public class MainMenuTransitionController : MonoBehaviour
 
 
         // =========================
-        // 黑屏停留
+        // 黑屏保持
         // =========================
 
         yield return new WaitForSeconds(fadeOutDelay);
@@ -223,7 +239,7 @@ public class MainMenuTransitionController : MonoBehaviour
 
 
         // =========================
-        // 第三阶段：secondColor → 透明
+        // 黑色 -> 透明
         // =========================
 
         timer = 0f;
@@ -233,7 +249,7 @@ public class MainMenuTransitionController : MonoBehaviour
         finalTransparent.a = 0f;
 
 
-        while (timer < fadeOutDuration)
+        while(timer < fadeOutDuration)
         {
             timer += Time.deltaTime;
 
@@ -257,7 +273,6 @@ public class MainMenuTransitionController : MonoBehaviour
 
 
 
-        // 隐藏Image
         fadeImage.gameObject.SetActive(false);
 
 

@@ -1,5 +1,7 @@
 using UnityEngine;
 using Cinemachine;
+using System.Collections;
+using UnityEngine.UI;
 
 public class ButtonMoveCamera : MonoBehaviour
 {
@@ -8,39 +10,49 @@ public class ButtonMoveCamera : MonoBehaviour
 
     public GameObject upButton;
     public GameObject downButton;
-    public GameObject newGameButton;
-    public GameObject continueButton;
+    public GameObject newGameText;
+    public GameObject continueText;
+    public GameObject exitText;
+
+    [SerializeField] private TMPTypewriterFade newGameTextFade;
+    [SerializeField] private TMPTypewriterFade continueTextFade;
+    [SerializeField] private TMPTypewriterFade exitTextFade;
 
     void Start()
     {
         // 初始化时，设置虚拟摄像机的优先级
         virtualCamera1.Priority = 10;
         virtualCamera2.Priority = 5;
-        // 初始化按钮状态，后期需要改成调整Interactable
+
+        // 初始化按钮与Text状态，后期需要改成调整Interactable
         upButton.SetActive(true);
         downButton.SetActive(false);
-        newGameButton.SetActive(false);
-        continueButton.SetActive(false);
-    }
-    public void Update()
-    {
-
+        newGameText.SetActive(false);
+        continueText.SetActive(false);
+        exitText.SetActive(false);
     }
 
     public void SwitchToCamera2()
     {
         virtualCamera2.Priority = 15;
-        upButton.SetActive(false);
+
         downButton.SetActive(true);
-        newGameButton.SetActive(true);
-        continueButton.SetActive(true);
+        newGameText.SetActive(true);
+        continueText.SetActive(true);
+        exitText.SetActive(true);
+
+        upButton.SetActive(false);
     }
+
     public void SwitchToCamera1()
     {
         virtualCamera2.Priority = 5;
+
         downButton.SetActive(false);
         upButton.SetActive(true);
-        newGameButton.SetActive(false);
-        continueButton.SetActive(false);
+
+        newGameTextFade.FadeOutAndDisable();
+        continueTextFade.FadeOutAndDisable();
+        exitTextFade.FadeOutAndDisable();
     }
 }
