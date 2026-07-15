@@ -916,9 +916,9 @@ public class PickupUIController : MonoBehaviour
             appliedLinkedSkills.Clear();
         }
 
-        AddLinkedSkillForPair(1, 2);
-        AddLinkedSkillForPair(3, 4);
-        AddStandaloneSkillForSlot(5);
+        AddStandaloneSkillForSlot(1);
+        AddLinkedSkillForPair(2, 3);
+        AddLinkedSkillForPair(4, 5);
 
         // 把装备槽推导出的技能同步到 PlayerCC。动画脚本不再需要读取 UI 私有状态，只读取 PlayerCC.equippedSkills。
         player.SetEquippedSkills(equippedSkillSnapshot);
