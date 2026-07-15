@@ -21,29 +21,53 @@ public class TriggerScenePortal : MonoBehaviour
 
 
     [Header("进入 Trigger 时显示的提示 Panel")]
+    [Tooltip("拖入完整Panel物体，不要拖TMP文字")]
     [SerializeField, FormerlySerializedAs("objectToShow")]
     private GameObject promptPanel;
 
 
-    public AudioSource audioSource;
+
+    [Header("音效")]
+    [SerializeField] private AudioSource audioSource;
+
 
 
     private bool playerInside;
     private bool isChangingScene;
 
 
+
     private void Start()
     {
         if (transitionController == null)
         {
-            transitionController = FindObjectOfType<MainMenuTransitionController>();
+            transitionController =
+                FindObjectOfType<MainMenuTransitionController>();
         }
+
 
         if (transitionController == null)
         {
-            Debug.LogWarning("没有找到 MainMenuTransitionController");
+            Debug.LogWarning(
+                "没有找到 MainMenuTransitionController"
+            );
+        }
+
+
+        if(audioSource == null)
+        {
+            audioSource = GetComponent<AudioSource>();
+        }
+
+
+        if(promptPanel != null)
+        {
+            promptPanel.SetActive(false);
         }
     }
+
+
+
     private void Update()
     {
         if (!playerInside || isChangingScene)
@@ -73,6 +97,7 @@ public class TriggerScenePortal : MonoBehaviour
 
         playerInside = true;
 
+
         SetPromptPanelVisible(true);
     }
 
@@ -87,6 +112,7 @@ public class TriggerScenePortal : MonoBehaviour
 
 
         playerInside = false;
+
 
         SetPromptPanelVisible(false);
     }
@@ -114,57 +140,57 @@ public class TriggerScenePortal : MonoBehaviour
 
     private IEnumerator ChangeSceneCoroutine()
     {
-        // =========================
-        // 开始播放转场
-        // =========================
+        // 播放转场
 
-        if (transitionController != null)
+        if(transitionController != null)
         {
             transitionController.StartTransition();
         }
 
 
-        // =========================
-        // 等待转场黑屏
-        // =========================
 
-        yield return new WaitForSeconds(sceneLoadDelay);
+        // 播放传送音效（如果有）
+
+        if(audioSource != null)
+        {
+            audioSource.Play();
+        }
 
 
 
-        // =========================
+        yield return new WaitForSeconds(
+            sceneLoadDelay
+        );
+
+
+
         // 保存
-        // =========================
 
-        if (SaveManager.Instance != null)
+        if(SaveManager.Instance != null)
         {
             SaveManager.Instance.CaptureAndSave();
         }
 
 
 
-        // =========================
-        // 停止音频
-        // =========================
+        // 停止全局SFX
 
-        if (AudioSFXManager.Instance != null)
+        if(AudioSFXManager.Instance != null)
         {
             AudioSFXManager.Instance.StopAllAudioImmediately();
         }
 
 
 
-        // =========================
         // 异步加载场景
-        // =========================
 
         AsyncOperation asyncLoad =
-            SceneManager.LoadSceneAsync(targetSceneIndex);
+            SceneManager.LoadSceneAsync(
+                targetSceneIndex
+            );
 
 
-        // 等待场景加载完成
-
-        while (!asyncLoad.isDone)
+        while(!asyncLoad.isDone)
         {
             yield return null;
         }
@@ -172,34 +198,18 @@ public class TriggerScenePortal : MonoBehaviour
 
 
 
-
     private void SetPromptPanelVisible(bool visible)
     {
-        ResolvePromptPanel();
-
-        if(promptPanel != null)
+        if(promptPanel == null)
         {
-            promptPanel.SetActive(visible);
-        }
-    }
+            Debug.LogWarning(
+                "Prompt Panel没有绑定"
+            );
 
-
-
-    private void ResolvePromptPanel()
-    {
-        if(promptPanel == null ||
-           promptPanel.GetComponent<TMP_Text>() == null)
-        {
             return;
         }
 
 
-        Transform parent = promptPanel.transform.parent;
-
-
-        if(parent != null)
-        {
-            promptPanel = parent.gameObject;
-        }
+        promptPanel.SetActive(visible);
     }
 }
