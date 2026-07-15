@@ -1301,7 +1301,7 @@ public class PickupUIController : MonoBehaviour
         }
     }
 
-    // 材质渐入效果（从透明到不透明）。
+    // 材质渐入效果（使用 shader 的 _OutlineAlpha 属性）。
     private IEnumerator FadeMaterialIn(Image img)
     {
         if (linkedMaterialFadeDuration <= 0f)
@@ -1309,25 +1309,22 @@ public class PickupUIController : MonoBehaviour
             yield break;
         }
 
+        // 设置初始透明度为 0
+        img.material.SetFloat("_OutlineAlpha", 0f);
+
         float elapsed = 0f;
-        Color color = img.color;
-        float startAlpha = 0f;
-        float endAlpha = 1f;
-
-        img.color = new Color(color.r, color.g, color.b, startAlpha);
-
         while (elapsed < linkedMaterialFadeDuration)
         {
             elapsed += Time.deltaTime;
             float t = Mathf.Clamp01(elapsed / linkedMaterialFadeDuration);
-            img.color = new Color(color.r, color.g, color.b, Mathf.Lerp(startAlpha, endAlpha, t));
+            img.material.SetFloat("_OutlineAlpha", t);
             yield return null;
         }
 
-        img.color = new Color(color.r, color.g, color.b, endAlpha);
+        img.material.SetFloat("_OutlineAlpha", 1f);
     }
 
-    // 材质渐出效果（从不透明到透明，然后切换回默认材质）。
+    // 材质渐出效果（使用 shader 的 _OutlineAlpha 属性，然后切换回默认材质）。
     private IEnumerator FadeMaterialOut(Image mainImg, Image subImg)
     {
         // 如果图片的 sprite 已经被清空（技能被卸下），直接返回
@@ -1346,29 +1343,21 @@ public class PickupUIController : MonoBehaviour
             yield break;
         }
 
-        // 渐出效果
+        // 渐出效果（使用 shader 的 _OutlineAlpha 属性）
         float elapsed = 0f;
-        Color mainColor = mainImg.color;
-        Color subColor = subImg.color;
-        float startAlpha = 1f;
-        float endAlpha = 0f;
-
         while (elapsed < linkedMaterialFadeDuration)
         {
             elapsed += Time.deltaTime;
             float t = Mathf.Clamp01(elapsed / linkedMaterialFadeDuration);
-            mainImg.color = new Color(mainColor.r, mainColor.g, mainColor.b, Mathf.Lerp(startAlpha, endAlpha, t));
-            subImg.color = new Color(subColor.r, subColor.g, subColor.b, Mathf.Lerp(startAlpha, endAlpha, t));
+            float alpha = Mathf.Lerp(1f, 0f, t);
+            mainImg.material.SetFloat("_OutlineAlpha", alpha);
+            subImg.material.SetFloat("_OutlineAlpha", alpha);
             yield return null;
         }
 
         // 切换回默认材质
         mainImg.material = null;
         subImg.material = null;
-
-        // 恢复原始透明度
-        mainImg.color = new Color(mainColor.r, mainColor.g, mainColor.b, 1f);
-        subImg.color = new Color(subColor.r, subColor.g, subColor.b, 1f);
     }
 
     private Sprite GetEquippedIcon(int equippedIndex, PickupUiEntry entry)
