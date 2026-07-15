@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using Skills;
 using UnityEngine;
@@ -51,6 +52,10 @@ public class PickupUIController : MonoBehaviour
     [Header("左上角装备栏")]
     [Tooltip("按界面位置顺序拖入左上角 5 个装备槽。装备不会自动补位，槽位允许空缺。")]
     [SerializeField] private PickupUISlotView[] equippedSlots = new PickupUISlotView[5];
+
+    [Header("装备动效")]
+    [Tooltip("5 个装备槽各自对应的 image 物体（如 Image(1,1)、Image(2,1) 等）。按槽位顺序拖入。")]
+    [SerializeField] private GameObject[] equippedSlotImages = new GameObject[5];
 
     [Header("第五装备槽")]
     [Tooltip("左上角第 5 个装备槽是否已解锁。未解锁时不能安装技能，可通过 Trigger Pickup 按 E 解锁。")]
@@ -159,6 +164,13 @@ public class PickupUIController : MonoBehaviour
         SyncBoltSpend();
         SyncLinkedSkills();
         suppressSaveOnSync = false;
+        InitializeEquipEffects();
+    }
+
+    // 启动时隐藏所有装备动效物体，仅在装备瞬间由 PlayEquipEffect 激活显示。
+    private void InitializeEquipEffects()
+    {
+        // 子 prefab 的 active 状态由用户自行控制，代码不做初始化隐藏。
     }
 
     private void OnEnable()
@@ -1590,6 +1602,7 @@ public class PickupUIController : MonoBehaviour
             SyncBoltSpend();
             SyncLinkedSkills();
             PlaySkillLoadoutSfx(equipSuccessSfx);
+            PlayEquipEffect(i);
             ItemEquipped?.Invoke(dragSourceItem);
             return;
         }
@@ -1672,7 +1685,8 @@ public class PickupUIController : MonoBehaviour
         PickupItemId sourceItem = equippedSlotItems[fromIndex];
 
         // 目标槽位有技能时交换，空槽时直接移入
-        if (equippedSlotOccupied[toIndex])
+        bool wasSwap = equippedSlotOccupied[toIndex];
+        if (wasSwap)
         {
             PickupItemId targetItem = equippedSlotItems[toIndex];
             equippedSlotItems[fromIndex] = targetItem;
@@ -1693,6 +1707,74 @@ public class PickupUIController : MonoBehaviour
         SyncBoltSpend();
         SyncLinkedSkills();
         PlaySkillLoadoutSfx(equipSuccessSfx);
+
+        // 交换时两槽内容都变了，都播放动效；纯移动只播放目标槽
+        PlayEquipEffect(toIndex);
+        if (wasSwap)
+        {
+            PlayEquipEffect(fromIndex);
+        }
+    }
+
+    // 在指定装备槽对应的 image 物体的子 prefab 上播放"单个圆形旋转"动效。
+    // 从 image 物体的子物体中查找 Animator，触发 "Reveal" 动画，播完后隐藏子物体。
+    private void PlayEquipEffect(int slotIndex)
+    {
+        if (!IsValidEquippedIndex(slotIndex))
+        {
+            return;
+        }
+
+        if (equippedSlotImages == null || slotIndex >= equippedSlotImages.Length)
+        {
+            return;
+        }
+
+        GameObject imageObj = equippedSlotImages[slotIndex];
+        if (imageObj == null)
+        {
+            return;
+        }
+
+        // 从 image 物体的子物体中查找 Animator（includeInactive=true 确保能找到被隐藏的子 prefab）
+        Animator anim = imageObj.GetComponentInChildren<Animator>(true);
+        if (anim == null)
+        {
+            return;
+        }
+
+        // 重新激活子 prefab 物体（上次播完可能已被隐藏），再触发旋转动画
+        anim.gameObject.SetActive(true);
+        anim.SetTrigger("Reveal");
+        StartCoroutine(HideEquipEffectWhenDone(anim));
+    }
+
+    // 等待 Animator 进入旋转状态并播完后，隐藏物体。
+    private IEnumerator HideEquipEffectWhenDone(Animator anim)
+    {
+        int stateHash = Animator.StringToHash("单技能圆形旋转锁定");
+
+        // 先等进入旋转状态（过渡可能需要一帧）
+        int waitFrames = 0;
+        while (!anim.GetCurrentAnimatorStateInfo(0).shortNameHash.Equals(stateHash))
+        {
+            waitFrames++;
+            if (waitFrames > 30)
+            {
+                // 安全兜底：长时间未进入状态则放弃，避免协程泄漏
+                yield break;
+            }
+            yield return null;
+        }
+
+        // 在旋转状态中等到 normalizedTime >= 1（播完）
+        while (anim.GetCurrentAnimatorStateInfo(0).shortNameHash.Equals(stateHash) &&
+               anim.GetCurrentAnimatorStateInfo(0).normalizedTime < 1f)
+        {
+            yield return null;
+        }
+
+        anim.gameObject.SetActive(false);
     }
 
     private void CancelDrag()
