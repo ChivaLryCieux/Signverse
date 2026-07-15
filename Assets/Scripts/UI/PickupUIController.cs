@@ -177,7 +177,9 @@ public class PickupUIController : MonoBehaviour
         ResolveWarnPanel();
         isHudVisible = true;
         ApplyHudVisibility();
-        HideDetailPanel();
+        // HideDetailPanel();  【卢】不使用开关控制DetailedPanel，而是使用动画控制出现消失，panel一直Active
+        isDetailPanelOpen = false;
+        activeDetailPanel = null;
         HideWarnPanel();
         ResolveSkillReferences();
         ResolveBoltPanel();
@@ -348,25 +350,31 @@ public class PickupUIController : MonoBehaviour
             return;
         }
 
-        HideDetailPanel();
+        if (isDetailPanelOpen)
+        {
+            HideDetailPanel();
+        }
 
         currentDetailItem = id;
         isDetailPanelOpen = true;
         ResolveDetailPanel();
 
         activeDetailPanel = entry.detailPanel != null ? entry.detailPanel : detailPanel;
-        if (detailPanel != null && activeDetailPanel != null && activeDetailPanel.transform.IsChildOf(detailPanel.transform))
+
+        Animator animator = activeDetailPanel.GetComponent<Animator>();
+
+        if (animator != null)
         {
-            detailPanel.SetActive(true);
+            animator.SetTrigger("Play");
         }
 
-        SetDetailPanelActive(activeDetailPanel, true);
     }
 
     public void HideDetailPanel()
     {
         bool wasOpen = isDetailPanelOpen;
         isDetailPanelOpen = false;
+
         if (wasOpen)
         {
             detailPanelClosedFrame = Time.frameCount;
@@ -374,13 +382,23 @@ public class PickupUIController : MonoBehaviour
 
         ResolveDetailPanel();
 
-        SetDetailPanelActive(activeDetailPanel, false);
-        activeDetailPanel = null;
+        Animator animator = null;
 
         if (detailPanel != null)
         {
-            detailPanel.SetActive(false);
+            animator = detailPanel.GetComponent<Animator>();
         }
+
+        if (animator != null)
+        {
+            animator.SetTrigger("Out");
+        }
+        else
+        {
+            Debug.LogWarning("没有找到 DetailPanel Animator");
+        }
+
+        activeDetailPanel = null;
     }
 
     private void Update()
