@@ -61,6 +61,12 @@ public class PickupUIController : MonoBehaviour
     [Tooltip("左上角第 5 个装备槽是否已解锁。未解锁时不能安装技能，可通过 Trigger Pickup 按 E 解锁。")]
     [SerializeField] private bool fifthEquippedSlotUnlocked;
 
+    [Header("调试（仅编辑器测试用）")]
+    [Tooltip("勾选后在游戏启动时获得全部螺栓。")]
+    [SerializeField] private bool debugUnlockAllBolts;
+    [Tooltip("填入要提前解锁的技能序号（1-5），多个用逗号分隔。例如：1,2,3")]
+    [SerializeField] private string debugUnlockSkills = "";
+
     [Header("行为")]
     [SerializeField] private bool hideLockedSlotsOnStart = true;
 
@@ -165,12 +171,48 @@ public class PickupUIController : MonoBehaviour
         SyncLinkedSkills();
         suppressSaveOnSync = false;
         InitializeEquipEffects();
+        InitializeDebugOptions();
     }
 
     // 启动时隐藏所有装备动效物体，仅在装备瞬间由 PlayEquipEffect 激活显示。
     private void InitializeEquipEffects()
     {
         // 子 prefab 的 active 状态由用户自行控制，代码不做初始化隐藏。
+    }
+
+    // 调试选项：在 Inspector 中勾选后，游戏启动时自动解锁装备槽或获得全部螺栓。
+    private void InitializeDebugOptions()
+    {
+        if (debugUnlockAllBolts && boltPanel != null)
+        {
+            boltPanel.SetUnlockedCount(boltPanel.MaxUnlockedCount);
+            Debug.Log("[调试] 已获得全部螺栓。");
+        }
+
+        if (!string.IsNullOrEmpty(debugUnlockSkills))
+        {
+            UnlockSkillsByDebug(debugUnlockSkills);
+        }
+    }
+
+    // 解析调试输入的技能序号（1-5），解锁对应技能。
+    private void UnlockSkillsByDebug(string input)
+    {
+        string[] parts = input.Split(',');
+        foreach (string part in parts)
+        {
+            string trimmed = part.Trim();
+            if (int.TryParse(trimmed, out int index) && index >= 1 && index <= 5)
+            {
+                PickupItemId itemId = (PickupItemId)(index - 1);
+                Unlock(itemId);
+                Debug.Log($"[调试] 已解锁技能 {itemId}（序号 {index}）。");
+            }
+            else
+            {
+                Debug.LogWarning($"[调试] 无效的技能序号：{trimmed}（应为 1-5）。");
+            }
+        }
     }
 
     private void OnEnable()
