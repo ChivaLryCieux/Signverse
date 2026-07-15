@@ -57,6 +57,12 @@ public class PickupUIController : MonoBehaviour
     [Tooltip("5 个装备槽各自对应的 image 物体（如 Image(1,1)、Image(2,1) 等）。按槽位顺序拖入。")]
     [SerializeField] private GameObject[] equippedSlotImages = new GameObject[5];
 
+    [Header("联动特效")]
+    [Tooltip("联动菱形线条的 Animator（两个）。按顺序拖入。")]
+    [SerializeField] private Animator[] linkedDiamondLineAnimators = new Animator[2];
+    [Tooltip("联动菱形背景的 Animator（两个）。按顺序拖入。")]
+    [SerializeField] private Animator[] linkedDiamondBgAnimators = new Animator[2];
+
     [Header("第五装备槽")]
     [Tooltip("左上角第 5 个装备槽是否已解锁。未解锁时不能安装技能，可通过 Trigger Pickup 按 E 解锁。")]
     [SerializeField] private bool fifthEquippedSlotUnlocked;
@@ -916,9 +922,36 @@ public class PickupUIController : MonoBehaviour
             appliedLinkedSkills.Clear();
         }
 
+        // 记录当前联动特效状态（是否正在显示）
+        bool wasShowing23 = IsLinkedEffectShowing(0);
+        bool wasShowing45 = IsLinkedEffectShowing(1);
+
         AddStandaloneSkillForSlot(1);
         AddLinkedSkillForPair(2, 3);
         AddLinkedSkillForPair(4, 5);
+
+        // 检查联动技能是否被解锁
+        bool isLinked23 = HasLinkedSkill(2, 3);
+        bool isLinked45 = HasLinkedSkill(4, 5);
+
+        // 只在状态变化时触发特效
+        if (!wasShowing23 && isLinked23)
+        {
+            PlayLinkedSkillEffect(2);
+        }
+        else if (wasShowing23 && !isLinked23)
+        {
+            HideLinkedEffect(0);
+        }
+
+        if (!wasShowing45 && isLinked45)
+        {
+            PlayLinkedSkillEffect(4);
+        }
+        else if (wasShowing45 && !isLinked45)
+        {
+            HideLinkedEffect(1);
+        }
 
         // 把装备槽推导出的技能同步到 PlayerCC。动画脚本不再需要读取 UI 私有状态，只读取 PlayerCC.equippedSkills。
         player.SetEquippedSkills(equippedSkillSnapshot);
@@ -971,6 +1004,35 @@ public class PickupUIController : MonoBehaviour
         if (!equippedSkillSnapshot.Contains(skill))
         {
             equippedSkillSnapshot.Add(skill);
+        }
+    }
+
+    // 触发联动特效：先播放菱形线条，再播放菱形背景。
+    // mainSlotNumber 为 2 时触发第一组，为 4 时触发第二组。
+    private void PlayLinkedSkillEffect(int mainSlotNumber)
+    {
+        int effectIndex = mainSlotNumber == 2 ? 0 : 1;
+
+        // 先触发菱形线条
+        if (linkedDiamondLineAnimators != null && effectIndex < linkedDiamondLineAnimators.Length)
+        {
+            Animator lineAnim = linkedDiamondLineAnimators[effectIndex];
+            if (lineAnim != null)
+            {
+                lineAnim.gameObject.SetActive(true);
+                lineAnim.SetTrigger("Reveal");
+            }
+        }
+
+        // 再触发菱形背景
+        if (linkedDiamondBgAnimators != null && effectIndex < linkedDiamondBgAnimators.Length)
+        {
+            Animator bgAnim = linkedDiamondBgAnimators[effectIndex];
+            if (bgAnim != null)
+            {
+                bgAnim.gameObject.SetActive(true);
+                bgAnim.SetTrigger("Reveal");
+            }
         }
     }
 
@@ -1038,6 +1100,79 @@ public class PickupUIController : MonoBehaviour
         prefix = mainIndex.ToString() + subIndex + "-";
         exactId = BuildLinkedSkillId(prefix, mainCode, subCode);
         return true;
+    }
+
+    // 检查指定的两个槽位是否都装备了技能（联动状态）。
+    private bool HasLinkedSkill(int mainSlotNumber, int subSlotNumber)
+    {
+        return TryGetEquippedEntry(mainSlotNumber, out _) && TryGetEquippedEntry(subSlotNumber, out _);
+    }
+
+    // 检查指定索引的联动特效是否正在显示（通过检查 Animator 状态）。
+    private bool IsLinkedEffectShowing(int effectIndex)
+    {
+        if (linkedDiamondLineAnimators != null && effectIndex < linkedDiamondLineAnimators.Length)
+        {
+            Animator lineAnim = linkedDiamondLineAnimators[effectIndex];
+            if (lineAnim != null && lineAnim.gameObject.activeSelf)
+            {
+                // 检查是否在"菱形线条出现"状态（而不是"菱形空状态"或"菱形线条消失"）
+                AnimatorStateInfo stateInfo = lineAnim.GetCurrentAnimatorStateInfo(0);
+                if (stateInfo.IsName("菱形线条出现") || stateInfo.IsName("联动菱形线条"))
+                {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    // 隐藏指定索引的联动特效。
+    private void HideLinkedEffect(int effectIndex)
+    {
+        if (linkedDiamondLineAnimators != null && effectIndex < linkedDiamondLineAnimators.Length)
+        {
+            Animator lineAnim = linkedDiamondLineAnimators[effectIndex];
+            if (lineAnim != null)
+            {
+                lineAnim.SetTrigger("Hide");
+            }
+        }
+
+        if (linkedDiamondBgAnimators != null && effectIndex < linkedDiamondBgAnimators.Length)
+        {
+            Animator bgAnim = linkedDiamondBgAnimators[effectIndex];
+            if (bgAnim != null)
+            {
+                bgAnim.SetTrigger("Hide");
+            }
+        }
+    }
+
+    // 隐藏所有联动特效（菱形线条和菱形背景）。
+    private void HideAllLinkedEffects()
+    {
+        if (linkedDiamondLineAnimators != null)
+        {
+            for (int i = 0; i < linkedDiamondLineAnimators.Length; i++)
+            {
+                if (linkedDiamondLineAnimators[i] != null)
+                {
+                    linkedDiamondLineAnimators[i].SetTrigger("Hide");
+                }
+            }
+        }
+
+        if (linkedDiamondBgAnimators != null)
+        {
+            for (int i = 0; i < linkedDiamondBgAnimators.Length; i++)
+            {
+                if (linkedDiamondBgAnimators[i] != null)
+                {
+                    linkedDiamondBgAnimators[i].SetTrigger("Hide");
+                }
+            }
+        }
     }
 
     private Sprite GetEquippedIcon(int equippedIndex, PickupUiEntry entry)
