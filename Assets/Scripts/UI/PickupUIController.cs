@@ -104,7 +104,7 @@ public class PickupUIController : MonoBehaviour
     [Tooltip("5 个禁止符物体的 Animator。在非 Nature 地面上时播放禁止动画。按顺序拖入。")]
     [SerializeField] private Animator[] forbidSymbolAnimators = new Animator[5];
     [Tooltip("站在非 Nature 地面上多久后才触发禁止符动画（秒）。")]
-    [SerializeField, Min(0f)] private float forbidSymbolDelay = 2f;
+    [SerializeField, Min(0f)] private float forbidSymbolDelay = 0f;
 
     [Header("联动技能")]
     [SerializeField] private PlayerCC player;
@@ -807,9 +807,11 @@ public class PickupUIController : MonoBehaviour
         }
     }
 
-    // 持续检测脚下标签，站在非 Nature/Water 地面上超过指定时间后播放禁止符动画。
+    // 持续检测脚下标签，站在非 Nature/Water 地面上播放禁止符动画。
+    // 空中时不切换任何状态，保持原状。delay 默认 0 表示落地立即触发。
     private bool forbidSymbolsActive;
     private float forbidSymbolTimer;
+    private static readonly RaycastHit[] groundHitBuffer = new RaycastHit[8];
 
     private void TickForbidSymbols()
     {
@@ -820,9 +822,42 @@ public class PickupUIController : MonoBehaviour
 
         ResolveSkillReferences();
 
-        bool canModify = player != null && player.CanModifySkillLoadout();
+        if (player == null)
+        {
+            return;
+        }
 
-        if (!canModify)
+        // 直接用射线检测脚下是否有地面
+        CharacterController cc = player.GetCharacterController();
+        if (cc == null)
+        {
+            return;
+        }
+
+        Vector3 origin = cc.transform.TransformPoint(cc.center) + Vector3.up * 0.1f;
+        float distance = cc.height * 0.5f + 0.3f;
+        int hitCount = Physics.RaycastNonAlloc(origin, Vector3.down, groundHitBuffer, distance, ~0, QueryTriggerInteraction.Ignore);
+
+        // 空中：不切换任何状态，保持原状，重置计时器
+        if (hitCount == 0)
+        {
+            forbidSymbolTimer = 0f;
+            return;
+        }
+
+        // 有地面，检测是否为 Nature/Water 标签
+        bool isNature = false;
+        for (int i = 0; i < hitCount; i++)
+        {
+            Collider col = groundHitBuffer[i].collider;
+            if (col != null && (col.CompareTag("Nature") || col.CompareTag("Water")))
+            {
+                isNature = true;
+                break;
+            }
+        }
+
+        if (!isNature)
         {
             // 站在非 Nature 地面上，开始计时
             if (!forbidSymbolsActive)
@@ -837,12 +872,12 @@ public class PickupUIController : MonoBehaviour
         }
         else
         {
-            // 回到 Nature 地面，重置计时并隐藏禁止符
+            // 站在 Nature 地面，重置计时并隐藏禁止符
             if (forbidSymbolsActive)
             {
+                forbidSymbolsActive = false;
                 PlayForbidSymbolAnimation(false);
             }
-            forbidSymbolsActive = false;
             forbidSymbolTimer = 0f;
         }
     }

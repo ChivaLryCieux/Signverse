@@ -293,6 +293,13 @@ public class SkillController : MonoBehaviour
         return HasAnyTaggedSurfaceHit(skillLoadoutSurfaceHitBuffer, hitCount, requiredTags);
     }
 
+    // 检测脚下是否有任意碰撞体（不限标签），用于判断玩家是否站在地面上（而非空中）。
+    public bool IsStandingOnAnySurface(PlayerCC owner)
+    {
+        int hitCount = GetSkillLoadoutSurfaceHits(owner);
+        return hitCount > 0;
+    }
+
     private int GetSkillLoadoutSurfaceHits(PlayerCC owner)
     {
         CharacterController activeController = owner != null ? owner.GetCharacterController() : null;

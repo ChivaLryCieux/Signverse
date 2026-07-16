@@ -316,6 +316,12 @@ public class PlayerCC : MonoBehaviour
         return EnsureSkillController().CanModifySkillLoadout(this);
     }
 
+    // 检测脚下是否有任意碰撞体（不限标签），用于判断玩家是否站在地面上（而非空中）。
+    public bool IsStandingOnAnySurface()
+    {
+        return EnsureSkillController().IsStandingOnAnySurface(this);
+    }
+
     public void SetEquippedSkills(IList<SkillBase> skills)
     {
         EnsureSkillController().SetEquippedSkills(skills);
