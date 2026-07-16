@@ -177,7 +177,6 @@ public class PickupUIController : MonoBehaviour
         ResolveWarnPanel();
         isHudVisible = true;
         ApplyHudVisibility();
-        // HideDetailPanel();  【卢】不使用开关控制DetailedPanel，而是使用动画控制出现消失，panel一直Active
         isDetailPanelOpen = false;
         activeDetailPanel = null;
         HideWarnPanel();
@@ -212,6 +211,28 @@ public class PickupUIController : MonoBehaviour
         if (!string.IsNullOrEmpty(debugUnlockSkills))
         {
             UnlockSkillsByDebug(debugUnlockSkills);
+            // 解锁技能后，隐藏所有 detail panel（prefab 中默认 m_IsActive=1 会导致自动显示）
+            DeactivateAllDetailPanels();
+        }
+    }
+
+    // 隐藏所有 detail panel 的 GameObject（包括全局和每个技能的）。
+    private void DeactivateAllDetailPanels()
+    {
+        if (detailPanel != null)
+        {
+            detailPanel.SetActive(false);
+        }
+
+        if (entries != null)
+        {
+            foreach (PickupUiEntry entry in entries)
+            {
+                if (entry != null && entry.detailPanel != null)
+                {
+                    entry.detailPanel.SetActive(false);
+                }
+            }
         }
     }
 
@@ -361,6 +382,9 @@ public class PickupUIController : MonoBehaviour
 
         activeDetailPanel = entry.detailPanel != null ? entry.detailPanel : detailPanel;
 
+        // 确保 GameObject 是激活的（可能在启动时被 DeactivateAllDetailPanels 隐藏）
+        activeDetailPanel.SetActive(true);
+
         Animator animator = activeDetailPanel.GetComponent<Animator>();
 
         if (animator != null)
@@ -382,9 +406,15 @@ public class PickupUIController : MonoBehaviour
 
         ResolveDetailPanel();
 
+        // 优先使用 activeDetailPanel（ShowDetailPanel 打开的那个），回退到全局 detailPanel
         Animator animator = null;
 
-        if (detailPanel != null)
+        if (activeDetailPanel != null)
+        {
+            animator = activeDetailPanel.GetComponent<Animator>();
+        }
+
+        if (animator == null && detailPanel != null)
         {
             animator = detailPanel.GetComponent<Animator>();
         }
