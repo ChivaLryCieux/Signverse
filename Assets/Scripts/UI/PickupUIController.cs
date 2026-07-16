@@ -103,6 +103,8 @@ public class PickupUIController : MonoBehaviour
     [Header("禁止符")]
     [Tooltip("5 个禁止符物体的 Animator。在非 Nature 地面上时播放禁止动画。按顺序拖入。")]
     [SerializeField] private Animator[] forbidSymbolAnimators = new Animator[5];
+    [Tooltip("站在非 Nature 地面上多久后才触发禁止符动画（秒）。")]
+    [SerializeField, Min(0f)] private float forbidSymbolDelay = 2f;
 
     [Header("联动技能")]
     [SerializeField] private PlayerCC player;
@@ -805,8 +807,9 @@ public class PickupUIController : MonoBehaviour
         }
     }
 
-    // 持续检测脚下标签，站在非 Nature/Water 地面上时播放禁止符动画。
+    // 持续检测脚下标签，站在非 Nature/Water 地面上超过指定时间后播放禁止符动画。
     private bool forbidSymbolsActive;
+    private float forbidSymbolTimer;
 
     private void TickForbidSymbols()
     {
@@ -819,17 +822,28 @@ public class PickupUIController : MonoBehaviour
 
         bool canModify = player != null && player.CanModifySkillLoadout();
 
-        if (!canModify && !forbidSymbolsActive)
+        if (!canModify)
         {
-            // 从可操作 -> 不可操作，播放禁止符
-            forbidSymbolsActive = true;
-            PlayForbidSymbolAnimation(true);
+            // 站在非 Nature 地面上，开始计时
+            if (!forbidSymbolsActive)
+            {
+                forbidSymbolTimer += Time.unscaledDeltaTime;
+                if (forbidSymbolTimer >= forbidSymbolDelay)
+                {
+                    forbidSymbolsActive = true;
+                    PlayForbidSymbolAnimation(true);
+                }
+            }
         }
-        else if (canModify && forbidSymbolsActive)
+        else
         {
-            // 从不可操作 -> 可操作，停止禁止符
+            // 回到 Nature 地面，重置计时并隐藏禁止符
+            if (forbidSymbolsActive)
+            {
+                PlayForbidSymbolAnimation(false);
+            }
             forbidSymbolsActive = false;
-            PlayForbidSymbolAnimation(false);
+            forbidSymbolTimer = 0f;
         }
     }
 
