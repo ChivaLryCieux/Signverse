@@ -20298,6 +20298,11 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 409661670}
     m_Modifications:
+    - target: {fileID: 408845046531538446, guid: eddc068c2a1e2ae4bbe37f07201625ee,
+        type: 3}
+      propertyPath: checkpointIndex
+      value: 36
+      objectReference: {fileID: 0}
     - target: {fileID: 1882181528533994415, guid: eddc068c2a1e2ae4bbe37f07201625ee,
         type: 3}
       propertyPath: m_LocalPosition.x
@@ -30381,6 +30386,11 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 409661670}
     m_Modifications:
+    - target: {fileID: 408845046531538446, guid: eddc068c2a1e2ae4bbe37f07201625ee,
+        type: 3}
+      propertyPath: checkpointIndex
+      value: 30
+      objectReference: {fileID: 0}
     - target: {fileID: 1882181528533994415, guid: eddc068c2a1e2ae4bbe37f07201625ee,
         type: 3}
       propertyPath: m_LocalPosition.x
@@ -63440,6 +63450,11 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 409661670}
     m_Modifications:
+    - target: {fileID: 408845046531538446, guid: eddc068c2a1e2ae4bbe37f07201625ee,
+        type: 3}
+      propertyPath: checkpointIndex
+      value: 18
+      objectReference: {fileID: 0}
     - target: {fileID: 1882181528533994415, guid: eddc068c2a1e2ae4bbe37f07201625ee,
         type: 3}
       propertyPath: m_LocalPosition.x
@@ -87312,6 +87327,11 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 409661670}
     m_Modifications:
+    - target: {fileID: 408845046531538446, guid: eddc068c2a1e2ae4bbe37f07201625ee,
+        type: 3}
+      propertyPath: checkpointIndex
+      value: 21
+      objectReference: {fileID: 0}
     - target: {fileID: 1882181528533994415, guid: eddc068c2a1e2ae4bbe37f07201625ee,
         type: 3}
       propertyPath: m_LocalPosition.x
@@ -103970,6 +103990,11 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 409661670}
     m_Modifications:
+    - target: {fileID: 408845046531538446, guid: eddc068c2a1e2ae4bbe37f07201625ee,
+        type: 3}
+      propertyPath: checkpointIndex
+      value: 28
+      objectReference: {fileID: 0}
     - target: {fileID: 1882181528533994415, guid: eddc068c2a1e2ae4bbe37f07201625ee,
         type: 3}
       propertyPath: m_LocalPosition.x
@@ -144327,6 +144352,11 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 409661670}
     m_Modifications:
+    - target: {fileID: 408845046531538446, guid: eddc068c2a1e2ae4bbe37f07201625ee,
+        type: 3}
+      propertyPath: checkpointIndex
+      value: 22
+      objectReference: {fileID: 0}
     - target: {fileID: 1882181528533994415, guid: eddc068c2a1e2ae4bbe37f07201625ee,
         type: 3}
       propertyPath: m_LocalPosition.x
@@ -145428,56 +145458,6 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 5655b45fb723afb4fb19ed25cb41bb1d, type: 3}
---- !u!21 &695909095
-Material:
-  serializedVersion: 8
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_Name: Height Fog Global
-  m_Shader: {fileID: 4800000, guid: 3a7ef1b66bafb7a448a880ef76d2e6e6, type: 3}
-  m_Parent: {fileID: 0}
-  m_ModifiedSerializedProperties: 0
-  m_ValidKeywords: []
-  m_InvalidKeywords:
-  - _RECEIVESHADOWS_OFF
-  - _SURFACE_TYPE_TRANSPARENT
-  m_LightmapFlags: 4
-  m_EnableInstancingVariants: 0
-  m_DoubleSidedGI: 0
-  m_CustomRenderQueue: 3001
-  stringTagMap: {}
-  disabledShaderPasses: []
-  m_LockedProperties: 
-  m_SavedProperties:
-    serializedVersion: 3
-    m_TexEnvs:
-    - unity_Lightmaps:
-        m_Texture: {fileID: 0}
-        m_Scale: {x: 1, y: 1}
-        m_Offset: {x: 0, y: 0}
-    - unity_LightmapsInd:
-        m_Texture: {fileID: 0}
-        m_Scale: {x: 1, y: 1}
-        m_Offset: {x: 0, y: 0}
-    - unity_ShadowMasks:
-        m_Texture: {fileID: 0}
-        m_Scale: {x: 1, y: 1}
-        m_Offset: {x: 0, y: 0}
-    m_Ints: []
-    m_Floats:
-    - _AlphaCutoff: 0.5
-    - _Banner: 1
-    - _FogCameraMode: 0
-    - _HeightFogGlobal: 1
-    - _IsHeightFogShader: 1
-    - _QueueControl: -1
-    - _QueueOffset: 0
-    - _ReceiveShadows: 0
-    m_Colors:
-    - _EmissionColor: {r: 1, g: 1, b: 1, a: 1}
-  m_BuildTextureStacks: []
 --- !u!1001 &695909989
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -164948,6 +164928,11 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 409661670}
     m_Modifications:
+    - target: {fileID: 408845046531538446, guid: eddc068c2a1e2ae4bbe37f07201625ee,
+        type: 3}
+      propertyPath: checkpointIndex
+      value: 35
+      objectReference: {fileID: 0}
     - target: {fileID: 1882181528533994415, guid: eddc068c2a1e2ae4bbe37f07201625ee,
         type: 3}
       propertyPath: m_LocalPosition.x
@@ -166523,6 +166508,11 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 409661670}
     m_Modifications:
+    - target: {fileID: 408845046531538446, guid: eddc068c2a1e2ae4bbe37f07201625ee,
+        type: 3}
+      propertyPath: checkpointIndex
+      value: 23
+      objectReference: {fileID: 0}
     - target: {fileID: 1882181528533994415, guid: eddc068c2a1e2ae4bbe37f07201625ee,
         type: 3}
       propertyPath: m_LocalPosition.x
@@ -170107,6 +170097,11 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 409661670}
     m_Modifications:
+    - target: {fileID: 408845046531538446, guid: eddc068c2a1e2ae4bbe37f07201625ee,
+        type: 3}
+      propertyPath: checkpointIndex
+      value: 17
+      objectReference: {fileID: 0}
     - target: {fileID: 1882181528533994415, guid: eddc068c2a1e2ae4bbe37f07201625ee,
         type: 3}
       propertyPath: m_LocalPosition.x
@@ -170411,7 +170406,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 695909095}
+  - {fileID: 1859359534}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -197159,6 +197154,11 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 409661670}
     m_Modifications:
+    - target: {fileID: 408845046531538446, guid: eddc068c2a1e2ae4bbe37f07201625ee,
+        type: 3}
+      propertyPath: checkpointIndex
+      value: 38
+      objectReference: {fileID: 0}
     - target: {fileID: 1882181528533994415, guid: eddc068c2a1e2ae4bbe37f07201625ee,
         type: 3}
       propertyPath: m_LocalPosition.x
@@ -209552,6 +209552,11 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 409661670}
     m_Modifications:
+    - target: {fileID: 408845046531538446, guid: eddc068c2a1e2ae4bbe37f07201625ee,
+        type: 3}
+      propertyPath: checkpointIndex
+      value: 33
+      objectReference: {fileID: 0}
     - target: {fileID: 1882181528533994415, guid: eddc068c2a1e2ae4bbe37f07201625ee,
         type: 3}
       propertyPath: m_LocalPosition.x
@@ -215819,6 +215824,11 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 409661670}
     m_Modifications:
+    - target: {fileID: 408845046531538446, guid: eddc068c2a1e2ae4bbe37f07201625ee,
+        type: 3}
+      propertyPath: checkpointIndex
+      value: 26
+      objectReference: {fileID: 0}
     - target: {fileID: 1882181528533994415, guid: eddc068c2a1e2ae4bbe37f07201625ee,
         type: 3}
       propertyPath: m_LocalPosition.x
@@ -219240,6 +219250,11 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 409661670}
     m_Modifications:
+    - target: {fileID: 408845046531538446, guid: eddc068c2a1e2ae4bbe37f07201625ee,
+        type: 3}
+      propertyPath: checkpointIndex
+      value: 29
+      objectReference: {fileID: 0}
     - target: {fileID: 1882181528533994415, guid: eddc068c2a1e2ae4bbe37f07201625ee,
         type: 3}
       propertyPath: m_LocalPosition.x
@@ -250489,6 +250504,11 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 409661670}
     m_Modifications:
+    - target: {fileID: 408845046531538446, guid: eddc068c2a1e2ae4bbe37f07201625ee,
+        type: 3}
+      propertyPath: checkpointIndex
+      value: 19
+      objectReference: {fileID: 0}
     - target: {fileID: 1882181528533994415, guid: eddc068c2a1e2ae4bbe37f07201625ee,
         type: 3}
       propertyPath: m_LocalPosition.x
@@ -269386,6 +269406,11 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 409661670}
     m_Modifications:
+    - target: {fileID: 408845046531538446, guid: eddc068c2a1e2ae4bbe37f07201625ee,
+        type: 3}
+      propertyPath: checkpointIndex
+      value: 31
+      objectReference: {fileID: 0}
     - target: {fileID: 1882181528533994415, guid: eddc068c2a1e2ae4bbe37f07201625ee,
         type: 3}
       propertyPath: m_LocalPosition.x
@@ -270243,6 +270268,11 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 409661670}
     m_Modifications:
+    - target: {fileID: 408845046531538446, guid: eddc068c2a1e2ae4bbe37f07201625ee,
+        type: 3}
+      propertyPath: checkpointIndex
+      value: 15
+      objectReference: {fileID: 0}
     - target: {fileID: 1882181528533994415, guid: eddc068c2a1e2ae4bbe37f07201625ee,
         type: 3}
       propertyPath: m_LocalPosition.x
@@ -287701,6 +287731,11 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 409661670}
     m_Modifications:
+    - target: {fileID: 408845046531538446, guid: eddc068c2a1e2ae4bbe37f07201625ee,
+        type: 3}
+      propertyPath: checkpointIndex
+      value: 27
+      objectReference: {fileID: 0}
     - target: {fileID: 1882181528533994415, guid: eddc068c2a1e2ae4bbe37f07201625ee,
         type: 3}
       propertyPath: m_LocalPosition.x
@@ -294434,6 +294469,11 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 409661670}
     m_Modifications:
+    - target: {fileID: 408845046531538446, guid: eddc068c2a1e2ae4bbe37f07201625ee,
+        type: 3}
+      propertyPath: checkpointIndex
+      value: 32
+      objectReference: {fileID: 0}
     - target: {fileID: 1882181528533994415, guid: eddc068c2a1e2ae4bbe37f07201625ee,
         type: 3}
       propertyPath: m_LocalPosition.x
@@ -299758,6 +299798,11 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 409661670}
     m_Modifications:
+    - target: {fileID: 408845046531538446, guid: eddc068c2a1e2ae4bbe37f07201625ee,
+        type: 3}
+      propertyPath: checkpointIndex
+      value: 12
+      objectReference: {fileID: 0}
     - target: {fileID: 1882181528533994415, guid: eddc068c2a1e2ae4bbe37f07201625ee,
         type: 3}
       propertyPath: m_LocalPosition.x
@@ -300889,6 +300934,11 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 409661670}
     m_Modifications:
+    - target: {fileID: 408845046531538446, guid: eddc068c2a1e2ae4bbe37f07201625ee,
+        type: 3}
+      propertyPath: checkpointIndex
+      value: 34
+      objectReference: {fileID: 0}
     - target: {fileID: 1882181528533994415, guid: eddc068c2a1e2ae4bbe37f07201625ee,
         type: 3}
       propertyPath: m_LocalPosition.x
@@ -304933,6 +304983,11 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 409661670}
     m_Modifications:
+    - target: {fileID: 408845046531538446, guid: eddc068c2a1e2ae4bbe37f07201625ee,
+        type: 3}
+      propertyPath: checkpointIndex
+      value: 13
+      objectReference: {fileID: 0}
     - target: {fileID: 1882181528533994415, guid: eddc068c2a1e2ae4bbe37f07201625ee,
         type: 3}
       propertyPath: m_LocalPosition.x
@@ -347076,6 +347131,11 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 409661670}
     m_Modifications:
+    - target: {fileID: 408845046531538446, guid: eddc068c2a1e2ae4bbe37f07201625ee,
+        type: 3}
+      propertyPath: checkpointIndex
+      value: 14
+      objectReference: {fileID: 0}
     - target: {fileID: 1882181528533994415, guid: eddc068c2a1e2ae4bbe37f07201625ee,
         type: 3}
       propertyPath: m_LocalPosition.x
@@ -348787,6 +348847,11 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 409661670}
     m_Modifications:
+    - target: {fileID: 408845046531538446, guid: eddc068c2a1e2ae4bbe37f07201625ee,
+        type: 3}
+      propertyPath: checkpointIndex
+      value: 39
+      objectReference: {fileID: 0}
     - target: {fileID: 1882181528533994415, guid: eddc068c2a1e2ae4bbe37f07201625ee,
         type: 3}
       propertyPath: m_LocalPosition.x
@@ -353883,6 +353948,11 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 409661670}
     m_Modifications:
+    - target: {fileID: 408845046531538446, guid: eddc068c2a1e2ae4bbe37f07201625ee,
+        type: 3}
+      propertyPath: checkpointIndex
+      value: 24
+      objectReference: {fileID: 0}
     - target: {fileID: 1882181528533994415, guid: eddc068c2a1e2ae4bbe37f07201625ee,
         type: 3}
       propertyPath: m_LocalPosition.x
@@ -356585,6 +356655,11 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 409661670}
     m_Modifications:
+    - target: {fileID: 408845046531538446, guid: eddc068c2a1e2ae4bbe37f07201625ee,
+        type: 3}
+      propertyPath: checkpointIndex
+      value: 37
+      objectReference: {fileID: 0}
     - target: {fileID: 1882181528533994415, guid: eddc068c2a1e2ae4bbe37f07201625ee,
         type: 3}
       propertyPath: m_LocalPosition.x
@@ -373359,6 +373434,11 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 409661670}
     m_Modifications:
+    - target: {fileID: 408845046531538446, guid: eddc068c2a1e2ae4bbe37f07201625ee,
+        type: 3}
+      propertyPath: checkpointIndex
+      value: 20
+      objectReference: {fileID: 0}
     - target: {fileID: 1882181528533994415, guid: eddc068c2a1e2ae4bbe37f07201625ee,
         type: 3}
       propertyPath: m_LocalPosition.x
@@ -375549,6 +375629,11 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 409661670}
     m_Modifications:
+    - target: {fileID: 408845046531538446, guid: eddc068c2a1e2ae4bbe37f07201625ee,
+        type: 3}
+      propertyPath: checkpointIndex
+      value: 16
+      objectReference: {fileID: 0}
     - target: {fileID: 1882181528533994415, guid: eddc068c2a1e2ae4bbe37f07201625ee,
         type: 3}
       propertyPath: m_LocalPosition.x
@@ -382175,6 +382260,11 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 409661670}
     m_Modifications:
+    - target: {fileID: 408845046531538446, guid: eddc068c2a1e2ae4bbe37f07201625ee,
+        type: 3}
+      propertyPath: checkpointIndex
+      value: 25
+      objectReference: {fileID: 0}
     - target: {fileID: 1882181528533994415, guid: eddc068c2a1e2ae4bbe37f07201625ee,
         type: 3}
       propertyPath: m_LocalPosition.x
@@ -397824,6 +397914,56 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 78051c83654d8044f99c3ecf34e85209, type: 3}
+--- !u!21 &1859359534
+Material:
+  serializedVersion: 8
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: Height Fog Global
+  m_Shader: {fileID: 4800000, guid: 3a7ef1b66bafb7a448a880ef76d2e6e6, type: 3}
+  m_Parent: {fileID: 0}
+  m_ModifiedSerializedProperties: 0
+  m_ValidKeywords: []
+  m_InvalidKeywords:
+  - _RECEIVESHADOWS_OFF
+  - _SURFACE_TYPE_TRANSPARENT
+  m_LightmapFlags: 4
+  m_EnableInstancingVariants: 0
+  m_DoubleSidedGI: 0
+  m_CustomRenderQueue: 3001
+  stringTagMap: {}
+  disabledShaderPasses: []
+  m_LockedProperties: 
+  m_SavedProperties:
+    serializedVersion: 3
+    m_TexEnvs:
+    - unity_Lightmaps:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - unity_LightmapsInd:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - unity_ShadowMasks:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    m_Ints: []
+    m_Floats:
+    - _AlphaCutoff: 0.5
+    - _Banner: 1
+    - _FogCameraMode: 0
+    - _HeightFogGlobal: 1
+    - _IsHeightFogShader: 1
+    - _QueueControl: -1
+    - _QueueOffset: 0
+    - _ReceiveShadows: 0
+    m_Colors:
+    - _EmissionColor: {r: 1, g: 1, b: 1, a: 1}
+  m_BuildTextureStacks: []
 --- !u!1001 &1859454291
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -438567,6 +438707,11 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 409661670}
     m_Modifications:
+    - target: {fileID: 408845046531538446, guid: eddc068c2a1e2ae4bbe37f07201625ee,
+        type: 3}
+      propertyPath: checkpointIndex
+      value: 11
+      objectReference: {fileID: 0}
     - target: {fileID: 1882181528533994415, guid: eddc068c2a1e2ae4bbe37f07201625ee,
         type: 3}
       propertyPath: m_LocalPosition.x
