@@ -27,6 +27,9 @@ public class SavePanelController : MonoBehaviour
     [Tooltip("点击该3D物体退出游戏")]
     [SerializeField] private Collider quitGameCollider;
 
+    [Tooltip("点击该3D物体清除所有存档")]
+    [SerializeField] private Collider clearSaveCollider;
+
 
     [Header("TMP（可选）")]
     [Tooltip("继续按钮文本")]
@@ -45,6 +48,7 @@ public class SavePanelController : MonoBehaviour
 
     public UnityEvent OnNewGameEvent = new UnityEvent();
     public UnityEvent OnContinueGameEvent = new UnityEvent();
+    public UnityEvent OnClearSaveEvent = new UnityEvent();
 
 
     private Camera mainCamera;
@@ -85,7 +89,8 @@ public class SavePanelController : MonoBehaviour
     {
         if (newGameCollider == null &&
             continueCollider == null &&
-            quitGameCollider == null)
+            quitGameCollider == null &&
+            clearSaveCollider == null)
         {
             return;
         }
@@ -191,6 +196,14 @@ public class SavePanelController : MonoBehaviour
             quitGameCollider.Raycast(ray, out _, maxRayDistance))
         {
             QuitGame();
+            return;
+        }
+
+        // 清除存档
+        if (clearSaveCollider != null &&
+            clearSaveCollider.Raycast(ray, out _, maxRayDistance))
+        {
+            OnClearSaveClicked();
         }
     }
 
@@ -324,5 +337,36 @@ public class SavePanelController : MonoBehaviour
         Debug.Log("Quit Game");
         Application.Quit();
 
+    }
+
+
+
+    // ==========================
+    // 清除存档
+    // ==========================
+
+    public void OnClearSaveClicked()
+    {
+        if (isChangingScene)
+        {
+            return;
+        }
+
+        OnClearSaveEvent?.Invoke();
+
+        // 删除存档文件
+        SaveManager.DeleteSave();
+
+        // 更新继续按钮状态：存档已清除，不能再继续游戏
+        continueEnabled = false;
+
+        if (continueButton != null)
+        {
+            continueButton.interactable = false;
+        }
+
+        UpdateContinueLabel();
+
+        Debug.Log("[SavePanelController] 所有存档已清除，只能开始新游戏。");
     }
 }
