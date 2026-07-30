@@ -85,28 +85,37 @@ public class InteractionPanelController : MonoBehaviour
     /// <summary>
     /// 显示详细内容状态
     /// </summary>
-    public void ShowDetail(InteractionPanelTrigger trigger, Sprite background, string bodyText)
+    public void ShowDetail(
+        InteractionPanelTrigger trigger,
+        Sprite background,
+        string bodyText)
     {
         activeTrigger = trigger;
         isShowingDetail = true;
 
-        if (backgroundImage != null)
+
+        if(backgroundImage != null)
         {
             backgroundImage.sprite = background;
             backgroundImage.enabled = background != null;
         }
 
+
         SetFixedContentVisible(false);
+
 
         SetBodyText(bodyText);
 
+
         SetDetailContentVisible(true);
 
-        if (panelRoot != null)
+
+        if(panelRoot != null)
         {
             panelRoot.SetActive(true);
 
-            if (canvasAudio != null)
+
+            if(canvasAudio != null)
             {
                 canvasAudio.showNarrative();
             }
@@ -198,4 +207,5 @@ public class InteractionPanelController : MonoBehaviour
             backgroundImage = GetComponentInChildren<Image>(true);
         }
     }
+    
 }

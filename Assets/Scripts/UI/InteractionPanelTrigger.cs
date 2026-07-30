@@ -186,4 +186,14 @@ public class InteractionPanelTrigger : MonoBehaviour
             panelController = FindObjectOfType<InteractionPanelController>();
         }
     }
+    public Sprite GetBackground()
+    {
+        return background;
+    }
+
+
+    public string GetBodyText()
+    {
+        return bodyText;
+    }
 }
