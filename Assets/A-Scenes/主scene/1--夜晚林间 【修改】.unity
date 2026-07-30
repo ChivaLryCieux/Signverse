@@ -24183,56 +24183,6 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 336906917}
   m_Mesh: {fileID: 3956641430154956442, guid: 92989c4f87242964b874f370a3afcd72, type: 3}
---- !u!21 &338125524
-Material:
-  serializedVersion: 8
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_Name: Height Fog Global
-  m_Shader: {fileID: 4800000, guid: 3a7ef1b66bafb7a448a880ef76d2e6e6, type: 3}
-  m_Parent: {fileID: 0}
-  m_ModifiedSerializedProperties: 0
-  m_ValidKeywords: []
-  m_InvalidKeywords:
-  - _RECEIVESHADOWS_OFF
-  - _SURFACE_TYPE_TRANSPARENT
-  m_LightmapFlags: 4
-  m_EnableInstancingVariants: 0
-  m_DoubleSidedGI: 0
-  m_CustomRenderQueue: 3001
-  stringTagMap: {}
-  disabledShaderPasses: []
-  m_LockedProperties: 
-  m_SavedProperties:
-    serializedVersion: 3
-    m_TexEnvs:
-    - unity_Lightmaps:
-        m_Texture: {fileID: 0}
-        m_Scale: {x: 1, y: 1}
-        m_Offset: {x: 0, y: 0}
-    - unity_LightmapsInd:
-        m_Texture: {fileID: 0}
-        m_Scale: {x: 1, y: 1}
-        m_Offset: {x: 0, y: 0}
-    - unity_ShadowMasks:
-        m_Texture: {fileID: 0}
-        m_Scale: {x: 1, y: 1}
-        m_Offset: {x: 0, y: 0}
-    m_Ints: []
-    m_Floats:
-    - _AlphaCutoff: 0.5
-    - _Banner: 1
-    - _FogCameraMode: 0
-    - _HeightFogGlobal: 1
-    - _IsHeightFogShader: 1
-    - _QueueControl: -1
-    - _QueueOffset: 0
-    - _ReceiveShadows: 0
-    m_Colors:
-    - _EmissionColor: {r: 1, g: 1, b: 1, a: 1}
-  m_BuildTextureStacks: []
 --- !u!1 &338133415
 GameObject:
   m_ObjectHideFlags: 0
@@ -43282,6 +43232,12 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 0.011619939, y: 0.0036323448, z: 0.01974222}
   m_Center: {x: 0.0000000022652937, y: 0.00083563436, z: -0.009871103}
+--- !u!82 &569847052 stripped
+AudioSource:
+  m_CorrespondingSourceObject: {fileID: 3197384099106792844, guid: 6f401fb4b2a37b9419d6be7db9f064f7,
+    type: 3}
+  m_PrefabInstance: {fileID: 1152073393}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &572256249
 GameObject:
   m_ObjectHideFlags: 0
@@ -43398,6 +43354,12 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 5359252130299745384, guid: da8b434c7cf75e34bbc8ccee178e900e,
     type: 3}
   m_PrefabInstance: {fileID: 833002442}
+  m_PrefabAsset: {fileID: 0}
+--- !u!82 &575112362 stripped
+AudioSource:
+  m_CorrespondingSourceObject: {fileID: 5761110769974826792, guid: 6f401fb4b2a37b9419d6be7db9f064f7,
+    type: 3}
+  m_PrefabInstance: {fileID: 1152073393}
   m_PrefabAsset: {fileID: 0}
 --- !u!1 &576477002
 GameObject:
@@ -71845,7 +71807,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 338125524}
+  - {fileID: 994112280}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -75622,6 +75584,56 @@ Transform:
     type: 3}
   m_PrefabInstance: {fileID: 1437001699}
   m_PrefabAsset: {fileID: 0}
+--- !u!21 &994112280
+Material:
+  serializedVersion: 8
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: Height Fog Global
+  m_Shader: {fileID: 4800000, guid: 3a7ef1b66bafb7a448a880ef76d2e6e6, type: 3}
+  m_Parent: {fileID: 0}
+  m_ModifiedSerializedProperties: 0
+  m_ValidKeywords: []
+  m_InvalidKeywords:
+  - _RECEIVESHADOWS_OFF
+  - _SURFACE_TYPE_TRANSPARENT
+  m_LightmapFlags: 4
+  m_EnableInstancingVariants: 0
+  m_DoubleSidedGI: 0
+  m_CustomRenderQueue: 3001
+  stringTagMap: {}
+  disabledShaderPasses: []
+  m_LockedProperties: 
+  m_SavedProperties:
+    serializedVersion: 3
+    m_TexEnvs:
+    - unity_Lightmaps:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - unity_LightmapsInd:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - unity_ShadowMasks:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    m_Ints: []
+    m_Floats:
+    - _AlphaCutoff: 0.5
+    - _Banner: 1
+    - _FogCameraMode: 0
+    - _HeightFogGlobal: 1
+    - _IsHeightFogShader: 1
+    - _QueueControl: -1
+    - _QueueOffset: 0
+    - _ReceiveShadows: 0
+    m_Colors:
+    - _EmissionColor: {r: 1, g: 1, b: 1, a: 1}
+  m_BuildTextureStacks: []
 --- !u!1001 &994308144
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -88452,6 +88464,11 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 285077092455269621, guid: 6f401fb4b2a37b9419d6be7db9f064f7,
+        type: 3}
+      propertyPath: audioSource
+      value: 
+      objectReference: {fileID: 1275639226}
     - target: {fileID: 751603357125233524, guid: 6f401fb4b2a37b9419d6be7db9f064f7,
         type: 3}
       propertyPath: m_Pivot.x
@@ -88600,6 +88617,11 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 21300000, guid: 0a16bbb87023f4c41adfeb7105b336b2,
         type: 3}
+    - target: {fileID: 2911181277599855541, guid: 6f401fb4b2a37b9419d6be7db9f064f7,
+        type: 3}
+      propertyPath: audioSource
+      value: 
+      objectReference: {fileID: 575112362}
     - target: {fileID: 2932733278207664751, guid: 6f401fb4b2a37b9419d6be7db9f064f7,
         type: 3}
       propertyPath: m_Sprite
@@ -88611,6 +88633,11 @@ PrefabInstance:
       propertyPath: m_Name
       value: RootCanvasFinal
       objectReference: {fileID: 0}
+    - target: {fileID: 4094923099413896456, guid: 6f401fb4b2a37b9419d6be7db9f064f7,
+        type: 3}
+      propertyPath: audioSource
+      value: 
+      objectReference: {fileID: 2038489758}
     - target: {fileID: 4279500587173374157, guid: 6f401fb4b2a37b9419d6be7db9f064f7,
         type: 3}
       propertyPath: m_Sprite
@@ -88640,7 +88667,7 @@ PrefabInstance:
     - target: {fileID: 4850523384623419669, guid: 6f401fb4b2a37b9419d6be7db9f064f7,
         type: 3}
       propertyPath: m_IsActive
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 5131164693165166093, guid: 6f401fb4b2a37b9419d6be7db9f064f7,
         type: 3}
@@ -88692,6 +88719,16 @@ PrefabInstance:
       propertyPath: forbidSymbolAnimators.Array.data[4]
       value: 
       objectReference: {fileID: 908021315}
+    - target: {fileID: 6352836913805220657, guid: 6f401fb4b2a37b9419d6be7db9f064f7,
+        type: 3}
+      propertyPath: audioSource
+      value: 
+      objectReference: {fileID: 569847052}
+    - target: {fileID: 6439211243732124010, guid: 6f401fb4b2a37b9419d6be7db9f064f7,
+        type: 3}
+      propertyPath: audioSource
+      value: 
+      objectReference: {fileID: 1736203202}
     - target: {fileID: 6479554401279003446, guid: 6f401fb4b2a37b9419d6be7db9f064f7,
         type: 3}
       propertyPath: m_Enabled
@@ -88720,7 +88757,7 @@ PrefabInstance:
     - target: {fileID: 7253348883619640526, guid: 6f401fb4b2a37b9419d6be7db9f064f7,
         type: 3}
       propertyPath: m_AnchoredPosition.x
-      value: 20.000122
+      value: 20
       objectReference: {fileID: 0}
     - target: {fileID: 7257404236517309259, guid: 6f401fb4b2a37b9419d6be7db9f064f7,
         type: 3}
@@ -99278,6 +99315,12 @@ Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 103e2570af37b5b4fb24bab577d87016,
     type: 3}
   m_PrefabInstance: {fileID: 379272375}
+  m_PrefabAsset: {fileID: 0}
+--- !u!82 &1275639226 stripped
+AudioSource:
+  m_CorrespondingSourceObject: {fileID: 5537886945744237012, guid: 6f401fb4b2a37b9419d6be7db9f064f7,
+    type: 3}
+  m_PrefabInstance: {fileID: 1152073393}
   m_PrefabAsset: {fileID: 0}
 --- !u!1001 &1276103826
 PrefabInstance:
@@ -135392,6 +135435,12 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: da8b434c7cf75e34bbc8ccee178e900e, type: 3}
+--- !u!82 &1736203202 stripped
+AudioSource:
+  m_CorrespondingSourceObject: {fileID: 5679776106116630375, guid: 6f401fb4b2a37b9419d6be7db9f064f7,
+    type: 3}
+  m_PrefabInstance: {fileID: 1152073393}
+  m_PrefabAsset: {fileID: 0}
 --- !u!4 &1736454790 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: fbeda7751ef32654083f477628edc3c9,
@@ -157964,6 +158013,12 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2036748913}
   m_Mesh: {fileID: -6888460253016933033, guid: 165f6b69217f1dc4cae7cfcf3ce0bf94, type: 3}
+--- !u!82 &2038489758 stripped
+AudioSource:
+  m_CorrespondingSourceObject: {fileID: 6767014280114185738, guid: 6f401fb4b2a37b9419d6be7db9f064f7,
+    type: 3}
+  m_PrefabInstance: {fileID: 1152073393}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &2038757244
 PrefabInstance:
   m_ObjectHideFlags: 0
